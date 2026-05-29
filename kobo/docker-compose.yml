@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine  # Alpine = plus rapide sur Windows
+    container_name: odk_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: odk_mti
+      POSTGRES_INITDB_ARGS: "-c client_encoding=UTF8"
+    ports:
+      - "5433:5432"  # Windows host port 5433 → Container port 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql  # ⭐ Initialise les tables
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d odk_mti"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

@@ -1,0 +1,160 @@
+2026-05-11 10:35:13,371 - INFO - ============================================================
+2026-05-11 10:35:13,371 - INFO - 🔄 Kobo Sync Started
+2026-05-11 10:35:13,371 - INFO - ============================================================
+2026-05-11 10:35:13,375 - ERROR - ❌ Database connection failed: could not translate host name "host.docker.internal" to address: nodename nor servname provided, or not known
+
+2026-05-11 10:35:13,375 - ERROR - ❌ Sync failed: could not translate host name "host.docker.internal" to address: nodename nor servname provided, or not known
+
+2026-05-11 10:35:57,034 - INFO - ============================================================
+2026-05-11 10:35:57,034 - INFO - 🔄 Kobo Sync Started
+2026-05-11 10:35:57,034 - INFO - ============================================================
+2026-05-11 10:35:57,052 - ERROR - ❌ Database connection failed: connection to server at "localhost" (::1), port 5432 failed: FATAL:  role "postgres" does not exist
+
+2026-05-11 10:35:57,052 - ERROR - ❌ Sync failed: connection to server at "localhost" (::1), port 5432 failed: FATAL:  role "postgres" does not exist
+
+2026-05-11 10:38:49,862 - INFO - ============================================================
+2026-05-11 10:38:49,862 - INFO - 🔄 Kobo Sync Started
+2026-05-11 10:38:49,862 - INFO - ============================================================
+2026-05-11 10:38:52,580 - INFO - ✅ Found 0 Kobo projects
+2026-05-11 10:38:52,583 - WARNING - ⚠️ Form 'MFWA_MTI_Demo' not found in Kobo
+2026-05-11 10:39:02,384 - INFO - ============================================================
+2026-05-11 10:39:02,385 - INFO - 🔄 Kobo Sync Started
+2026-05-11 10:39:02,385 - INFO - ============================================================
+2026-05-11 10:39:04,126 - INFO - ✅ Found 0 Kobo projects
+2026-05-11 10:39:04,128 - WARNING - ⚠️ Form 'MFWA_MTI_Demo' not found in Kobo
+2026-05-11 10:58:47,792 - INFO - ============================================================
+2026-05-11 10:58:47,792 - INFO - 🔄 Kobo Sync Started
+2026-05-11 10:58:47,792 - INFO - ============================================================
+2026-05-11 10:58:49,102 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 10:58:49,103 - WARNING - ⚠️ Form 'MFWA_MTI_Demo' not found in Kobo
+2026-05-11 10:58:56,881 - INFO - ============================================================
+2026-05-11 10:58:56,881 - INFO - 🔄 Kobo Sync Started
+2026-05-11 10:58:56,881 - INFO - ============================================================
+2026-05-11 10:58:58,413 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 10:58:58,415 - WARNING - ⚠️ Form 'MFWA_MTI_Demo' not found in Kobo
+2026-05-11 11:00:16,732 - INFO - ============================================================
+2026-05-11 11:00:16,732 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:00:16,732 - INFO - ============================================================
+2026-05-11 11:00:17,861 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 11:00:17,863 - INFO - 📋 Found form: MFWA Media Trust Barometer - Ghana (Demo) (ID: aSSVtGFgeJti6Ln8KM5EzY)
+2026-05-11 11:00:18,868 - INFO - 📊 Found 1 submissions for asset aSSVtGFgeJti6Ln8KM5EzY
+2026-05-11 11:00:19,115 - ERROR - ❌ Error creating outlet Unknown
+2026-05-11 11:00:19,115 - INFO - ============================================================
+2026-05-11 11:00:19,115 - INFO - ✅ Sync Complete - 0 synced, 0 skipped
+2026-05-11 11:00:19,115 - INFO - ============================================================
+2026-05-11 11:01:17,416 - INFO - ============================================================
+2026-05-11 11:01:17,416 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:01:17,416 - INFO - ============================================================
+2026-05-11 11:01:18,406 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 11:01:18,407 - INFO - 📋 Found form: MFWA Media Trust Barometer - Ghana (Demo) (ID: aSSVtGFgeJti6Ln8KM5EzY)
+2026-05-11 11:01:19,436 - INFO - 📊 Found 1 submissions for asset aSSVtGFgeJti6Ln8KM5EzY
+2026-05-11 11:01:19,438 - INFO - DEBUG: Submission keys = ['_id', 'formhub/uuid', 'start', 'end', 'today', 'deviceid', 'interview_id', 'enumerator_id', 'survey_mode', 'geo/region', 'geo/district', 'geo/locality', 'geo/residence_type', 'consent', 'demo/age', 'demo/sex', 'demo/education', 'demo/employment', 'demo/internet_access', 'demo/news_language', 'demo/hh_radio', 'demo/hh_tv', 'engage/news_interest', 'engage/news_days_7', 'platforms/radio_grp/use_radio', 'platforms/radio_grp/radio_freq', 'platforms/tv_grp/use_tv', 'platforms/tv_grp/tv_freq', 'platforms/online_grp/use_online', 'platforms/social_grp/use_social', 'platforms/social_grp/social_freq', 'rating/outlet_name', 'rating/outlet_grp/outlet_overall_trust', 'rating/outlet_grp/outlet_accuracy', 'rating/outlet_grp/outlet_verify', 'rating/outlet_grp/outlet_fair', 'rating/outlet_grp/outlet_indep', 'rating/outlet_grp/outlet_public', 'rating/outlet_grp/outlet_correct', 'rating/outlet_grp/outlet_align', 'rating/outlet_grp/outlet_polshape', '__version__', 'meta/instanceID', '_xform_id_string', '_uuid', 'meta/rootUuid', '_attachments', '_status', '_geolocation', '_submission_time', '_tags', '_notes', '_validation_status', '_submitted_by']
+2026-05-11 11:01:19,438 - INFO - DEBUG: outlet_name = Unknown
+2026-05-11 11:01:19,698 - ERROR - ❌ Error creating outlet Unknown
+2026-05-11 11:01:19,698 - INFO - ============================================================
+2026-05-11 11:01:19,698 - INFO - ✅ Sync Complete - 0 synced, 0 skipped
+2026-05-11 11:01:19,698 - INFO - ============================================================
+2026-05-11 11:02:12,897 - INFO - ============================================================
+2026-05-11 11:02:12,897 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:02:12,897 - INFO - ============================================================
+2026-05-11 11:02:13,895 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 11:02:13,897 - INFO - 📋 Found form: MFWA Media Trust Barometer - Ghana (Demo) (ID: aSSVtGFgeJti6Ln8KM5EzY)
+2026-05-11 11:02:14,827 - INFO - 📊 Found 1 submissions for asset aSSVtGFgeJti6Ln8KM5EzY
+2026-05-11 11:02:14,828 - INFO - DEBUG: Submission keys = ['_id', 'formhub/uuid', 'start', 'end', 'today', 'deviceid', 'interview_id', 'enumerator_id', 'survey_mode', 'geo/region', 'geo/district', 'geo/locality', 'geo/residence_type', 'consent', 'demo/age', 'demo/sex', 'demo/education', 'demo/employment', 'demo/internet_access', 'demo/news_language', 'demo/hh_radio', 'demo/hh_tv', 'engage/news_interest', 'engage/news_days_7', 'platforms/radio_grp/use_radio', 'platforms/radio_grp/radio_freq', 'platforms/tv_grp/use_tv', 'platforms/tv_grp/tv_freq', 'platforms/online_grp/use_online', 'platforms/social_grp/use_social', 'platforms/social_grp/social_freq', 'rating/outlet_name', 'rating/outlet_grp/outlet_overall_trust', 'rating/outlet_grp/outlet_accuracy', 'rating/outlet_grp/outlet_verify', 'rating/outlet_grp/outlet_fair', 'rating/outlet_grp/outlet_indep', 'rating/outlet_grp/outlet_public', 'rating/outlet_grp/outlet_correct', 'rating/outlet_grp/outlet_align', 'rating/outlet_grp/outlet_polshape', '__version__', 'meta/instanceID', '_xform_id_string', '_uuid', 'meta/rootUuid', '_attachments', '_status', '_geolocation', '_submission_time', '_tags', '_notes', '_validation_status', '_submitted_by']
+2026-05-11 11:02:14,829 - INFO - DEBUG: outlet_name = Unknown
+2026-05-11 11:02:15,074 - ERROR - ❌ Error creating outlet Unknown
+2026-05-11 11:02:15,074 - INFO - ============================================================
+2026-05-11 11:02:15,074 - INFO - ✅ Sync Complete - 0 synced, 0 skipped
+2026-05-11 11:02:15,075 - INFO - ============================================================
+2026-05-11 11:03:50,491 - INFO - ============================================================
+2026-05-11 11:03:50,491 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:03:50,491 - INFO - ============================================================
+2026-05-11 11:03:51,568 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 11:03:51,570 - INFO - 📋 Found form: MFWA Media Trust Barometer - Ghana (Demo) (ID: aSSVtGFgeJti6Ln8KM5EzY)
+2026-05-11 11:03:52,763 - INFO - 📊 Found 1 submissions for asset aSSVtGFgeJti6Ln8KM5EzY
+2026-05-11 11:03:52,765 - INFO - DEBUG: Submission keys = ['_id', 'formhub/uuid', 'start', 'end', 'today', 'deviceid', 'interview_id', 'enumerator_id', 'survey_mode', 'geo/region', 'geo/district', 'geo/locality', 'geo/residence_type', 'consent', 'demo/age', 'demo/sex', 'demo/education', 'demo/employment', 'demo/internet_access', 'demo/news_language', 'demo/hh_radio', 'demo/hh_tv', 'engage/news_interest', 'engage/news_days_7', 'platforms/radio_grp/use_radio', 'platforms/radio_grp/radio_freq', 'platforms/tv_grp/use_tv', 'platforms/tv_grp/tv_freq', 'platforms/online_grp/use_online', 'platforms/social_grp/use_social', 'platforms/social_grp/social_freq', 'rating/outlet_name', 'rating/outlet_grp/outlet_overall_trust', 'rating/outlet_grp/outlet_accuracy', 'rating/outlet_grp/outlet_verify', 'rating/outlet_grp/outlet_fair', 'rating/outlet_grp/outlet_indep', 'rating/outlet_grp/outlet_public', 'rating/outlet_grp/outlet_correct', 'rating/outlet_grp/outlet_align', 'rating/outlet_grp/outlet_polshape', '__version__', 'meta/instanceID', '_xform_id_string', '_uuid', 'meta/rootUuid', '_attachments', '_status', '_geolocation', '_submission_time', '_tags', '_notes', '_validation_status', '_submitted_by']
+2026-05-11 11:03:52,766 - INFO - DEBUG: outlet_name = citifm
+2026-05-11 11:03:53,008 - ERROR - ❌ Error creating outlet citifm
+2026-05-11 11:03:53,008 - INFO - ============================================================
+2026-05-11 11:03:53,008 - INFO - ✅ Sync Complete - 0 synced, 0 skipped
+2026-05-11 11:03:53,008 - INFO - ============================================================
+2026-05-11 11:06:23,541 - INFO - ============================================================
+2026-05-11 11:06:23,541 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:06:23,541 - INFO - ============================================================
+2026-05-11 11:06:38,346 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 11:06:38,348 - INFO - 📋 Found form: MFWA Media Trust Barometer - Ghana (Demo) (ID: aSSVtGFgeJti6Ln8KM5EzY)
+2026-05-11 11:06:39,280 - INFO - 📊 Found 1 submissions for asset aSSVtGFgeJti6Ln8KM5EzY
+2026-05-11 11:06:39,282 - INFO - Processing: citifm
+2026-05-11 11:06:39,516 - ERROR - ❌ Error creating outlet: ERROR:  column "location" of relation "outlets" does not exist
+LINE 1: INSERT INTO outlets (name, location, created_at)
+                                   ^
+2026-05-11 11:06:39,516 - WARNING - ⚠️ Could not create outlet citifm
+2026-05-11 11:06:39,516 - INFO - ============================================================
+2026-05-11 11:06:39,516 - INFO - ✅ Sync Complete - 0 synced, 0 skipped
+2026-05-11 11:06:39,516 - INFO - ============================================================
+2026-05-11 11:08:19,223 - INFO - ============================================================
+2026-05-11 11:08:19,223 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:08:19,223 - INFO - ============================================================
+2026-05-11 11:08:20,317 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 11:08:20,319 - INFO - 📋 Found form: MFWA Media Trust Barometer - Ghana (Demo) (ID: aSSVtGFgeJti6Ln8KM5EzY)
+2026-05-11 11:08:21,539 - INFO - 📊 Found 1 submissions for asset aSSVtGFgeJti6Ln8KM5EzY
+2026-05-11 11:08:21,541 - INFO - Processing: citifm
+2026-05-11 11:08:21,763 - ERROR - ❌ Could not parse outlet ID from response
+2026-05-11 11:08:21,763 - WARNING - ⚠️ Could not create outlet citifm
+2026-05-11 11:08:21,763 - INFO - ============================================================
+2026-05-11 11:08:21,763 - INFO - ✅ Sync Complete - 0 synced, 0 skipped
+2026-05-11 11:08:21,763 - INFO - ============================================================
+2026-05-11 11:08:54,966 - INFO - ============================================================
+2026-05-11 11:08:54,966 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:08:54,966 - INFO - ============================================================
+2026-05-11 11:08:55,969 - INFO - ✅ Found 1 Kobo projects
+2026-05-11 11:08:55,971 - INFO - 📋 Found form: MFWA Media Trust Barometer - Ghana (Demo) (ID: aSSVtGFgeJti6Ln8KM5EzY)
+2026-05-11 11:08:57,693 - INFO - 📊 Found 1 submissions for asset aSSVtGFgeJti6Ln8KM5EzY
+2026-05-11 11:08:57,695 - INFO - Processing: citifm
+2026-05-11 11:08:57,895 - INFO - ✅ Found existing outlet: citifm (ID: 11)
+2026-05-11 11:08:57,896 - ERROR - ❌ Error calculating MTI scores: could not convert string to float: 'neither'
+2026-05-11 11:08:57,969 - ERROR - ❌ Error syncing submission: psql: warning: extra command-line argument "legon" ignored
+psql: warning: extra command-line argument ", geo/residence_type: urban, consent: yes, demo/age: 23, demo/sex: female, demo/education: secondary, demo/employment: employed_part, demo/internet_access: weekly, demo/news_language: ewe, demo/hh_radio: yes, demo/hh_tv: no, engage/news_interest: somewhat, engage/news_days_7: 1, platforms/radio_grp/use_radio: yes, platforms/radio_grp/radio_freq: sometimes, platforms/tv_grp/use_tv: yes, platforms/tv_grp/tv_freq: rarely, platforms/online_grp/use_online: no, platforms/social_grp/use_social: yes, platforms/social_grp/social_freq: rarely, rating/outlet_name: citifm, rating/outlet_grp/outlet_overall_trust: 5, rating/outlet_grp/outlet_accuracy: neither, rating/outlet_grp/outlet_verify: agree, rating/outlet_grp/outlet_fair: strongly_disagree, rating/outlet_grp/outlet_indep: disagree, rating/outlet_grp/outlet_public: disagree, rating/outlet_grp/outlet_correct: neither, rating/outlet_grp/outlet_align: npp, rating/outlet_grp/outlet_polshape: sometimes, __version__: vjjGjQnaT4tFHCvJtEp3EV, meta/instanceID: uuid:37940c72-e1b8-49ab-95a1-b92af0801813, _xform_id_string: aSSVtGFgeJti6Ln8KM5EzY, _uuid: 37940c72-e1b8-49ab-95a1-b92af0801813, meta/rootUuid: uuid:37940c72-e1b8-49ab-95a1-b92af0801813, _attachments: [], _status: submitted_via_web, _geolocation: [null, null], _submission_time: 2026-05-10T16:47:30, _tags: [], _notes: [], _validation_status: {}, _submitted_by: ininahazweyves}',
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    '2026-05-11T11:08:57.896181'
+                )
+                ON CONFLICT (outlet_id, submission_date)
+                DO UPDATE SET
+                    raw_response = EXCLUDED.raw_response,
+                    accuracy = EXCLUDED.accuracy,
+                    verification = EXCLUDED.verification,
+                    independence = EXCLUDED.independence,
+                    fair_balanced = EXCLUDED.fair_balanced,
+                    public_interest = EXCLUDED.public_interest,
+                    corrections = EXCLUDED.corrections,
+                    total_mti = EXCLUDED.total_mti;
+            " ignored
+ERROR:  unterminated quoted string at or near "'{_id: 747898145, formhub/uuid: 06d610dff7294e3f9add8cf47c0be822, start: 2026-05-10T16:45:02.873Z, end: 2026-05-10T16:46:58.145Z, today: 2026-05-10, deviceid: collect:Qqv5u7XPAt3w7IKs, interview_id: 34, enumerator_id: 34, survey_mode: main, geo/region: greater_accra, geo/district: 484, geo/locality: East"
+LINE 17:                     '{_id: 747898145, formhub/uuid: 06d610df...
+                             ^
+2026-05-11 11:08:57,969 - INFO - ============================================================
+2026-05-11 11:08:57,969 - INFO - ✅ Sync Complete - 0 synced, 1 skipped
+2026-05-11 11:08:57,969 - INFO - ============================================================
+2026-05-11 11:10:02,015 - INFO - ============================================================
+2026-05-11 11:10:02,016 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:10:02,016 - INFO - ============================================================
+2026-05-11 11:10:02,029 - ERROR - ❌ Database connection failed: connection to server at "localhost" (::1), port 5432 failed: FATAL:  role "postgres" does not exist
+
+2026-05-11 11:10:02,029 - ERROR - ❌ Sync failed: connection to server at "localhost" (::1), port 5432 failed: FATAL:  role "postgres" does not exist
+
+2026-05-11 11:10:35,174 - INFO - ============================================================
+2026-05-11 11:10:35,175 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:10:35,175 - INFO - ============================================================
+2026-05-11 11:10:38,261 - INFO - ✅ Found 0 Kobo projects
+2026-05-11 11:10:38,263 - WARNING - ⚠️ Form 'MFWA_MTI_Demo' not found in Kobo
+2026-05-11 11:11:14,980 - INFO - ============================================================
+2026-05-11 11:11:14,980 - INFO - 🔄 Kobo Sync Started
+2026-05-11 11:11:14,980 - INFO - ============================================================
+2026-05-11 11:11:16,960 - INFO - ✅ Found 0 Kobo projects
+2026-05-11 11:11:16,963 - WARNING - ⚠️ Form 'MFWA Media Trust Barometer - Ghana (Demo)' not found in Kobo

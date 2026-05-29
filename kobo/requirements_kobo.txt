@@ -1,0 +1,14 @@
+# MFWA MTI Demo - Python Requirements (Windows - FIXED)
+# Python 3.9+
+
+# === API & HTTP ===
+requests==2.31.0              # Requêtes HTTP
+Flask==3.0.0                  # Web framework
+Flask-CORS==4.0.0             # Support CORS pour React
+
+# === Database ===
+# ⭐ IMPORTANT: Utiliser une version plus récente avec wheels précompilés
+psycopg2-binary==2.9.12       # Fonctionne sur Windows
+
+# === Environment & Config ===
+python-dotenv==1.0.0          # Charger .env files
