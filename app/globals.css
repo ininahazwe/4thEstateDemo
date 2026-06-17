@@ -1,0 +1,8 @@
+/* app/globals.css */
+@import "./styles/base.css";
+@import "./styles/home.css";
+@import "./styles/layout.css";
+@import "./styles/global.css";
+@import "./styles/component-banner.css";
+@import "./styles/home-critical.css";
+@import "./styles/custom.css";

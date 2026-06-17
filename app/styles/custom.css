@@ -1,0 +1,15 @@
+.zone-archives .wrap {
+    gap: 16px;
+}
+
+.zone-archives .wrap article.item {
+    margin-top: 0 !important;
+}
+
+.zone-long-format .wrap {
+    gap: 16px;
+}
+
+.zone-long-format .wrap article.item {
+    margin-top: 0 !important;
+}
