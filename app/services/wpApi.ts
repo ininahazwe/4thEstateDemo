@@ -13,6 +13,7 @@ import {type StoriesArticle} from "../components/Stories/types";
 
 interface WPPost {
     id: number;
+    slug: string;
     link: string;
     title: { rendered: string };
     excerpt: { rendered: string };
@@ -76,6 +77,11 @@ const BLUR_PLACEHOLDER =
  *     }
  * }
  */
+
+function buildHref(post: WPPost): string {
+    return `/article/${post.slug}`;
+}
+
 
 // ---------------------------------------------------------------------------
 // Utilitaires
@@ -233,7 +239,7 @@ export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[];
 
             const article: ArticleData = {
                 id:            `wp-post-${post.id}`,
-                href:          post.link,
+                href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
                 source:        'The Fourth Estate',
@@ -287,7 +293,7 @@ export async function getLatestBannerArticles(): Promise<ArticleDataBanner[]> {
 
             return {
                 id:            String(post.id),
-                href:          post.link,
+                href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: resolvedTag,
                 section:       'politique' as const,
@@ -333,7 +339,7 @@ export async function getGeneralNewsArticles(perPage = 9): Promise<GeneralNewsAr
 
             const article: GeneralNewsArticle = {
                 id:            `gn-post-${post.id}`,
-                href:          post.link,
+                href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
                 source:        'The Fourth Estate',
@@ -386,7 +392,7 @@ export async function getEnvironmentArticles(perPage = 6): Promise<EnvironmentAr
 
             const article: EnvironmentArticle = {
                 id:            `env-post-${post.id}`,
-                href:          post.link,
+                href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
                 source:        'The Fourth Estate',
@@ -439,7 +445,7 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
 
             const article: AntiCorruptionArticle = {
                 id:            `ac-post-${post.id}`,
-                href:          post.link,
+                href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
                 source:        'The Fourth Estate',
@@ -486,7 +492,7 @@ export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
 
             return {
                 id:            `oi-post-${post.id}`,
-                href:          post.link,
+                href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
                 section:       'our-impact' as const,
@@ -551,7 +557,7 @@ export async function getStoriesArticles(perPage: number = 6): Promise<StoriesAr
 
             const article: StoriesArticle = {
                 id: `stories-post-${post.id}`,
-                href: post.link,
+                href: buildHref(post),
                 title: cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
                 section: 'stories',

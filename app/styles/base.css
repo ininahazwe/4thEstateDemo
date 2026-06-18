@@ -1195,7 +1195,8 @@ html:not(.v-app) [data-model^=article]:hover {
 [data-model^=article] .item-text .strapline {
     background:var(--sitePrimary);
     background-clip:text;
-    -webkit-text-fill-color:#0000
+    -webkit-text-fill-color:#0000;
+    padding-right: 4px;
 }
 [data-model^=article] .item-text .infos {
     align-items:flex-end;
@@ -3014,7 +3015,7 @@ html[class*=page-article-campaign][class*=preview] .site-header .header-logo:bef
     display:flex;
     flex-direction:column;
     justify-content:center;
-    min-height:250px
+    /*min-height:250px*/
 }
 .dfpcontainer #banniere_basse {
     text-align:center
