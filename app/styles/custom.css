@@ -6,10 +6,21 @@
     margin-top: 0 !important;
 }
 
-.zone-long-format .wrap {
-    gap: 16px;
+.zone-stories .wrap article.item {
+    margin-top: 0 !important;
 }
+
+/*.zone-long-format .wrap {*/
+/*    gap: 16px;*/
+/*}*/
 
 .zone-long-format .wrap article.item {
     margin-top: 0 !important;
+}
+
+.item-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;  /* ou la proportion que tu veux */
+    overflow: hidden;
+    display: block;
 }
