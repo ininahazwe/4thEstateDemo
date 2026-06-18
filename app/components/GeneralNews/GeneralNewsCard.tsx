@@ -12,15 +12,11 @@ interface GeneralNewsCardProps {
 const handlePlayAudio = (titleId: string) => {
     const titleEl = document.getElementById(titleId);
     const articleText = titleEl?.closest('article')?.querySelector('.item-text')?.textContent;
-
     if (!articleText) return;
-
     window.speechSynthesis.cancel();
-
     const utterance = new SpeechSynthesisUtterance(articleText);
     utterance.lang = 'fr-FR';
     utterance.rate = 1.0;
-
     window.speechSynthesis.speak(utterance);
 };
 
@@ -43,18 +39,17 @@ export default function GeneralNewsCard({ article, index }: GeneralNewsCardProps
             <a href={article.href}>
                 {article.image && (
                     <div className="item-image">
-                        <picture>
-                            <Image
-                                src={article.image.src}
-                                srcSet={article.image.srcSet}
-                                width={article.image.width}
-                                height={article.image.height}
-                                fetchPriority={article.image.fetchPriority}
-                                loading={article.image.fetchPriority === 'high' ? undefined : 'lazy'}
-                                onError={handleImageError}
-                                alt=""
-                            />
-                        </picture>
+                        <Image
+                            src={article.image.src}
+                            width={article.image.width}
+                            height={article.image.height}
+                            placeholder="blur"
+                            blurDataURL={article.image.blurDataURL}
+                            fetchPriority={article.image.fetchPriority as 'high' | 'auto' | 'low'}
+                            loading={article.image.fetchPriority === 'high' ? 'eager' : 'lazy'}
+                            onError={handleImageError}
+                            alt=""
+                        />
                     </div>
                 )}
 

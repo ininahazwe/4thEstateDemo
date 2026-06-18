@@ -90,7 +90,7 @@
     }
     .home .forecast-top-articles .wrap article.item {
         margin:0 0 4px;
-        width:calc(33% - 2px)
+        width:calc(50% - 2px)
     }
     .home .forecast-top-articles .wrap article.item .item-text {
         font-size:16px

@@ -51,9 +51,10 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
                         <picture>
                             <Image
                                 src={article.image.src}
-                                srcSet={article.image.srcSet}
                                 width={article.image.width}
                                 height={article.image.height}
+                                placeholder="blur"
+                                blurDataURL={article.image.blurDataURL}
                                 fetchPriority={article.image.fetchPriority}
                                 loading={article.image.fetchPriority === 'high' ? undefined : 'lazy'}
                                 onError={handleImageError}

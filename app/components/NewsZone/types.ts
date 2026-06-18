@@ -3,6 +3,7 @@ export interface ArticleImage {
     srcSet?: string;
     width: number;
     height: number;
+    blurDataURL?: string;
     fetchPriority?: "high" | "low" | "auto";
 }
 
@@ -22,6 +23,7 @@ export interface ArticleData {
         srcSet: string;
         width: number;
         height: number;
+        blurDataURL?: string;
         fetchPriority?: 'high' | 'low' | 'auto';
     };
     // Premium a été supprimé ici

@@ -3,6 +3,7 @@ export interface EnvironmentArticleImage {
     srcSet?: string;
     width: number;
     height: number;
+    blurDataURL?: string;
     fetchPriority?: 'high' | 'low' | 'auto';
 }
 

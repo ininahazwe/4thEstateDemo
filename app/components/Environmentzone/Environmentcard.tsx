@@ -1,7 +1,7 @@
 'use client';
 
 import { type EnvironmentArticle } from './Types';
-import { Globe, Headphones, Bookmark } from 'lucide-react';
+import { Globe, Headphones } from 'lucide-react';
 import Image from "next/image";
 
 interface EnvironmentCardProps {
@@ -42,11 +42,12 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                         <picture>
                             <Image
                                 src={article.image.src}
-                                srcSet={article.image.srcSet}
                                 width={article.image.width}
                                 height={article.image.height}
-                                fetchPriority={article.image.fetchPriority}
-                                loading={article.image.fetchPriority === 'high' ? undefined : 'lazy'}
+                                placeholder="blur"
+                                blurDataURL={article.image.blurDataURL}
+                                fetchPriority={article.image.fetchPriority as 'high' | 'auto' | 'low'}
+                                loading={article.image.fetchPriority === 'high' ? 'eager' : 'lazy'}
                                 onError={handleImageError}
                                 alt=""
                             />

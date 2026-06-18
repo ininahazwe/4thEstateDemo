@@ -7,13 +7,14 @@ import {
     getEnvironmentArticles,
     getFourthEstateArticles,
     getGeneralNewsArticles,
-    getLatestBannerArticles, getOurImpactArticles
+    getLatestBannerArticles, getOurImpactArticles, getStoriesArticles
 } from "@/app/services/wpApi";
 import GeneralNewsZone from "@/app/components/GeneralNews/GeneralNewsZone";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 import EnvironmentZone from "@/app/components/Environmentzone/Environmentzone";
 import AntiCorruptionZone from "@/app/components/AntiCorruption/Corruptionzone";
 import OurImpactZone from "@/app/components/Impact/ImpactZone";
+import StoriesZone from "@/app/components/Stories/Storieszone";
 
 export default async function App() {
     // Récupération automatique et asynchrone des articles en direct de l'API de The Fourth Estate
@@ -21,9 +22,9 @@ export default async function App() {
     const articles = await getLatestBannerArticles();
     const generalNews = await getGeneralNewsArticles(3);
     const environmentlNews = await getEnvironmentArticles(3);
-    const antiCorruptionNews = await getAntiCorruptionArticles(3);
-    const impactNews = await getOurImpactArticles(3);
-
+    const antiCorruptionNews = await getAntiCorruptionArticles();
+    const impactNews = await getOurImpactArticles();
+    const storiesNews = await getStoriesArticles();
 
     return (
         <>
@@ -53,6 +54,8 @@ export default async function App() {
                             <OurImpactZone articles={impactNews} />
 
                             <GeneralNewsZone articles={generalNews} />
+
+                            <StoriesZone articles={storiesNews} />
 
                             <AntiCorruptionZone articles={antiCorruptionNews} />
 

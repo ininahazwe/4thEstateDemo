@@ -1,6 +1,6 @@
 'use client';
 
-import { type AntiCorruptionArticle } from './types';
+import { type AntiCorruptionArticle } from './Types';
 import { Globe, Headphones, Bookmark } from 'lucide-react';
 import Image from "next/image";
 
@@ -41,13 +41,14 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
                         <picture>
                             <Image
                                 src={article.image.src}
-                                srcSet={article.image.srcSet}
                                 width={article.image.width}
                                 height={article.image.height}
-                                fetchPriority={article.image.fetchPriority}
-                                loading={article.image.fetchPriority === 'high' ? undefined : 'lazy'}
-                                onError={handleImageError}
+                                placeholder="blur"
+                                blurDataURL={article.image.blurDataURL}
+                                fetchPriority={article.image.fetchPriority as 'high' | 'auto' | 'low'}
+                                loading={article.image.fetchPriority === 'high' ? 'eager' : 'lazy'}
                                 alt=""
+                                onError={handleImageError}
                             />
                         </picture>
                     </div>

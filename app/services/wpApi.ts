@@ -1,8 +1,16 @@
-import { type ArticleData } from '../components/NewsZone/types';
-import { type ArticleDataBanner } from '../components/SiteBanner/types';
-import { type GeneralNewsArticle} from "@/app/components/GeneralNews/types";
+import { type ArticleData }          from '../components/NewsZone/types';
+import { type ArticleDataBanner }     from '../components/SiteBanner/types';
+import { type GeneralNewsArticle }    from '../components/GeneralNews/types';
+import { type EnvironmentArticle }    from '../components/Environmentzone/Types';
+import { type AntiCorruptionArticle } from '../components/AntiCorruption/Types';
+import { type OurImpactArticle }      from '../components/Impact/Types';
+import {type StoriesArticle} from "../components/Stories/types";
 
-// Interfaces pour typer proprement les réponses de l'API WordPress
+
+// ---------------------------------------------------------------------------
+// Interfaces WordPress
+// ---------------------------------------------------------------------------
+
 interface WPPost {
     id: number;
     link: string;
@@ -17,10 +25,7 @@ interface WPPost {
 interface WPMedia {
     id: number;
     source_url: string;
-    media_details?: {
-        width?: number;
-        height?: number;
-    };
+    media_details?: { width?: number; height?: number };
 }
 
 interface WPTerm {
@@ -28,239 +33,317 @@ interface WPTerm {
     name: string;
 }
 
+// ---------------------------------------------------------------------------
+// Configuration centrale
+// ---------------------------------------------------------------------------
+
+const WP_BASE = 'https://thefourthestategh.com/wp-json/wp/v2';
+
+/**
+ * IDs de catégories WordPress.
+ * Pour trouver un ID : GET /wp-json/wp/v2/categories?slug=<votre-slug>
+ * Renseigner les valeurs null dès que les IDs sont connus.
+ */
+const CATEGORY_IDS = {
+    politique:      3    as number,
+    economie:       5    as number,
+    generalNews:    109  as number,
+    environment:    null as number | null, // ⚠️ à renseigner
+    antiCorruption: null as number | null, // ⚠️ à renseigner
+    ourImpact:      null as number | null, // ⚠️ à renseigner
+};
+
+/**
+ * Placeholder LQIP générique (SVG gris 640×426, base64).
+ * Affiché immédiatement par Next.js <Image placeholder="blur"> avant le chargement.
+ *
+ * Pour un vrai blur par image (couleurs dominantes réelles) :
+ *   npm install plaiceholder sharp
+ * puis décommenter generateBlurDataURL ci-dessous et l'utiliser dans buildImage.
+ */
+const BLUR_PLACEHOLDER =
+    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NDAiIGhlaWdodD0iNDI2Ij48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTJlOGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNjYmQ1ZTEiIGZvbnQtc2l6ZT0iMjQiPuKWqTwvdGV4dD48L3N2Zz4=';
+
+/*
+ * import { getPlaiceholder } from 'plaiceholder';
+ *
+ * async function generateBlurDataURL(src: string): Promise<string> {
+ *     try {
+ *         const { base64 } = await getPlaiceholder(src, { size: 4 });
+ *         return base64;
+ *     } catch {
+ *         return BLUR_PLACEHOLDER;
+ *     }
+ * }
+ */
+
+// ---------------------------------------------------------------------------
+// Utilitaires
+// ---------------------------------------------------------------------------
+
 function formatWpDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
     });
 }
 
-// Fonction utilitaire pour nettoyer les entités HTML complexes des titres WordPress
 function cleanHtmlTitle(title: string): string {
     if (typeof window === 'undefined') {
         return title
-            .replace(/&#8217;/g, "’")
-            .replace(/&#8220;/g, "“")
-            .replace(/&#8221;/g, "”")
-            .replace(/&amp;/g, "&")
-            .replace(/&#038;/g, "&");
+            .replace(/&#8217;/g, "'")
+            .replace(/&#8220;/g, '\u201C')
+            .replace(/&#8221;/g, '\u201D')
+            .replace(/&amp;/g,   '&')
+            .replace(/&#038;/g,  '&');
     }
     const doc = new DOMParser().parseFromString(title, 'text/html');
     return doc.body.textContent || title;
 }
 
+/**
+ * fetchPriority selon la position dans la page :
+ * - 0     → 'high'  (hero, au-dessus du fold)
+ * - 1–2   → 'auto'  (souvent encore visible)
+ * - 3+    → 'low'   (sous le fold, peut attendre)
+ */
+function imagePriority(index: number): 'high' | 'auto' | 'low' {
+    if (index === 0) return 'high';
+    if (index  < 3) return 'auto';
+    return 'low';
+}
+
+// ---------------------------------------------------------------------------
+// Helpers fetch groupés
+// ---------------------------------------------------------------------------
+
+async function fetchPosts(url: string, revalidate = 600): Promise<WPPost[]> {
+    const res = await fetch(url, { next: { revalidate } });
+    if (!res.ok) return [];
+    return res.json();
+}
+
+/**
+ * Médias : UNE seule requête ?include=id1,id2,… au lieu d'une par image.
+ * Réduit getFourthEstateArticles de ~15 requêtes à 1.
+ */
+async function fetchMediaBatch(mediaIds: number[], revalidate = 600): Promise<Map<number, WPMedia>> {
+    const map = new Map<number, WPMedia>();
+    if (!mediaIds.length) return map;
+    const res = await fetch(
+        `${WP_BASE}/media?include=${mediaIds.join(',')}&per_page=100`,
+        { next: { revalidate } }
+    );
+    if (!res.ok) return map;
+    const medias: WPMedia[] = await res.json();
+    medias.forEach(m => map.set(m.id, m));
+    return map;
+}
+
+async function fetchCategoryBatch(categoryIds: number[], revalidate = 600): Promise<Map<number, string>> {
+    const map = new Map<number, string>();
+    if (!categoryIds.length) return map;
+    const res = await fetch(
+        `${WP_BASE}/categories?include=${categoryIds.join(',')}&per_page=100`,
+        { next: { revalidate } }
+    );
+    if (!res.ok) return map;
+    const cats: WPTerm[] = await res.json();
+    cats.forEach(c => map.set(c.id, c.name));
+    return map;
+}
+
+async function fetchTagBatch(tagIds: number[], revalidate = 600): Promise<Map<number, string>> {
+    const map = new Map<number, string>();
+    if (!tagIds.length) return map;
+    const res = await fetch(
+        `${WP_BASE}/tags?include=${tagIds.join(',')}&per_page=100`,
+        { next: { revalidate } }
+    );
+    if (!res.ok) return map;
+    const tags: WPTerm[] = await res.json();
+    tags.forEach(t => map.set(t.id, t.name));
+    return map;
+}
+
+function extractIds(posts: WPPost[]) {
+    return {
+        mediaIds:    Array.from(new Set(posts.map(p => p.featured_media).filter(id => id > 0))),
+        categoryIds: Array.from(new Set(posts.flatMap(p => p.categories).filter(id => id > 0))),
+        tagIds:      Array.from(new Set(posts.flatMap(p => p.tags).filter(id => id > 0))),
+    };
+}
+
+/**
+ * Résout un ID de catégorie.
+ * Si déjà connu dans CATEGORY_IDS : retour immédiat, zéro fetch.
+ * Sinon : fetch mis en cache 1h.
+ */
+async function resolveCategoryId(knownId: number | null, slug: string): Promise<number | null> {
+    if (knownId !== null) return knownId;
+    const res = await fetch(`${WP_BASE}/categories?slug=${slug}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const cats: WPTerm[] = await res.json();
+    return cats[0]?.id ?? null;
+}
+
+/**
+ * Construit l'objet image avec blurDataURL pour le placeholder immédiat.
+ * blurDataURL est lu par Next.js <Image placeholder="blur">.
+ */
+function buildImage(media: WPMedia, index: number): NonNullable<ArticleData['image']> {
+    return {
+        src:           media.source_url,
+        srcSet:        `${media.source_url} 2x`,
+        width:         media.media_details?.width  ?? 640,
+        height:        media.media_details?.height ?? 426,
+        fetchPriority: imagePriority(index),
+        blurDataURL:   BLUR_PLACEHOLDER,
+    };
+}
+
+// ---------------------------------------------------------------------------
+// getFourthEstateArticles
+// ---------------------------------------------------------------------------
+
 export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[]; zone2: ArticleData[] }> {
     try {
-        // 1. Récupérer les 15 derniers articles
-        const postsRes = await fetch('https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=15', {
-            next: { revalidate: 600 } // Cache ISR Next.js (10 minutes)
-        });
+        const posts = await fetchPosts(`${WP_BASE}/posts?per_page=15`);
+        if (!posts.length) return { zone1: [], zone2: [] };
 
-        if (!postsRes.ok) throw new Error('Erreur lors de la récupération des articles');
-        const posts: WPPost[] = await postsRes.json();
+        const { mediaIds, categoryIds, tagIds } = extractIds(posts);
 
-        // 2. Extraire tous les IDs uniques nécessaires pour limiter les appels réseau externes
-        const mediaIds = Array.from(new Set(posts.map(p => p.featured_media).filter(id => id > 0)));
-        const categoryIds = Array.from(new Set(posts.flatMap(p => p.categories).filter(id => id > 0)));
-        const tagIds = Array.from(new Set(posts.flatMap(p => p.tags).filter(id => id > 0)));
-
-        // 3. Récupérer en parallèle toutes les dépendances (Médias, Catégories, Tags)
-        const mediaPromises = mediaIds.map(id =>
-            fetch(`https://thefourthestategh.com/wp-json/wp/v2/media/${id}`).then(res => res.ok ? res.json() : null).catch(() => null)
-        );
-
-        // Utilisation des filtres d'inclusion WordPress (?include=id1,id2) pour tout grouper en une seule requête par type
-        const categoriesPromise = categoryIds.length > 0
-            ? fetch(`https://thefourthestategh.com/wp-json/wp/v2/categories?include=${categoryIds.join(',')}`).then(res => res.ok ? res.json() : []).catch(() => [])
-            : Promise.resolve([]);
-
-        const tagsPromise = tagIds.length > 0
-            ? fetch(`https://thefourthestategh.com/wp-json/wp/v2/tags?include=${tagIds.join(',')}`).then(res => res.ok ? res.json() : []).catch(() => [])
-            : Promise.resolve([]);
-
-        const [mediaResults, categoriesResults, tagsResults] = await Promise.all([
-            Promise.all(mediaPromises),
-            categoriesPromise,
-            tagsPromise
+        const [mediaMap, categoryMap, tagMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
+            fetchTagBatch(tagIds),
         ]);
 
-        // 4. Indexer les résultats dans des Maps pour une recherche instantanée (O(1)) lors du mapping
-        const mediaMap = new Map<number, WPMedia>();
-        mediaResults.forEach(m => { if (m) mediaMap.set(m.id, m); });
-
-        const categoryMap = new Map<number, string>();
-        (categoriesResults as WPTerm[]).forEach(c => categoryMap.set(c.id, c.name));
-
-        const tagMap = new Map<number, string>();
-        (tagsResults as WPTerm[]).forEach(t => tagMap.set(t.id, t.name));
-
-        // 5. Mapper les articles vers le format attendu par NewsZone et ArticleCard
         const mappedArticles: ArticleData[] = posts.map((post, index) => {
             const media = mediaMap.get(post.featured_media);
 
-            // Résolution du tag ou de la catégorie (Prend le premier tag trouvé, sinon la première catégorie, sinon "Investigation")
-            let tagOrCategory = "Investigation";
-            if (post.categories && post.categories.length > 0) {
-                const firstCat = categoryMap.get(post.categories[0]);
-                if (firstCat) tagOrCategory = firstCat;
+            let tagOrCategory = 'Investigation';
+            if (post.categories.length > 0) {
+                const cat = categoryMap.get(post.categories[0]);
+                if (cat) tagOrCategory = cat;
             }
 
-            // Détermination de la section graphique (Adaptable selon les vrais IDs de votre WordPress)
-            let section: 'geopolitique' | 'economie' | 'societe' | 'politique' | 'culture' = 'societe';
-            if (post.categories.includes(3)) section = 'politique';
-            if (post.categories.includes(5)) section = 'economie';
+            let section: ArticleData['section'] = 'societe';
+            if (post.categories.includes(CATEGORY_IDS.politique)) section = 'politique';
+            if (post.categories.includes(CATEGORY_IDS.economie))  section = 'economie';
 
             const article: ArticleData = {
-                id: `wp-post-${post.id}`,
-                href: post.link,
-                title: cleanHtmlTitle(post.title.rendered),
-                tagOrCategory: cleanHtmlTitle(tagOrCategory), // Remplacement de strapline
-                source: "The Fourth Estate",
-                section: section,
-                model: index === 0 ? "article-vertical" : "article",
-                type: index === 2 ? "sirius-live" : "article",
-                index: index + 1,
+                id:            `wp-post-${post.id}`,
+                href:          post.link,
+                title:         cleanHtmlTitle(post.title.rendered),
+                tagOrCategory: cleanHtmlTitle(tagOrCategory),
+                source:        'The Fourth Estate',
+                section,
+                model:         index === 0 ? 'article-vertical' : 'article',
+                type:          index === 2 ? 'sirius-live' : 'article',
+                index:         index + 1,
             };
 
-            if (media) {
-                article.image = {
-                    src: media.source_url,
-                    srcSet: `${media.source_url} 2x`,
-                    width: media.media_details?.width || 640,
-                    height: media.media_details?.height || 426,
-                    fetchPriority: index === 0 ? "high" : "auto"
-                };
-            }
+            if (media) article.image = buildImage(media, index);
 
             return article;
         });
 
-        // 6. Distribution finale des articles récoltés
         return {
             zone1: mappedArticles.slice(0, 5),
-            zone2: mappedArticles.slice(5, 11)
+            zone2: mappedArticles.slice(5, 11),
         };
 
     } catch (error) {
-        console.error("Erreur wpApi service:", error);
+        console.error('Erreur wpApi [getFourthEstateArticles]:', error);
         return { zone1: [], zone2: [] };
     }
 }
 
+// ---------------------------------------------------------------------------
+// getLatestBannerArticles
+// ---------------------------------------------------------------------------
+
 export async function getLatestBannerArticles(): Promise<ArticleDataBanner[]> {
     try {
-        const res = await fetch('https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=4', {
-            next: { revalidate: 300 } // Cache de 5 minutes
-        });
+        const posts = await fetchPosts(`${WP_BASE}/posts?per_page=4`, 300);
+        if (!posts.length) return [];
 
-        if (!res.ok) return [];
+        const { categoryIds, tagIds } = extractIds(posts);
 
-        const posts: WPPost[] = await res.json();
+        const [categoryMap, tagMap] = await Promise.all([
+            fetchCategoryBatch(categoryIds, 300),
+            fetchTagBatch(tagIds, 300),
+        ]);
 
         return posts.map((post, idx) => {
-            // Détermination du tag ou de la catégorie (même logique validée précédemment)
-            let resolvedTag = "Investigation";
-            if (post.tags && post.tags.length > 0) {
-                // Remplacer par votre logique d'extraction textuelle réelle (ex: tagMap.get)
-                resolvedTag = "Tag " + post.tags[0];
-            } else if (post.categories && post.categories.length > 0) {
-                resolvedTag = "Actualité";
+            let resolvedTag = 'Investigation';
+            if (post.tags.length > 0) {
+                const tag = tagMap.get(post.tags[0]);
+                if (tag) resolvedTag = tag;
+            } else if (post.categories.length > 0) {
+                const cat = categoryMap.get(post.categories[0]);
+                if (cat) resolvedTag = cat;
             }
 
             return {
-                id: String(post.id),
-                href: post.link,
-                title: post.title.rendered.replace(/&#8217;/g, "’").replace(/&amp;/g, "&"), // Utilise votre cleanHtmlTitle
+                id:            String(post.id),
+                href:          post.link,
+                title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: resolvedTag,
-                section: 'politique', // Valeur par défaut à mapper selon vos besoins CSS
-                model: 'article',
-                type: 'article',
-                index: idx,
-                // On stocke la date formatée dans source ou on adapte le composant pour utiliser le tagOrCategory réutilisable
-                source: formatWpDate(post.date)
+                section:       'politique' as const,
+                model:         'article'   as const,
+                type:          'article'   as const,
+                index:         idx,
+                source:        formatWpDate(post.date),
             };
         });
+
     } catch (error) {
-        console.error("Erreur wpApi lors de la récupération du bandeau:", error);
+        console.error('Erreur wpApi [getLatestBannerArticles]:', error);
         return [];
     }
 }
 
-export async function getGeneralNewsArticles(perPage: number = 9): Promise<GeneralNewsArticle[]> {
+// ---------------------------------------------------------------------------
+// getGeneralNewsArticles
+// ---------------------------------------------------------------------------
+
+export async function getGeneralNewsArticles(perPage = 9): Promise<GeneralNewsArticle[]> {
     try {
-        // ID fixe de la catégorie "general-news" — vérifié via l'API WordPress
-        const GENERAL_NEWS_CATEGORY_ID = 109;
-
-        const res = await fetch(
-            `https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=${perPage}&categories=${GENERAL_NEWS_CATEGORY_ID}`,
-            { next: { revalidate: 600 } }
+        const posts = await fetchPosts(
+            `${WP_BASE}/posts?per_page=${perPage}&categories=${CATEGORY_IDS.generalNews}`
         );
-
-        if (!res.ok) return [];
-
-        const posts: WPPost[] = await res.json();
         if (!posts.length) return [];
 
-        // 3. Récupérer médias et catégories en parallèle
-        const mediaIds = Array.from(new Set(posts.map(p => p.featured_media).filter(id => id > 0)));
-        const categoryIds = Array.from(new Set(posts.flatMap(p => p.categories).filter(id => id > 0)));
+        const { mediaIds, categoryIds } = extractIds(posts);
 
-        const [mediaResults, categoriesResults] = await Promise.all([
-            Promise.all(
-                mediaIds.map(id =>
-                    fetch(`https://thefourthestategh.com/wp-json/wp/v2/media/${id}`)
-                        .then(res => res.ok ? res.json() : null)
-                        .catch(() => null)
-                )
-            ),
-            categoryIds.length > 0
-                ? fetch(`https://thefourthestategh.com/wp-json/wp/v2/categories?include=${categoryIds.join(',')}`)
-                    .then(res => res.ok ? res.json() : [])
-                    .catch(() => [])
-                : Promise.resolve([])
+        const [mediaMap, categoryMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
         ]);
 
-        // 4. Indexer dans des Maps
-        const mediaMap = new Map<number, WPMedia>();
-        (mediaResults as (WPMedia | null)[]).forEach(m => { if (m) mediaMap.set(m.id, m); });
-
-        const categoryMap = new Map<number, string>();
-        (categoriesResults as WPTerm[]).forEach(c => categoryMap.set(c.id, c.name));
-
-        // 5. Mapper vers GeneralNewsArticle
         return posts.map((post, index) => {
             const media = mediaMap.get(post.featured_media);
 
             let tagOrCategory = 'General News';
             if (post.categories.length > 0) {
-                const firstCat = categoryMap.get(post.categories[0]);
-                if (firstCat) tagOrCategory = firstCat;
+                const cat = categoryMap.get(post.categories[0]);
+                if (cat) tagOrCategory = cat;
             }
 
             const article: GeneralNewsArticle = {
-                id: `gn-post-${post.id}`,
-                href: post.link,
-                title: cleanHtmlTitle(post.title.rendered),
+                id:            `gn-post-${post.id}`,
+                href:          post.link,
+                title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
-                source: 'The Fourth Estate',
-                section: 'general-news',
-                model: 'article-vertical',
-                type: 'article',
-                index: index + 1,
+                source:        'The Fourth Estate',
+                section:       'general-news',
+                model:         'article-vertical',
+                type:          'article',
+                index:         index + 1,
             };
 
-            if (media) {
-                article.image = {
-                    src: media.source_url,
-                    srcSet: `${media.source_url} 2x`,
-                    width: media.media_details?.width ?? 640,
-                    height: media.media_details?.height ?? 426,
-                    fetchPriority: index === 0 ? 'high' : 'auto',
-                };
-            }
+            if (media) article.image = buildImage(media, index);
 
             return article;
         });
@@ -271,82 +354,49 @@ export async function getGeneralNewsArticles(perPage: number = 9): Promise<Gener
     }
 }
 
-export async function getEnvironmentArticles(perPage: number = 6): Promise<EnvironmentArticle[]> {
+// ---------------------------------------------------------------------------
+// getEnvironmentArticles
+// ---------------------------------------------------------------------------
+
+export async function getEnvironmentArticles(perPage = 6): Promise<EnvironmentArticle[]> {
     try {
-        // Résoudre l'ID de la catégorie "environment" via son slug
-        // Une fois l'ID connu, remplacez par une constante : const ENVIRONMENT_CATEGORY_ID = XXX;
-        const catRes = await fetch(
-            'https://thefourthestategh.com/wp-json/wp/v2/categories?slug=environment',
-            { next: { revalidate: 3600 } }
-        );
-        const categories: WPTerm[] = catRes.ok ? await catRes.json() : [];
-        const categoryId = categories[0]?.id ?? null;
-
+        const categoryId = await resolveCategoryId(CATEGORY_IDS.environment, 'environment');
         const url = categoryId
-            ? `https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=${perPage}&categories=${categoryId}`
-            : `https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=${perPage}`;
+            ? `${WP_BASE}/posts?per_page=${perPage}&categories=${categoryId}`
+            : `${WP_BASE}/posts?per_page=${perPage}`;
 
-        const res = await fetch(url, { next: { revalidate: 600 } });
-        if (!res.ok) return [];
-
-        const posts: WPPost[] = await res.json();
+        const posts = await fetchPosts(url);
         if (!posts.length) return [];
 
-        // Récupérer médias et catégories en parallèle
-        const mediaIds = Array.from(new Set(posts.map(p => p.featured_media).filter(id => id > 0)));
-        const categoryIds = Array.from(new Set(posts.flatMap(p => p.categories).filter(id => id > 0)));
+        const { mediaIds, categoryIds } = extractIds(posts);
 
-        const [mediaResults, categoriesResults] = await Promise.all([
-            Promise.all(
-                mediaIds.map(id =>
-                    fetch(`https://thefourthestategh.com/wp-json/wp/v2/media/${id}`)
-                        .then(res => res.ok ? res.json() : null)
-                        .catch(() => null)
-                )
-            ),
-            categoryIds.length > 0
-                ? fetch(`https://thefourthestategh.com/wp-json/wp/v2/categories?include=${categoryIds.join(',')}`)
-                    .then(res => res.ok ? res.json() : [])
-                    .catch(() => [])
-                : Promise.resolve([])
+        const [mediaMap, categoryMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
         ]);
-
-        const mediaMap = new Map<number, WPMedia>();
-        (mediaResults as (WPMedia | null)[]).forEach(m => { if (m) mediaMap.set(m.id, m); });
-
-        const categoryMap = new Map<number, string>();
-        (categoriesResults as WPTerm[]).forEach(c => categoryMap.set(c.id, c.name));
 
         return posts.map((post, index) => {
             const media = mediaMap.get(post.featured_media);
 
             let tagOrCategory = 'Environment';
             if (post.categories.length > 0) {
-                const firstCat = categoryMap.get(post.categories[0]);
-                if (firstCat) tagOrCategory = firstCat;
+                const cat = categoryMap.get(post.categories[0]);
+                if (cat) tagOrCategory = cat;
             }
 
             const article: EnvironmentArticle = {
-                id: `env-post-${post.id}`,
-                href: post.link,
-                title: cleanHtmlTitle(post.title.rendered),
+                id:            `env-post-${post.id}`,
+                href:          post.link,
+                title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
-                source: 'The Fourth Estate',
-                section: 'environment',
-                model: 'article-vertical',
-                type: 'article',
-                index: index + 1,
+                source:        'The Fourth Estate',
+                section:       'environment',
+                model:         'article-vertical',
+                type:          'article',
+                index:         index + 1,
             };
 
-            if (media) {
-                article.image = {
-                    src: media.source_url,
-                    srcSet: `${media.source_url} 2x`,
-                    width: media.media_details?.width ?? 640,
-                    height: media.media_details?.height ?? 426,
-                    fetchPriority: index === 0 ? 'high' : 'auto',
-                };
-            }
+            if (media) article.image = buildImage(media, index);
 
             return article;
         });
@@ -357,22 +407,109 @@ export async function getEnvironmentArticles(perPage: number = 6): Promise<Envir
     }
 }
 
+// ---------------------------------------------------------------------------
+// getAntiCorruptionArticles
+// ---------------------------------------------------------------------------
+
 export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle[]> {
     try {
-        // Résoudre l'ID de la catégorie "anti-corruption" via son slug
-        // Une fois l'ID connu, remplacez par : const ANTI_CORRUPTION_CATEGORY_ID = XXX;
-        const catRes = await fetch(
-            'https://thefourthestategh.com/wp-json/wp/v2/categories?slug=anti-corruption',
-            { next: { revalidate: 3600 } }
-        );
-        const categories: WPTerm[] = catRes.ok ? await catRes.json() : [];
-        const categoryId = categories[0]?.id ?? null;
-
+        const categoryId = await resolveCategoryId(CATEGORY_IDS.antiCorruption, 'anti-corruption');
         const url = categoryId
-            ? `https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=5&categories=${categoryId}`
-            : `https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=5`;
+            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}`
+            : `${WP_BASE}/posts?per_page=5`;
 
-        const res = await fetch(url, { next: { revalidate: 600 } });
+        const posts = await fetchPosts(url);
+        if (!posts.length) return [];
+
+        const { mediaIds, categoryIds } = extractIds(posts);
+
+        const [mediaMap, categoryMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
+        ]);
+
+        return posts.map((post, index) => {
+            const media = mediaMap.get(post.featured_media);
+
+            let tagOrCategory = 'Anti-Corruption';
+            if (post.categories.length > 0) {
+                const cat = categoryMap.get(post.categories[0]);
+                if (cat) tagOrCategory = cat;
+            }
+
+            const article: AntiCorruptionArticle = {
+                id:            `ac-post-${post.id}`,
+                href:          post.link,
+                title:         cleanHtmlTitle(post.title.rendered),
+                tagOrCategory: cleanHtmlTitle(tagOrCategory),
+                source:        'The Fourth Estate',
+                section:       'anti-corruption',
+                model:         index === 0 ? 'article-vertical' : 'article',
+                type:          'article',
+                index:         index + 1,
+            };
+
+            if (media) article.image = buildImage(media, index);
+
+            return article;
+        });
+
+    } catch (error) {
+        console.error('Erreur wpApi [getAntiCorruptionArticles]:', error);
+        return [];
+    }
+}
+
+// ---------------------------------------------------------------------------
+// getOurImpactArticles  (pas d'images dans cette zone)
+// ---------------------------------------------------------------------------
+
+export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
+    try {
+        const categoryId = await resolveCategoryId(CATEGORY_IDS.ourImpact, 'our-impact');
+        const url = categoryId
+            ? `${WP_BASE}/posts?per_page=6&categories=${categoryId}`
+            : `${WP_BASE}/posts?per_page=6`;
+
+        const posts = await fetchPosts(url);
+        if (!posts.length) return [];
+
+        const { categoryIds } = extractIds(posts);
+        const categoryMap = await fetchCategoryBatch(categoryIds);
+
+        return posts.map((post, index) => {
+            let tagOrCategory = 'Our Impact';
+            if (post.categories.length > 0) {
+                const cat = categoryMap.get(post.categories[0]);
+                if (cat) tagOrCategory = cat;
+            }
+
+            return {
+                id:            `oi-post-${post.id}`,
+                href:          post.link,
+                title:         cleanHtmlTitle(post.title.rendered),
+                tagOrCategory: cleanHtmlTitle(tagOrCategory),
+                section:       'our-impact' as const,
+                model:         'article'    as const,
+                type:          'default'    as const,
+                index:         index + 1,
+            };
+        });
+
+    } catch (error) {
+        console.error('Erreur wpApi [getOurImpactArticles]:', error);
+        return [];
+    }
+}
+
+export async function getStoriesArticles(perPage: number = 6): Promise<StoriesArticle[]> {
+    try {
+        // Recherche par mot-clé "video" — équivalent de /?s=video
+        const res = await fetch(
+            `https://thefourthestategh.com/wp-json/wp/v2/posts?search=video&per_page=${perPage}`,
+            { next: { revalidate: 600 } }
+        );
+
         if (!res.ok) return [];
 
         const posts: WPPost[] = await res.json();
@@ -406,22 +543,21 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
         return posts.map((post, index) => {
             const media = mediaMap.get(post.featured_media);
 
-            let tagOrCategory = 'Anti-Corruption';
+            let tagOrCategory = 'Stories';
             if (post.categories.length > 0) {
                 const firstCat = categoryMap.get(post.categories[0]);
                 if (firstCat) tagOrCategory = firstCat;
             }
 
-            const article: AntiCorruptionArticle = {
-                id: `ac-post-${post.id}`,
+            const article: StoriesArticle = {
+                id: `stories-post-${post.id}`,
                 href: post.link,
                 title: cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
-                source: 'The Fourth Estate',
-                section: 'anti-corruption',
-                // Index 0 → grande carte verticale (colonne gauche), autres → article standard
-                model: index === 0 ? 'article-vertical' : 'article',
-                type: 'article',
+                section: 'stories',
+                // Alterne story / story light comme dans le HTML de référence (index pair = light)
+                model: index % 2 === 0 ? 'story' : 'story light',
+                type: 'stories',
                 index: index + 1,
             };
 
@@ -429,8 +565,9 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
                 article.image = {
                     src: media.source_url,
                     srcSet: `${media.source_url} 2x`,
+                    // Dimensions portrait — format Stories
                     width: media.media_details?.width ?? 640,
-                    height: media.media_details?.height ?? 426,
+                    height: media.media_details?.height ?? 1138,
                     fetchPriority: index === 0 ? 'high' : 'auto',
                 };
             }
@@ -439,65 +576,7 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
         });
 
     } catch (error) {
-        console.error('Erreur wpApi [getAntiCorruptionArticles]:', error);
-        return [];
-    }
-}
-
-export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
-    try {
-        // Résoudre l'ID de la catégorie "our-impact" via son slug
-        // Une fois l'ID connu, remplacez par : const OUR_IMPACT_CATEGORY_ID = XXX;
-        const catRes = await fetch(
-            'https://thefourthestategh.com/wp-json/wp/v2/categories?slug=our-impact',
-            { next: { revalidate: 3600 } }
-        );
-        const categories: WPTerm[] = catRes.ok ? await catRes.json() : [];
-        const categoryId = categories[0]?.id ?? null;
-
-        const url = categoryId
-            ? `https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=6&categories=${categoryId}`
-            : `https://thefourthestategh.com/wp-json/wp/v2/posts?per_page=6`;
-
-        const res = await fetch(url, { next: { revalidate: 600 } });
-        if (!res.ok) return [];
-
-        const posts: WPPost[] = await res.json();
-        if (!posts.length) return [];
-
-        // Pas besoin de médias — cette zone n'affiche pas d'images
-        const categoryIds = Array.from(new Set(posts.flatMap(p => p.categories).filter(id => id > 0)));
-
-        const categoriesResults: WPTerm[] = categoryIds.length > 0
-            ? await fetch(`https://thefourthestategh.com/wp-json/wp/v2/categories?include=${categoryIds.join(',')}`)
-                .then(res => res.ok ? res.json() : [])
-                .catch(() => [])
-            : [];
-
-        const categoryMap = new Map<number, string>();
-        categoriesResults.forEach(c => categoryMap.set(c.id, c.name));
-
-        return posts.map((post, index) => {
-            let tagOrCategory = 'Our Impact';
-            if (post.categories.length > 0) {
-                const firstCat = categoryMap.get(post.categories[0]);
-                if (firstCat) tagOrCategory = firstCat;
-            }
-
-            return {
-                id: `oi-post-${post.id}`,
-                href: post.link,
-                title: cleanHtmlTitle(post.title.rendered),
-                tagOrCategory: cleanHtmlTitle(tagOrCategory),
-                section: 'our-impact' as const,
-                model: 'article' as const,
-                type: 'default' as const,
-                index: index + 1,
-            };
-        });
-
-    } catch (error) {
-        console.error('Erreur wpApi [getOurImpactArticles]:', error);
+        console.error('Erreur wpApi [getStoriesArticles]:', error);
         return [];
     }
 }
