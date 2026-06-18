@@ -2,6 +2,7 @@
 
 import { type ArticleData } from './types';
 import {Globe, Headphones} from "lucide-react";
+import Image from "next/image";
 
 interface ArticleCardProps {
     article: ArticleData;
@@ -48,7 +49,7 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
                 {article.image && (
                     <div className="item-image">
                         <picture>
-                            <img
+                            <Image
                                 src={article.image.src}
                                 srcSet={article.image.srcSet}
                                 width={article.image.width}

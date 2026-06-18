@@ -2,6 +2,7 @@
 
 import { type AntiCorruptionArticle } from './types';
 import { Globe, Headphones, Bookmark } from 'lucide-react';
+import Image from "next/image";
 
 interface AntiCorruptionCardProps {
     article: AntiCorruptionArticle;
@@ -38,7 +39,7 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
                 {article.image && (
                     <div className="item-image">
                         <picture>
-                            <img
+                            <Image
                                 src={article.image.src}
                                 srcSet={article.image.srcSet}
                                 width={article.image.width}

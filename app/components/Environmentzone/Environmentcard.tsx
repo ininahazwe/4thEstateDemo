@@ -2,6 +2,7 @@
 
 import { type EnvironmentArticle } from './Types';
 import { Globe, Headphones, Bookmark } from 'lucide-react';
+import Image from "next/image";
 
 interface EnvironmentCardProps {
     article: EnvironmentArticle;
@@ -39,7 +40,7 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                 {article.image && (
                     <div className="item-image">
                         <picture>
-                            <img
+                            <Image
                                 src={article.image.src}
                                 srcSet={article.image.srcSet}
                                 width={article.image.width}

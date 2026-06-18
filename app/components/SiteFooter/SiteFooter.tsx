@@ -8,6 +8,7 @@ import {
     type MagazineData
 } from './footerData';
 import Link from "next/link";
+import Image from "next/image";
 
 interface SiteFooterProps {
     // Optionnel : permet d'injecter dynamiquement les numéros de la semaine via votre API
@@ -170,10 +171,10 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                             <div className="footer-title">L’application mobile</div>
                             <div className="wrap">
                                 <a href="https://itunes.apple.com/fr/app/courrier-international-magazine/id921592832" className="app ithalc" data-ithalc="[cta_bloc_footer]" data-ithal="appios">
-                                    <img loading="lazy" src="/bucket/assets/19736043d5ae92f5521f862714cad251e792dfbf/img/icons/icon-appstore.png" alt="Télécharger sur l’AppStore" width="155" height="48" />
+                                    <Image loading="lazy" src="/bucket/assets/19736043d5ae92f5521f862714cad251e792dfbf/img/icons/icon-appstore.png" alt="Télécharger sur l’AppStore" width="155" height="48" />
                                 </a>
                                 <a href="https://play.google.com/store/apps/details?id=com.milibris.courrierinternationallemag&amp;hl=fr_FR" className="app ithalc" data-ithalc="[cta_bloc_footer]" data-ithal="appandroid">
-                                    <img loading="lazy" src="/bucket/assets/19736043d5ae92f5521f862714cad251e792dfbf/img/icons/icon-googleplay.png" alt="Télécharger sur GooglePlay" width="155" height="48" />
+                                    <Image loading="lazy" src="/bucket/assets/19736043d5ae92f5521f862714cad251e792dfbf/img/icons/icon-googleplay.png" alt="Télécharger sur GooglePlay" width="155" height="48" />
                                 </a>
                             </div>
                         </div>

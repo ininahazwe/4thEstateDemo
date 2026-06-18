@@ -2,6 +2,7 @@
 
 import { type GeneralNewsArticle } from './types';
 import { Globe, Headphones, Bookmark } from 'lucide-react';
+import Image from "next/image";
 
 interface GeneralNewsCardProps {
     article: GeneralNewsArticle;
@@ -43,7 +44,7 @@ export default function GeneralNewsCard({ article, index }: GeneralNewsCardProps
                 {article.image && (
                     <div className="item-image">
                         <picture>
-                            <img
+                            <Image
                                 src={article.image.src}
                                 srcSet={article.image.srcSet}
                                 width={article.image.width}
