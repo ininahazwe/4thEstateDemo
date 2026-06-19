@@ -7,7 +7,7 @@ interface ArticleAsideProps {
 
 export default function ArticleAside({ mostRead }: ArticleAsideProps) {
     return (
-        <aside className="article-aside" aria-label="Articles populaires">
+        <aside className="article-aside" data-column="right">
             <section aria-labelledby="most-read-title">
                 <p className="section-title" id="most-read-title">
                     Les plus lus

@@ -13,18 +13,16 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
     if (!items.length) return null;
 
     return (
-        <nav className="breadcrumb" aria-label="Fil d'Ariane">
-            <Link href="/">Accueil</Link>
+        <ul className="article-breadcrumbs">
             {items.map((item, i) => (
-                <span key={item.href} style={{ display: "contents" }}>
-                    <span className="breadcrumb-sep" aria-hidden="true">/</span>
+                <li className="item" key={item.href}>
                     {i === items.length - 1 ? (
                         <span aria-current="page">{item.label}</span>
                     ) : (
                         <Link href={item.href}>{item.label}</Link>
                     )}
-                </span>
+                </li>
             ))}
-        </nav>
+        </ul>
     );
 }

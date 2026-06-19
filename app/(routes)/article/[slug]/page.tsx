@@ -8,6 +8,7 @@ import ArticleAside from "@/app/components/Article/ArticleAside";
 import type { Metadata } from "next";
 import {getArticleBySlug, getMostReadArticles, getReadMoreArticles} from "@/app/services/wpApi.article";
 import ArticleMenu from "@/app/components/Article/ArticleMenu";
+import {Calendar, Clock, Headphones} from "lucide-react";
 
 interface ArticlePageProps {
     params: Promise<{ slug: string }>;
@@ -63,26 +64,43 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <div id="habillagepub" className="site-main-wrap">
                     <main className="site-main" id="site-main">
                         <article className="article" data-columns="2">
-                            <header className="article-header">
+                            <header className="article-header" data-column="full">
                                 <Breadcrumb items={breadcrumbs} />
                                 <ArticleHeader
                                     strapline={article.strapline}
                                     title={article.title}
-                                    lede={article.excerpt}
-                                    source={article.source ?? "Courrier international"}
-                                    readTime={article.readTime}
-                                    publishedAt={article.publishedAt}
-                                    imageUrl={article.featuredImage}
-                                    imageCaption={article.imageCaption}
-                                    imageCredit={article.imageCredit}
                                 />
+                                <p className="article-lede">{article.excerpt}</p>
+
+                                <div className="article-rule" aria-hidden="true" />
+
+                                <div className="article-metas">
+                                    <a className="article-source">
+                                        {article.source ?? "Courrier international"}
+                                    </a>
+                                    {article.readTime && (
+                                    <div className="article-infos">
+                                        <span className="info-time">
+                                            <Clock size={14} strokeWidth={2} aria-hidden="true" style={{marginRight: "4px"}}/>
+                                            {article.readTime}
+                                        </span>
+                                        <span className="info-date">
+                                            <Calendar size={14} strokeWidth={2} aria-hidden="true" style={{marginRight: "4px"}}/>
+                                            {article.publishedAt}
+                                        </span>
+                                    </div>
+                                    )}
+                                </div>
                             </header>
-                            {/*<ArticleBody*/}
-                            {/*    content={article.content}*/}
-                            {/*    relatedArticles={relatedArticles}*/}
-                            {/*    readMoreArticles={readMoreArticles}*/}
-                            {/*    tags={article.tags}*/}
-                            {/*/>*/}
+                            <ArticleBody
+                                content={article.content}
+                                featuredImage={article.featuredImage}
+                                imageCaption={article.imageCaption}
+                                imageCredit={article.imageCredit}
+                                relatedArticles={relatedArticles}
+                                readMoreArticles={readMoreArticles}
+                                tags={article.tags}
+                            />
                             <ArticleAside mostRead={mostRead} />
                         </article>
                     </main>

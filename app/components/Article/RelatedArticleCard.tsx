@@ -9,7 +9,7 @@ export default function RelatedArticleCard({
     isPremium,
 }: WpArticleCard) {
     return (
-        <article className="related-card">
+        <article className="item" data-model="article-vertical" data-type="default">
             <Link href={href}>
                 {image && (
                     <div className="related-card-img">
