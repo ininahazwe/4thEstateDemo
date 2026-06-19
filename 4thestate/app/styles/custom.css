@@ -1,0 +1,86 @@
+.zone-archives .wrap {
+    gap: 16px;
+}
+
+.zone-archives .wrap article.item {
+    margin-top: 0 !important;
+}
+
+.zone-stories .wrap article.item {
+    margin-top: 0 !important;
+}
+
+/*.zone-long-format .wrap {*/
+/*    gap: 16px;*/
+/*}*/
+
+.zone-long-format .wrap article.item {
+    margin-top: 0 !important;
+}
+
+.item-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;  /* ou la proportion que tu veux */
+    overflow: hidden;
+    display: block;
+}
+
+p.wp-block-paragraph{
+    margin-top: 1rem;
+}
+
+.wp-block-embed__wrapper{
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* Ratio 16:9 (calculé avec la formule : 9 / 16 * 100) */
+    height: 0;
+    overflow: hidden;
+    max-width: 800px; /* Optionnel : force une largeur maximale */
+    margin: 20px auto; /* Optionnel : centre la vidéo */
+}
+/* Forcer la taille de l'iframe dans le conteneur */
+.wp-block-embed__wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.pswp__custom-caption {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    text-align: center;
+    z-index: 100001; /* Doit être supérieur au z-index de pswp */
+}
+
+.wp-element-caption::before{
+    position: relative;
+    display: inline-flex;
+    width: 50px;
+    height: 1px;
+    margin-right: 12px;
+    padding-top: .75em;
+    content: '';
+    vertical-align: top;
+    border-bottom: 1px solid var(--sitePrimary);
+}
+
+.hero-socials .item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.footer-icon {
+    width: 20px;  /* Ajustez selon la taille voulue */
+    height: 20px;
+    fill: currentColor; /* Permet à l'icône de prendre la couleur du texte du lien */
+}

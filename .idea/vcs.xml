@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/4thestate" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Agenda" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Inventory-app" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/LeafletMap" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Memorial" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Tracker" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/crm-contacts" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dw-portfolio" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/event-registration-app" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/fourthestate-articles" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/iteka" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/kobo/mti-dashboard" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/mfwa-articles" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/mfwa-mti-backend" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/snacksApp" vcs="Git" />
+  </component>
+</project>
