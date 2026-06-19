@@ -1,0 +1,36 @@
+/* Caption en filigrane dans le modal PhotoSwipe, calée en bas, comme la figcaption au survol */
+.pswp__custom-caption {
+    background-color: #00000080;
+    bottom: 0;
+    color: #fff;
+    font-size: 14px;
+    left: 0;
+    line-height: 1.3;
+    padding: 8px;
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+    z-index: 10;
+}
+
+.pswp__custom-caption .wrap {
+    margin: 0 auto;
+    max-width: 800px;
+}
+
+.pswp__custom-caption .caption {
+    display: block;
+}
+
+.pswp__custom-caption .credit {
+    font-size: 12px;
+    text-transform: uppercase;
+    opacity: .8;
+}
+
+/* La caption suit le même cycle d'apparition/disparition que le reste de l'UI PhotoSwipe
+   (barre du haut, flèches) : visible par défaut à l'ouverture, peut se masquer/réapparaître
+   au mouvement de la souris si .pswp--ui-visible est piloté par PhotoSwipe lui-même. */
+.pswp__custom-caption:empty {
+    display: none;
+}

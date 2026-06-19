@@ -8,7 +8,8 @@ import ArticleAside from "@/app/components/Article/ArticleAside";
 import type { Metadata } from "next";
 import {getArticleBySlug, getMostReadArticles, getReadMoreArticles} from "@/app/services/wpApi.article";
 import ArticleMenu from "@/app/components/Article/ArticleMenu";
-import {Calendar, Clock, Headphones} from "lucide-react";
+import {Calendar, Clock} from "lucide-react";
+import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 
 interface ArticlePageProps {
     params: Promise<{ slug: string }>;
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     if (!article) return { title: "Article introuvable" };
 
     return {
-        title: `${article.title} — Courrier international`,
+        title: `${article.title} — The Fourth Estate`,
         description: article.excerpt,
         openGraph: {
             title: article.title,
@@ -38,21 +39,23 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
     // Tous les fetches secondaires en parallèle
     const [relatedArticles, readMoreArticles, mostRead] = await Promise.all([
-        // Grille "Sur le même sujet" en bas : même logique tags/catégorie
         getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 3),
-        // Encarts "À lire aussi" intercalés dans le texte : subset différent
         getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 3),
         getMostReadArticles(4),
     ]);
 
     const breadcrumbs = [
         ...(article.category
-            ? [{ label: article.category.name, href: `/categorie/${article.category.slug}` }]
+            ? [{ label: article.category.name, href: `/category/${article.category.slug}` }]
             : []),
         ...(article.country
-            ? [{ label: article.country.name, href: `/pays/${article.country.slug}` }]
+            ? [{ label: article.country.name, href: `/country/${article.country.slug}` }]
             : []),
     ];
+
+    const authorNames = article.authors.length
+        ? article.authors.map((a) => a.displayName).join(" | ")
+        : "The Fourth Estate";
 
     return (
         <>
@@ -69,6 +72,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                 <ArticleHeader
                                     strapline={article.strapline}
                                     title={article.title}
+                                    category={article.category}
                                 />
                                 <p className="article-lede">{article.excerpt}</p>
 
@@ -76,23 +80,25 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
                                 <div className="article-metas">
                                     <a className="article-source">
-                                        {article.source ?? "Courrier international"}
+                                        {authorNames}
                                     </a>
                                     {article.readTime && (
-                                    <div className="article-infos">
+                                        <div className="article-infos">
                                         <span className="info-time">
                                             <Clock size={14} strokeWidth={2} aria-hidden="true" style={{marginRight: "4px"}}/>
                                             {article.readTime}
                                         </span>
-                                        <span className="info-date">
+                                            <span className="info-date">
                                             <Calendar size={14} strokeWidth={2} aria-hidden="true" style={{marginRight: "4px"}}/>
-                                            {article.publishedAt}
+                                                {article.publishedAt}
                                         </span>
-                                    </div>
+                                        </div>
                                     )}
                                 </div>
                             </header>
                             <ArticleBody
+                                id={article.id}
+                                title={article.title}
                                 content={article.content}
                                 featuredImage={article.featuredImage}
                                 imageCaption={article.imageCaption}
@@ -100,12 +106,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                 relatedArticles={relatedArticles}
                                 readMoreArticles={readMoreArticles}
                                 tags={article.tags}
+                                authors={article.authors}
                             />
                             <ArticleAside mostRead={mostRead} />
                         </article>
                     </main>
                 </div>
             </div>
+
+            <p>KEHKEHKLEHJLKE</p>
+
+            <SubscriptionBanner />
 
             <SiteFooter />
         </>

@@ -1,5 +1,6 @@
 import ArticleCard from './ArticleCard';
 import { type ArticleData } from './types';
+import SpecialOfferBanner from "@/app/components/GeneralNews/SpecialOfferBanner";
 
 interface NewsZoneProps {
     zone1Articles: ArticleData[];
@@ -43,7 +44,7 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                     ))}
                 </div>
 
-                {/* COLONNE LATÉRALE (zone-2)
+                {/* COLONNE LATÉRALE (zone-2)*/}
                 <div className="zone-2" data-column="left">
                     {zone2Areas.map((area, areaIdx) => (
                         <div className="area" key={`z2-area-${areaIdx}`}>
@@ -56,7 +57,8 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                             ))}
                         </div>
                     ))}
-                </div>*/}
+                    <SpecialOfferBanner />
+                </div>
             </section>
     );
 }

@@ -1,6 +1,13 @@
 .article.expat {
     --sitePrimary:#1da1f2
 }
+.tools-list{
+    display: flex;
+}
+.tts.tts-stop{
+    padding: 22px 20px;
+    background-color: var(--siteBoxBackground)
+}
 .article .article-header {
     margin-bottom:32px
 }

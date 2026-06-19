@@ -101,12 +101,9 @@ export default function Header() {
 
                 {/* Zone Abonnement */}
                 <div className="header-hebdo">
-                    <a className="header-abo ithalc" href="https://fourthestate.free.nf" data-model="button"
-                       data-premium="" rel="nofollow" data-ithal="header_abo">
+                    <a className="header-abo ithalc" href="https://fourthestate.free.nf" data-model="button" data-premium="" rel="nofollow" data-ithal="header_abo">
                         Join Us
-                        <span style={{display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px'}}>
-              from 50ghs/mois
-            </span>
+                        <span style={{display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px'}}>from 50ghs/mois</span>
                     </a>
                 </div>
 

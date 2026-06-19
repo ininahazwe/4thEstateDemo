@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import {ClosedCaption, X} from "lucide-react"; // Assurez-vous d'utiliser le bon chemin selon votre version, généralement 'next/link'
+import {X} from "lucide-react";
 
 export default function SubscriptionBanner() {
     const [isVisible, setIsVisible] = useState(false);
@@ -50,7 +50,7 @@ export default function SubscriptionBanner() {
             <button
                 type="button"
                 className="banner-close ithalc"
-                title="Fermer bandeau abonnement"
+                title="Close subscription banner"
                 data-cookie-name={cookieName}
                 data-cookie-expiration="1"
                 data-ithalc="[cta_bloc]"
@@ -58,7 +58,7 @@ export default function SubscriptionBanner() {
                 onClick={handleClose}
             >
                 <X size={18} strokeWidth={2} aria-hidden="true" />
-                <span className="sr-only">Fermer bandeau abonnement</span>
+                <span className="sr-only">Close subscription banner</span>
             </button>
         </aside>
     );

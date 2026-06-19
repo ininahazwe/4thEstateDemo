@@ -1,5 +1,11 @@
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface WpArticleAuthor {
+    displayName: string;
+    slug: string;
+    avatarUrl?: string;
+}
+
 export interface WpArticle {
     id: number;
     slug: string;
@@ -8,6 +14,7 @@ export interface WpArticle {
     content: string;
     strapline?: string;
     source?: string;
+    authors: WpArticleAuthor[];
     readTime?: string;
     publishedAt: string;
     featuredImage?: string;
@@ -54,7 +61,7 @@ function formatDate(iso: string): string {
 function estimateReadTime(htmlContent: string): string {
     const words = stripHtml(htmlContent).split(/\s+/).length;
     const minutes = Math.max(1, Math.round(words / 200));
-    return `Lecture ${minutes} min.`;
+    return `Reading time ${minutes} min.`;
 }
 
 function buildArticleCard(post: Record<string, unknown>): WpArticleCard {
@@ -107,6 +114,7 @@ export async function getArticleBySlug(slug: string): Promise<WpArticle | null> 
         ) ?? [];
         const categoryTerms = allTerms[0] ?? [];
         const tagTerms = allTerms[1] ?? [];
+        const rawAuthors = (post.authors as Array<Record<string, unknown>>) ?? [];
 
         return {
             id: post.id as number,
@@ -116,6 +124,11 @@ export async function getArticleBySlug(slug: string): Promise<WpArticle | null> 
             content: (post.content as { rendered: string }).rendered,
             strapline: (acf.strapline as string) ?? undefined,
             source: (acf.source as string) ?? undefined,
+            authors: rawAuthors.map((a) => ({
+                displayName: a.display_name as string,
+                slug: a.slug as string,
+                avatarUrl: (a.avatar_url as string) ?? undefined,
+            })),
             readTime:
                 (acf.read_time as string) ??
                 estimateReadTime((post.content as { rendered: string }).rendered),
@@ -215,7 +228,7 @@ export async function getReadMoreArticles(
 export async function getMostReadArticles(count = 4): Promise<WpArticleCard[]> {
     try {
         const res = await fetch(
-            `${WP_API}/posts?per_page=${count}&orderby=comment_count&order=desc&_embed=1`,
+            `${WP_API}/posts?per_page=${count}&orderby=date&order=desc&_embed=1`,
             { next: { revalidate: 300 } }
         );
         if (!res.ok) return [];

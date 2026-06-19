@@ -5,6 +5,7 @@ import { type EnvironmentArticle }    from '../components/Environmentzone/Types'
 import { type AntiCorruptionArticle } from '../components/AntiCorruption/Types';
 import { type OurImpactArticle }      from '../components/Impact/Types';
 import {type StoriesArticle} from "../components/Stories/types";
+import {type HumanRightsArticle} from "../components/HumanRights/Types";
 
 
 // ---------------------------------------------------------------------------
@@ -21,6 +22,7 @@ interface WPPost {
     categories: number[];
     tags: number[];
     date: string;
+    status?: string; // présent sur requêtes authentifiées ; absent en public (déjà filtré par WP)
 }
 
 interface WPMedia {
@@ -125,7 +127,8 @@ function imagePriority(index: number): 'high' | 'auto' | 'low' {
 async function fetchPosts(url: string, revalidate = 600): Promise<WPPost[]> {
     const res = await fetch(url, { next: { revalidate } });
     if (!res.ok) return [];
-    return res.json();
+    const posts: WPPost[] = await res.json();
+    return posts.filter(p => !p.status || p.status === 'publish');
 }
 
 /**
@@ -213,7 +216,7 @@ function buildImage(media: WPMedia, index: number): NonNullable<ArticleData['ima
 
 export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[]; zone2: ArticleData[] }> {
     try {
-        const posts = await fetchPosts(`${WP_BASE}/posts?per_page=15`);
+        const posts = await fetchPosts(`${WP_BASE}/posts?per_page=15&status=publish`);
         if (!posts.length) return { zone1: [], zone2: [] };
 
         const { mediaIds, categoryIds, tagIds } = extractIds(posts);
@@ -271,7 +274,7 @@ export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[];
 
 export async function getLatestBannerArticles(): Promise<ArticleDataBanner[]> {
     try {
-        const posts = await fetchPosts(`${WP_BASE}/posts?per_page=4`, 300);
+        const posts = await fetchPosts(`${WP_BASE}/posts?per_page=4&status=publish`, 300);
         if (!posts.length) return [];
 
         const { categoryIds, tagIds } = extractIds(posts);
@@ -317,7 +320,7 @@ export async function getLatestBannerArticles(): Promise<ArticleDataBanner[]> {
 export async function getGeneralNewsArticles(perPage = 9): Promise<GeneralNewsArticle[]> {
     try {
         const posts = await fetchPosts(
-            `${WP_BASE}/posts?per_page=${perPage}&categories=${CATEGORY_IDS.generalNews}`
+            `${WP_BASE}/posts?per_page=${perPage}&categories=${CATEGORY_IDS.generalNews}&status=publish`
         );
         if (!posts.length) return [];
 
@@ -368,8 +371,8 @@ export async function getEnvironmentArticles(perPage = 6): Promise<EnvironmentAr
     try {
         const categoryId = await resolveCategoryId(CATEGORY_IDS.environment, 'environment');
         const url = categoryId
-            ? `${WP_BASE}/posts?per_page=${perPage}&categories=${categoryId}`
-            : `${WP_BASE}/posts?per_page=${perPage}`;
+            ? `${WP_BASE}/posts?per_page=${perPage}&categories=${categoryId}&status=publish`
+            : `${WP_BASE}/posts?per_page=${perPage}&status=publish`;
 
         const posts = await fetchPosts(url);
         if (!posts.length) return [];
@@ -421,8 +424,8 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
     try {
         const categoryId = await resolveCategoryId(CATEGORY_IDS.antiCorruption, 'anti-corruption');
         const url = categoryId
-            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}`
-            : `${WP_BASE}/posts?per_page=5`;
+            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish`
+            : `${WP_BASE}/posts?per_page=5&status=publish`;
 
         const posts = await fetchPosts(url);
         if (!posts.length) return [];
@@ -467,6 +470,59 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
 }
 
 // ---------------------------------------------------------------------------
+// getHumanRightArticles
+// ---------------------------------------------------------------------------
+
+export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
+    try {
+        const categoryId = await resolveCategoryId(CATEGORY_IDS.antiCorruption, 'human-right');
+        const url = categoryId
+            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish`
+            : `${WP_BASE}/posts?per_page=5&status=publish`;
+
+        const posts = await fetchPosts(url);
+        if (!posts.length) return [];
+
+        const { mediaIds, categoryIds } = extractIds(posts);
+
+        const [mediaMap, categoryMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
+        ]);
+
+        return posts.map((post, index) => {
+            const media = mediaMap.get(post.featured_media);
+
+            let tagOrCategory = 'Human-Right';
+            if (post.categories.length > 0) {
+                const cat = categoryMap.get(post.categories[0]);
+                if (cat) tagOrCategory = cat;
+            }
+
+            const article: AntiCorruptionArticle = {
+                id:            `ac-post-${post.id}`,
+                href:          buildHref(post),
+                title:         cleanHtmlTitle(post.title.rendered),
+                tagOrCategory: cleanHtmlTitle(tagOrCategory),
+                source:        'The Fourth Estate',
+                section:       'human-right',
+                model:         index === 0 ? 'article-vertical' : 'article',
+                type:          'article',
+                index:         index + 1,
+            };
+
+            if (media) article.image = buildImage(media, index);
+
+            return article;
+        });
+
+    } catch (error) {
+        console.error('Erreur wpApi [getHumanRightArticles]:', error);
+        return [];
+    }
+}
+
+// ---------------------------------------------------------------------------
 // getOurImpactArticles  (pas d'images dans cette zone)
 // ---------------------------------------------------------------------------
 
@@ -474,8 +530,8 @@ export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
     try {
         const categoryId = await resolveCategoryId(CATEGORY_IDS.ourImpact, 'our-impact');
         const url = categoryId
-            ? `${WP_BASE}/posts?per_page=6&categories=${categoryId}`
-            : `${WP_BASE}/posts?per_page=6`;
+            ? `${WP_BASE}/posts?per_page=6&categories=${categoryId}&status=publish`
+            : `${WP_BASE}/posts?per_page=6&status=publish`;
 
         const posts = await fetchPosts(url);
         if (!posts.length) return [];
@@ -512,13 +568,16 @@ export async function getStoriesArticles(perPage: number = 6): Promise<StoriesAr
     try {
         // Recherche par mot-clé "video" — équivalent de /?s=video
         const res = await fetch(
-            `https://thefourthestategh.com/wp-json/wp/v2/posts?search=video&per_page=${perPage}`,
+            `https://thefourthestategh.com/wp-json/wp/v2/posts?search=video&per_page=${perPage}&status=publish`,
             { next: { revalidate: 600 } }
         );
 
         if (!res.ok) return [];
 
-        const posts: WPPost[] = await res.json();
+        const rawPosts: WPPost[] = await res.json();
+        // Garde défensive : cet endpoint utilise un fetch direct (pas fetchPosts),
+        // donc le filtre status=publish n'est pas hérité automatiquement.
+        const posts = rawPosts.filter(p => !p.status || p.status === 'publish');
         if (!posts.length) return [];
 
         // Récupérer médias et catégories en parallèle

@@ -1,0 +1,109 @@
+#ci-banner-offre-spe {
+    display:block;
+    position:relative;
+    margin:40px auto 20px;
+    border-radius:var(--radius);
+    background-color:var(--sitePrimary);
+    overflow:hidden;
+}
+#ci-banner-offre-spe .bg {
+    position:absolute;
+    z-index:0;
+    top:0;
+    right:0;
+    height:100%;
+    width:auto;
+    pointer-events:none;
+}
+#ci-banner-offre-spe .wrap {
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:row;
+    align-items:flex-end;
+    justify-content:space-between;
+    padding:16px 0 0 16px;
+    text-decoration:none;
+    color:inherit;
+}
+#ci-banner-offre-spe .content {
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+    padding-bottom:16px;
+}
+#ci-banner-offre-spe .logo {
+    width:120px;
+    height:auto;
+    display:block;
+}
+#ci-banner-offre-spe .tag {
+    align-items:center;
+    border-radius:20px;
+    display:flex;
+    font-weight:700;
+    gap:6px;
+    justify-content:center;
+    line-height:1;
+    padding:8px 12px;
+    width:fit-content;
+    background-color:var(--sitePrincipal);
+    color:#fff;
+    font-size:12px;
+}
+#ci-banner-offre-spe .price {
+    font-family:var(--sans);
+    font-size:36px;
+    font-weight:bold;
+    line-height:1;
+    color:var(--sitePrincipal);
+    margin:0;
+}
+#ci-banner-offre-spe .baseline {
+    font-size:14px;
+    line-height:1.2;
+    color:#111;
+    margin:0;
+    max-width:220px;
+}
+#ci-banner-offre-spe [data-model^="button"] {
+    background-color:var(--sitePrincipal);
+    color:#fff;
+}
+#ci-banner-offre-spe .picto-abo {
+    flex-shrink:0;
+    display:block;
+    width:130px;
+    height:130px;
+    position:absolute;
+    right:12px;
+    bottom:2px;
+}
+@media screen and (max-width:340px) {
+    #ci-banner-offre-spe .picto-abo {
+        width:100px;
+        height:100px;
+    }
+}
+@media screen and (min-width:600px) {
+    #ci-banner-offre-spe .wrap {
+        padding:20px 0 0 24px;
+    }
+    #ci-banner-offre-spe .content {
+        padding-bottom:20px;
+    }
+    #ci-banner-offre-spe .price {
+        font-size:48px;
+    }
+    #ci-banner-offre-spe .baseline {
+        font-size:20px;
+        max-width:340px;
+    }
+    #ci-banner-offre-spe .picto-abo {
+        width:170px;
+        height:170px;
+        right:110px;
+        bottom:6px;
+    }
+}

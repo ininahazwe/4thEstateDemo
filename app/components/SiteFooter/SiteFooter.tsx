@@ -10,12 +10,30 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 
+// 1. Importation des icônes souhaitées depuis react-icons
+import {
+    FaFacebookF,
+    FaXTwitter,
+    FaInstagram,
+    FaLinkedinIn,
+    FaYoutube
+} from "react-icons/fa6";
+import { IoLogoRss } from "react-icons/io5";
+
 interface SiteFooterProps {
-    // Optionnel : permet d'injecter dynamiquement les numéros de la semaine via votre API
     magazines?: MagazineData[];
 }
 
-// Valeurs par défaut si l'API ne fournit pas encore les magazines de la semaine
+// 2. Dictionnaire de correspondance (Key -> Composant Icône)
+const iconMapping: Record<string, React.ComponentType<{ className?: string }>> = {
+    facebook: FaFacebookF,
+    twitter: FaXTwitter, // ou x-twitter selon votre clé dans footerData
+    instagram: FaInstagram,
+    linkedin: FaLinkedinIn,
+    youtube: FaYoutube,
+    rss: IoLogoRss
+};
+
 const defaultMagazines: MagazineData[] = [
     {
         className: 'hebdo',
@@ -52,7 +70,7 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                 {/* HERO SECTION : Logo & Réseaux Sociaux */}
                 <div className="footer-hero">
                     <div className="hero-logo">
-                        <Link href="/" title="Retour à l’accueil Courrier international">
+                        <Link href="/" title="Retour à l’accueil The Fourth Estate">
                             <Image
                                 src="/assets/img/logo.svg"
                                 alt="The Fourth Estate Logo"
@@ -63,23 +81,35 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                         </Link>
                     </div>
                     <div className="hero-socials">
-                        {socialLinks.map((social, index) => (
-                            <a
-                                key={index}
-                                href={social.href}
-                                target="_blank"
-                                rel="noopener"
-                                className="item"
-                                title={social.title}
-                                data-icon={social.icon}
-                            >
-                                <span className="sr-only">{social.title}</span>
-                            </a>
-                        ))}
+                        {socialLinks.map((social, index) => {
+                            // 3. Récupération dynamique de l'icône associée
+                            const IconComponent = iconMapping[social.icon.toLowerCase()];
+
+                            return (
+                                <a
+                                    key={index}
+                                    href={social.href}
+                                    target="_blank"
+                                    rel="noopener"
+                                    className="item"
+                                    title={social.title}
+                                    // Optionnel : gardez data-icon si vos anciens sélecteurs CSS globaux en ont besoin
+                                    data-icon={social.icon}
+                                >
+                                    {/* Rendu de l'icône avec une classe CSS pour l'ajuster si nécessaire */}
+                                    {IconComponent ? (
+                                        <IconComponent className="footer-icon" />
+                                    ) : (
+                                        <span className="icon-fallback">★</span>
+                                    )}
+                                    <span className="sr-only">{social.title}</span>
+                                </a>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* CTAs SECTION : Blocs de liens et magazines */}
+                {/* CTAs SECTION */}
                 <div className="footer-ctas">
                     <nav className="footer-links">
 
@@ -121,7 +151,7 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                             ))}
                         </div>
 
-                        {/* Colonne 3 : Aide & Liens Légaux */}
+                        {/* Colonne 3 : Aide & Liens Liens Légaux */}
                         <div className={sectionsLegals.boxClass}>
                             <span className="footer-title">{sectionsLegals.title}</span>
                             {sectionsLegals.links.map((link, idx) => (

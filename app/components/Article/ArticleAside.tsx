@@ -8,28 +8,25 @@ interface ArticleAsideProps {
 export default function ArticleAside({ mostRead }: ArticleAsideProps) {
     return (
         <aside className="article-aside" data-column="right">
-            <section aria-labelledby="most-read-title">
-                <p className="section-title" id="most-read-title">
-                    Les plus lus
-                </p>
-                <ol className="most-read-list">
+            <section className="forecast-top-articles">
+                <div className="section-title" id="most-read-title">
+                    Most Read Stories
+                </div>
+                <div className="wrap">
                     {mostRead.map((item, i) => (
-                        <li key={item.id} className="most-read-item">
-                            <span className="most-read-index" aria-hidden="true">
-                                {i + 1}
-                            </span>
-                            <Link href={item.href} style={{ flex: 1 }}>
-                                {item.isPremium && (
-                                    <span className="badge-premium">Abonnés</span>
-                                )}
-                                {item.strapline && (
-                                    <p className="most-read-strapline">{item.strapline}</p>
-                                )}
-                                <p className="most-read-title">{item.title}</p>
+                        <article key={item.id} className="item" data-model="article" data-type="default" data-index={i + 1}>
+                            <Link href={item.href} style={{flex: 1}}>
+                                <div className="item-text">
+                                    <div className="heading">
+                                        <p className="most-read-title">{item.category && (
+                                            <span className="strapline">{item.category}</span>
+                                        )}{item.title}</p>
+                                    </div>
+                                </div>
                             </Link>
-                        </li>
+                        </article>
                     ))}
-                </ol>
+                </div>
             </section>
         </aside>
     );

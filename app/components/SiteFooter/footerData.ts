@@ -99,7 +99,7 @@ export const sectionsLegals: FooterSection = {
         { label: "Mentions légales", href: "https://www.courrierinternational.com/page/mentions-legales" },
         { label: "Politique de\u00A0confidentialité", href: "https://www.courrierinternational.com/page/donnees-personnelles" },
         { label: "Paramétrer les cookies", href: "#", className: "gdpr-cs-parameters-link" },
-        { label: "Agence Courrier international", href: "https://www.courrierinternational.com/page/agence-courrier" },
+        { label: "Agence The Fourth Estate", href: "https://www.courrierinternational.com/page/agence-courrier" },
         { label: "Nos partenaires", href: "https://www.courrierinternational.com/page/partenaires" },
         { label: "Annonceurs", href: "https://www.courrierinternational.com/page/publicite" },
         { label: "Contact", href: "https://www.courrierinternational.com/page/contact" },

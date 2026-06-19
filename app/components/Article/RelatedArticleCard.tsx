@@ -2,25 +2,26 @@ import Link from "next/link";
 import {WpArticleCard} from "@/app/services/wpApi.article";
 
 export default function RelatedArticleCard({
-    strapline,
+    category,
     title,
     href,
     image,
-    isPremium,
 }: WpArticleCard) {
     return (
         <article className="item" data-model="article-vertical" data-type="default">
             <Link href={href}>
                 {image && (
-                    <div className="related-card-img">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={image} alt="" loading="lazy" />
+                    <div className="item-image">
+                        <picture>
+                            <img src={image} alt="" loading="lazy" />
+                        </picture>
                     </div>
                 )}
-                <div className="related-card-body">
-                    {isPremium && <span className="badge-premium">Abonnés</span>}
-                    {strapline && <p className="related-card-strapline">{strapline}</p>}
-                    <p className="related-card-title">{title}</p>
+                <div className="item-text">
+                    <div className="heading">
+                        <p className="title">{category && <span className="strapline">{category}. </span>}
+                        {title}</p>
+                    </div>
                 </div>
             </Link>
         </article>

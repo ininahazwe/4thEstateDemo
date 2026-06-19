@@ -19,7 +19,8 @@
     --live-essential:#ef1a42;
     --stories:#00dbff;
     --storiesText:#000;
-    --puzzle:#00fa9a;
+    --puzzle:#e594a6;
+    --bleufonce:#003049;
     --agenceSiteBackground:#fcf8ff;
     --agenceSecondary:#5c6972;
     --agenceSecondaryText:#fff;
@@ -49,7 +50,8 @@
     --pictoY2B:var(--pictoFond);
     --pictoY2W:var(--pictoFond);
     --pictoY2T:var(--pictoFond);
-    --sitePrimary:#ff7d24;
+    --sitePrimary:#c0c0c0;
+    --sitePrincipal:#6d2929;
     --siteAbo:#ffde00;
     --siteAboRGB:255,222,0;
     --siteAboText:#111;
@@ -910,7 +912,8 @@ img {
     box-shadow:0 4px 4px -4px var(--siteBoxShadow);
     color:var(--siteText);
     cursor:pointer;
-    display:inline-block;
+    display:inline-flex;
+    align-items: center;
     font-family:var(--sans);
     font-size:14px;
     font-weight:600;
@@ -1193,7 +1196,7 @@ html:not(.v-app) [data-model^=article]:hover {
     display:inline
 }
 [data-model^=article] .item-text .strapline {
-    background:var(--sitePrimary);
+    background:#6d2929;
     background-clip:text;
     -webkit-text-fill-color:#0000;
     padding-right: 4px;
@@ -1918,7 +1921,9 @@ label.item-action input:not(:checked)~span[data-icon=toggle-large-off] {
     overflow:hidden;
     padding:10px 12px;
     position:relative;
-    text-overflow:ellipsis
+    text-overflow:ellipsis;
+    display: flex;
+    flex-direction: column;
 }
 .site-header .header-abo .normal {
     font-weight:400
@@ -2166,7 +2171,7 @@ label.item-action input:not(:checked)~span[data-icon=toggle-large-off] {
 .site-banner .banner-hot-articles {
     scrollbar-width:none;
     -ms-overflow-style:none;
-    background-color:#171d25;
+    background-color:#6d2929;
     color:#fff;
     overflow:auto
 }
