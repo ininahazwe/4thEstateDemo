@@ -1,12 +1,10 @@
-'use client';
-
 import {
     socialLinks,
-    sectionsTags,
     sectionsGroup,
     sectionsLegals,
     type MagazineData
 } from './footerData';
+import { getTopCategories } from '../../services/wpApi';
 import Link from "next/link";
 import Image from "next/image";
 
@@ -57,11 +55,9 @@ const defaultMagazines: MagazineData[] = [
     }
 ];
 
-export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterProps) {
+export default async function SiteFooter({ magazines = defaultMagazines }: SiteFooterProps) {
 
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-        e.currentTarget.classList.add('img--error');
-    };
+    const topCategories = await getTopCategories(10);
 
     return (
         <footer id="site-footer" className="site-footer">
@@ -70,7 +66,7 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                 {/* HERO SECTION : Logo & Réseaux Sociaux */}
                 <div className="footer-hero">
                     <div className="hero-logo">
-                        <Link href="/" title="Retour à l’accueil The Fourth Estate">
+                        <Link href="/" title="Back to The Fourth Estate homepage">
                             <Image
                                 src="/assets/img/logo.svg"
                                 alt="The Fourth Estate Logo"
@@ -97,10 +93,8 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                                     data-icon={social.icon}
                                 >
                                     {/* Rendu de l'icône avec une classe CSS pour l'ajuster si nécessaire */}
-                                    {IconComponent ? (
+                                    {IconComponent && (
                                         <IconComponent className="footer-icon" />
-                                    ) : (
-                                        <span className="icon-fallback">★</span>
                                     )}
                                     <span className="sr-only">{social.title}</span>
                                 </a>
@@ -113,42 +107,44 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                 <div className="footer-ctas">
                     <nav className="footer-links">
 
-                        {/* Colonne 1 : Nos Rubriques */}
-                        <div className={sectionsTags.boxClass}>
-                            <span className="footer-title">{sectionsTags.title}</span>
-                            {sectionsTags.links.map((link, idx) => (
+                        {/* Colonne 1 : Topics (catégories les plus actives, via l'API) */}
+                        <div className="links-box links-tags">
+                            <span className="footer-title">Topics</span>
+                            {topCategories.map((cat) => (
                                 <a
-                                    key={idx}
-                                    href={link.href}
+                                    key={cat.id}
+                                    href={cat.href}
                                     className="item ithalc"
                                     data-ithalc="[cta_bloc_footer]"
-                                    data-ithal={link.ithal}
+                                    data-ithal={cat.ithal}
                                 >
-                                    {link.label}
+                                    {cat.label}
                                 </a>
                             ))}
                         </div>
 
                         {/* Colonne 2 : Groupe (Rendez-vous + Sites) */}
                         <div className="group">
-                            {sectionsGroup.map((section, sIdx) => (
-                                <div className={section.boxClass} key={sIdx}>
-                                    <span className="footer-title">{section.title}</span>
-                                    {section.links.map((link, idx) => (
-                                        <a
-                                            key={idx}
-                                            href={link.href}
-                                            target={link.target}
-                                            rel={link.rel}
-                                            className="item ithalc"
-                                            data-ithalc="[cta_bloc_footer]"
-                                            data-ithal={link.ithal}
-                                        >
-                                            {link.label}
-                                        </a>
-                                    ))}
-                                </div>
-                            ))}
+                            <div className="links-box links-services">
+                                <span className="footer-title">Highlights</span>
+                                {sectionsGroup.map((section, sIdx) => (
+                                    <div className={section.boxClass} key={sIdx}>
+                                        {section.links.map((link, idx) => (
+                                            <a
+                                                key={idx}
+                                                href={link.href}
+                                                target={link.target}
+                                                rel={link.rel}
+                                                className="item ithalc"
+                                                data-ithalc="[cta_bloc_footer]"
+                                                data-ithal={link.ithal}
+                                            >
+                                                {link.label}
+                                            </a>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Colonne 3 : Aide & Liens Liens Légaux */}
@@ -189,7 +185,6 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                                                     width={mag.width}
                                                     height={mag.height}
                                                     alt={mag.alt}
-                                                    onError={handleImageError}
                                                 />
                                             </picture>
                                         </figure>
@@ -199,14 +194,10 @@ export default function SiteFooter({ magazines = defaultMagazines }: SiteFooterP
                         </div>
 
                         <div className="away-apps">
-                            <div className="footer-title">L’application mobile</div>
+                            <div className="footer-title">Mobile app</div>
                             <div className="wrap">
-                                <a href="https://itunes.apple.com/fr/app/courrier-international-magazine/id921592832" className="app ithalc" data-ithalc="[cta_bloc_footer]" data-ithal="appios">
-
-                                </a>
-                                <a href="https://play.google.com/store/apps/details?id=com.milibris.courrierinternationallemag&amp;hl=fr_FR" className="app ithalc" data-ithalc="[cta_bloc_footer]" data-ithal="appandroid">
-
-                                </a>
+                                <a href="https://itunes.apple.com/fr/app/courrier-international-magazine/id921592832" className="app ithalc" data-ithalc="[cta_bloc_footer]" data-ithal="appios"></a>
+                                <a href="https://play.google.com/store/apps/details?id=com.milibris.courrierinternationallemag&hl=fr_FR" className="app ithalc" data-ithalc="[cta_bloc_footer]" data-ithal="appandroid"></a>
                             </div>
                         </div>
                     </div>

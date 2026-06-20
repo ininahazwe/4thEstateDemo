@@ -6,7 +6,8 @@ import {
     getAntiCorruptionArticles,
     getEnvironmentArticles,
     getFourthEstateArticles,
-    getGeneralNewsArticles, getHumanRightArticles,
+    getGeneralNewsArticles,
+    getHumanRightArticles,
     getLatestBannerArticles,
     getOurImpactArticles,
     getStoriesArticles
@@ -18,6 +19,8 @@ import AntiCorruptionZone from "@/app/components/AntiCorruption/Corruptionzone";
 import OurImpactZone from "@/app/components/Impact/ImpactZone";
 import StoriesZone from "@/app/components/Stories/Storieszone";
 import HumanRightsZone from "@/app/components/HumanRights/HumanRightZone";
+import TikTokStoriesSlider from "@/app/components/VideoSlider/TikTokStoriesSlider";
+
 
 export default async function App() {
     // Récupération automatique et asynchrone des articles en direct de l'API de The Fourth Estate
@@ -61,7 +64,9 @@ export default async function App() {
 
                             <HumanRightsZone articles={humanRightsNews} />
 
-                            <StoriesZone articles={storiesNews} />
+                            <TikTokStoriesSlider />
+
+                            {/*<StoriesZone articles={storiesNews} />*/}
 
                             <AntiCorruptionZone articles={antiCorruptionNews} />
 

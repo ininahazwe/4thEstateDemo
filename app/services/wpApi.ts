@@ -36,6 +36,18 @@ interface WPTerm {
     name: string;
 }
 
+interface WPCategoryWithCount extends WPTerm {
+    slug: string;
+    count: number;
+}
+
+export interface FooterCategory {
+    id: number;
+    label: string;
+    href: string;
+    ithal: string;
+}
+
 // ---------------------------------------------------------------------------
 // Configuration centrale
 // ---------------------------------------------------------------------------
@@ -51,9 +63,10 @@ const CATEGORY_IDS = {
     politique:      3    as number,
     economie:       5    as number,
     generalNews:    109  as number,
-    environment:    null as number | null, // ⚠️ à renseigner
-    antiCorruption: null as number | null, // ⚠️ à renseigner
-    ourImpact:      null as number | null, // ⚠️ à renseigner
+    environment:    131  as number,
+    antiCorruption: 111  as number,
+    humanRight:     121  as number,
+    ourImpact:      229  as number,
 };
 
 /**
@@ -475,7 +488,7 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
 
 export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
     try {
-        const categoryId = await resolveCategoryId(CATEGORY_IDS.antiCorruption, 'human-right');
+        const categoryId = await resolveCategoryId(CATEGORY_IDS.humanRight, 'human-right');
         const url = categoryId
             ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish`
             : `${WP_BASE}/posts?per_page=5&status=publish`;
@@ -499,8 +512,8 @@ export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
                 if (cat) tagOrCategory = cat;
             }
 
-            const article: AntiCorruptionArticle = {
-                id:            `ac-post-${post.id}`,
+            const article: HumanRightsArticle = {
+                id:            `hr-post-${post.id}`,
                 href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
@@ -642,6 +655,39 @@ export async function getStoriesArticles(perPage: number = 6): Promise<StoriesAr
 
     } catch (error) {
         console.error('Erreur wpApi [getStoriesArticles]:', error);
+        return [];
+    }
+}
+
+// ---------------------------------------------------------------------------
+// getTopCategories
+// ---------------------------------------------------------------------------
+
+/**
+ * Retourne les catégories ayant le plus d'articles publiés (champ `count`
+ * natif de l'API WP, déjà calculé côté serveur — aucun scan de posts requis).
+ * `hide_empty=true` exclut les catégories vides ; `orderby=count&order=desc`
+ * trie par popularité décroissante.
+ */
+export async function getTopCategories(limit = 10): Promise<FooterCategory[]> {
+    try {
+        const res = await fetch(
+            `${WP_BASE}/categories?orderby=count&order=desc&hide_empty=true&per_page=${limit}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!res.ok) return [];
+
+        const cats: WPCategoryWithCount[] = await res.json();
+
+        return cats.map(cat => ({
+            id:    cat.id,
+            label: cat.name,
+            href:  `/category/${cat.slug}`,
+            ithal: cat.slug,
+        }));
+
+    } catch (error) {
+        console.error('Erreur wpApi [getTopCategories]:', error);
         return [];
     }
 }
