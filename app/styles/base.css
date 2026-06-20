@@ -24,7 +24,7 @@
     --agenceSiteBackground:#fcf8ff;
     --agenceSecondary:#5c6972;
     --agenceSecondaryText:#fff;
-    --logoExpat:url(/dist/assets/img/logos/logoExpat-light.svg?v1);
+    /*--logoExpat:url(/dist/assets/img/logos/logoExpat-light.svg?v1);*/
     --logoFond:#ffde00;
     --logoTexte:#111;
     --logoGlobe:#111;
@@ -133,7 +133,7 @@
         --agenceSiteBackground:#364954;
         --agenceSecondary:#eee;
         --agenceSecondaryText:#222;
-        --logoExpat:url(/dist/assets/img/logos/logoExpat-dark.svg?v1);
+        /*--logoExpat:url(/dist/assets/img/logos/logoExpat-dark.svg?v1);*/
         --logoGoogle:#fff;
         --logoFond:none;
         --logoTexte:#fff;
@@ -189,7 +189,7 @@
     --agenceSiteBackground:#364954;
     --agenceSecondary:#eee;
     --agenceSecondaryText:#222;
-    --logoExpat:url(/dist/assets/img/logos/logoExpat-dark.svg?v1);
+    /*--logoExpat:url(/dist/assets/img/logos/logoExpat-dark.svg?v1);*/
     --logoGoogle:#fff;
     --logoFond:none;
     --logoTexte:#fff;
@@ -858,25 +858,25 @@ img {
 }
 [data-icon-after=weekend]:after,
 [data-icon-before=weekend]:before,
-[data-icon=weekend]:before {
+/*[data-icon=weekend]:before {
     background-image:url(/dist/assets/img/logos/weekend-favicon.svg)
-}
+}*/
 [data-icon-after=reveil2]:after,
 [data-icon-before=reveil2]:before,
-[data-icon=reveil2]:before {
+/*[data-icon=reveil2]:before {
     background-image:url(/dist/assets/img/logos/newsletters/reveil.svg)
-}
+}*/
 [data-icon-after=app]:after,
 [data-icon-before=app]:before,
-[data-icon=app]:before {
+/*[data-icon=app]:before {
     background-image:url(/dist/assets/img/logos/newsletters/app-fav.svg)
-}
-[data-icon=hebdo]:before {
+}*/
+/*[data-icon=hebdo]:before {
     background-image:url(/dist/assets/img/logos/newsletters/hebdo.svg)
-}
+}*/
 [data-icon-after=stories]:after,
 [data-icon-before=stories]:before,
-[data-icon=stories]:before {
+/*[data-icon=stories]:before {
     background-image:url(/dist/assets/img/logos/newsletters/stories-fav.svg)
 }
 [data-icon=daily]:before {
@@ -905,7 +905,7 @@ img {
 }
 [data-icon=climatiques]:before {
     background-image:url(/dist/assets/img/logos/newsletters/climatiques.svg)
-}
+}*/
 [data-model^=button] {
     appearance:none;
     background-color:var(--siteBoxBackground);
@@ -3042,7 +3042,7 @@ html[class*=page-article-campaign][class*=preview] .site-header .header-logo:bef
         bottom:0!important;
         height:auto!important;
         left:0!important;
-        min-width:none!important;
+        /*min-width:none!important;*/
         position:absolute!important;
         right:0!important;
         top:0!important;
