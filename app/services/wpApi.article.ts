@@ -67,13 +67,19 @@ const WP_API = process.env.NEXT_PUBLIC_WP_API_URL ?? "https://thefourthestategh.
 
 async function fetchMediaBatch(ids: number[]): Promise<Map<number, WPMedia>> {
     const map = new Map<number, WPMedia>();
-    const cleanIds = Array.from(new Set(ids.filter(id => id > 0)));
-    if (!cleanIds.length) return map;
+    // On ne garde que les ID strictement supérieurs à 0
+    const cleanIds = Array.from(new Set(ids.filter(id => id && id > 0)));
+
+    // SÉCURITÉ CRITIQUE : Si aucun ID valide, on ne contacte JAMAIS WordPress
+    if (cleanIds.length === 0) return map;
+
     try {
         const res = await fetch(`${WP_API}/media?include=${cleanIds.join(",")}&per_page=100`, { next: { revalidate: 600 } });
         if (res.ok) {
             const medias: WPMedia[] = await res.json();
-            medias.forEach(m => map.set(m.id, m));
+            if (Array.isArray(medias)) {
+                medias.forEach(m => map.set(m.id, m));
+            }
         }
     } catch {}
     return map;
@@ -81,13 +87,17 @@ async function fetchMediaBatch(ids: number[]): Promise<Map<number, WPMedia>> {
 
 async function fetchCategoryBatch(ids: number[]): Promise<Map<number, WPTerm>> {
     const map = new Map<number, WPTerm>();
-    const cleanIds = Array.from(new Set(ids.filter(id => id > 0)));
-    if (!cleanIds.length) return map;
+    const cleanIds = Array.from(new Set(ids.filter(id => id && id > 0)));
+
+    if (cleanIds.length === 0) return map; // SÉCURITÉ CRITIQUE
+
     try {
         const res = await fetch(`${WP_API}/categories?include=${cleanIds.join(",")}&per_page=100`, { next: { revalidate: 3600 } });
         if (res.ok) {
             const cats: WPTerm[] = await res.json();
-            cats.forEach(c => map.set(c.id, c));
+            if (Array.isArray(cats)) {
+                cats.forEach(c => map.set(c.id, c));
+            }
         }
     } catch {}
     return map;
@@ -95,13 +105,17 @@ async function fetchCategoryBatch(ids: number[]): Promise<Map<number, WPTerm>> {
 
 async function fetchTagBatch(ids: number[]): Promise<Map<number, WPTerm>> {
     const map = new Map<number, WPTerm>();
-    const cleanIds = Array.from(new Set(ids.filter(id => id > 0)));
-    if (!cleanIds.length) return map;
+    const cleanIds = Array.from(new Set(ids.filter(id => id && id > 0)));
+
+    if (cleanIds.length === 0) return map; // SÉCURITÉ CRITIQUE
+
     try {
         const res = await fetch(`${WP_API}/tags?include=${cleanIds.join(",")}&per_page=100`, { next: { revalidate: 3600 } });
         if (res.ok) {
             const tags: WPTerm[] = await res.json();
-            tags.forEach(t => map.set(t.id, t));
+            if (Array.isArray(tags)) {
+                tags.forEach(t => map.set(t.id, t));
+            }
         }
     } catch {}
     return map;
@@ -109,13 +123,17 @@ async function fetchTagBatch(ids: number[]): Promise<Map<number, WPTerm>> {
 
 async function fetchUsersBatch(ids: number[]): Promise<Map<number, WPUser>> {
     const map = new Map<number, WPUser>();
-    const cleanIds = Array.from(new Set(ids.filter(id => id > 0)));
-    if (!cleanIds.length) return map;
+    const cleanIds = Array.from(new Set(ids.filter(id => id && id > 0)));
+
+    if (cleanIds.length === 0) return map; // SÉCURITÉ CRITIQUE
+
     try {
         const res = await fetch(`${WP_API}/users?include=${cleanIds.join(",")}&per_page=100`, { next: { revalidate: 3600 } });
         if (res.ok) {
             const users: WPUser[] = await res.json();
-            users.forEach(u => map.set(u.id, u));
+            if (Array.isArray(users)) {
+                users.forEach(u => map.set(u.id, u));
+            }
         }
     } catch {}
     return map;
