@@ -17,6 +17,9 @@ interface ArticlePageProps {
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
     const { slug } = await params;
+    // getArticleBySlug est enveloppé dans React.cache() : cet appel et celui
+    // dans ArticlePage() ci-dessous partagent le même résultat — un seul
+    // fetch réseau pour les deux, au lieu de deux fetches identiques.
     const article = await getArticleBySlug(slug);
     if (!article) return { title: "Article introuvable" };
 
@@ -34,15 +37,20 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 export default async function ArticlePage({ params }: ArticlePageProps) {
     const { slug } = await params;
 
+    // Même fetch que dans generateMetadata — dédupliqué automatiquement par React.cache()
     const article = await getArticleBySlug(slug);
     if (!article) notFound();
 
-    // Tous les fetches secondaires en parallèle
-    const [relatedArticles, readMoreArticles, mostRead] = await Promise.all([
-        getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 3),
+    // Tous les fetches secondaires en parallèle.
+    // Le doublon getReadMoreArticles/getReadMoreArticles a été supprimé :
+    // readMoreArticles et relatedArticles utilisaient les MÊMES arguments,
+    // ce qui doublait inutilement le travail (jusqu'à 2 fetches WordPress en plus).
+    // On réutilise maintenant le même résultat pour les deux usages.
+    const [readMoreArticles, mostRead] = await Promise.all([
         getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 3),
         getMostReadArticles(4),
     ]);
+    const relatedArticles = readMoreArticles;
 
     const breadcrumbs = [
         ...(article.category
@@ -113,8 +121,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     </main>
                 </div>
             </div>
-
-            <p>KEHKEHKLEHJLKE</p>
 
             <SubscriptionBanner />
 
