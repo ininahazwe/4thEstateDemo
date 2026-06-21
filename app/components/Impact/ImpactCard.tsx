@@ -1,6 +1,6 @@
 'use client';
 
-import { type OurImpactArticle } from './types';
+import { type OurImpactArticle } from './Types';
 
 interface OurImpactCardProps {
     article: OurImpactArticle;
