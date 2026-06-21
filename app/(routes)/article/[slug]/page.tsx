@@ -11,8 +11,38 @@ import ArticleMenu from "@/app/components/Article/ArticleMenu";
 import { Calendar, Clock } from "lucide-react";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 
+const WP_API =
+    process.env.NEXT_PUBLIC_WP_API_URL ?? "https://thefourthestategh.com/wp-json/wp/v2";
+
 interface ArticlePageProps {
     params: Promise<{ slug: string }>;
+}
+
+/**
+ * Pré-génère les pages des articles existants au moment du build/déploiement.
+ * Ces pages deviennent statiques et sont servies depuis le CDN — temps de
+ * chargement quasi nul, peu importe qui visite en premier.
+ *
+ * Seuls les articles publiés APRÈS ce déploiement ne sont pas couverts : ils
+ * passent par le chemin normal (rendu à la demande + cache ISR de 600s sur
+ * getArticleBySlug), donc un premier visiteur sur un article tout neuf
+ * connaîtra encore un chargement plus lent — c'est attendu et limité aux
+ * articles très récents.
+ *
+ * _fields=slug réduit la réponse WordPress au strict minimum (juste le slug),
+ * évite de transférer titre/contenu/médias pour une liste qui n'en a pas besoin.
+ */
+export async function generateStaticParams() {
+    try {
+        const res = await fetch(`${WP_API}/posts?per_page=100&_fields=slug&status=publish`);
+        if (!res.ok) return [];
+        const posts = (await res.json()) as Array<{ slug: string }>;
+        return posts.map((post) => ({ slug: post.slug }));
+    } catch {
+        // En cas d'échec, Next.js retombe sur le rendu à la demande pour
+        // chaque slug — pas d'interruption du build.
+        return [];
+    }
 }
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
@@ -39,7 +69,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     const article = await getArticleBySlug(slug);
     if (!article) notFound();
 
-    // Lancement simultané des requêtes secondaires (Désormais ultra-rapides grâce à la suppression de _embed=1)
+    // Lancement simultané des requêtes secondaires
     const [readMoreArticles, mostRead] = await Promise.all([
         getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 3),
         getMostReadArticles(4),

@@ -98,13 +98,18 @@ function buildArticleCard(post: Record<string, unknown>): WpArticleCard {
  * appellent getArticleBySlug(slug) durant le même rendu serveur, le fetch
  * réseau n'est exécuté QU'UNE FOIS — le second appel reçoit le résultat
  * déjà résolu en mémoire. Élimine un fetch WordPress redondant à chaque
- * chargement de page article (gain potentiel de 1-2s).
+ * chargement de page article.
  */
 export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | null> => {
     try {
         const res = await fetch(
             `${WP_API}/posts?slug=${encodeURIComponent(slug)}&_embed=1`,
-            { next: { revalidate: 60 } }
+            // revalidate passé de 60s à 600s : le contenu éditorial change rarement
+            // après publication, donc une fenêtre de cache plus longue réduit la
+            // fréquence des "cache miss" qui déclenchent le fetch réseau lent
+            // (Frankfort ↔ Ghana). Un article déjà visité reste donc rapide
+            // beaucoup plus longtemps qu'avant.
+            { next: { revalidate: 600 } }
         );
         if (!res.ok) return null;
 
