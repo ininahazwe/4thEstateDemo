@@ -24,14 +24,29 @@ import TikTokStoriesSlider from "@/app/components/VideoSlider/TikTokStoriesSlide
 
 export default async function App() {
     // Récupération automatique et asynchrone des articles en direct de l'API de The Fourth Estate
-    const { zone1, zone2 } = await getFourthEstateArticles();
-    const articles = await getLatestBannerArticles();
-    const generalNews = await getGeneralNewsArticles(3);
-    const environmentlNews = await getEnvironmentArticles(3);
-    const antiCorruptionNews = await getAntiCorruptionArticles();
-    const impactNews = await getOurImpactArticles();
-    const storiesNews = await getStoriesArticles();
-    const humanRightsNews = await getHumanRightArticles();
+    //
+    // Avant : 8 appels séquentiels (chaque await bloque le suivant). Aucune de ces
+    // fonctions ne dépend du résultat d'une autre — les paralléliser via Promise.all
+    // ramène le temps total au temps du fetch le plus lent au lieu de leur somme.
+    const [
+        { zone1, zone2 },
+        articles,
+        generalNews,
+        environmentlNews,
+        antiCorruptionNews,
+        impactNews,
+        storiesNews,
+        humanRightsNews,
+    ] = await Promise.all([
+        getFourthEstateArticles(),
+        getLatestBannerArticles(),
+        getGeneralNewsArticles(3),
+        getEnvironmentArticles(3),
+        getAntiCorruptionArticles(),
+        getOurImpactArticles(),
+        getStoriesArticles(),
+        getHumanRightArticles(),
+    ]);
 
     return (
         <>
@@ -50,7 +65,7 @@ export default async function App() {
                 <div className="site-main-wrap">
                     <main className="site-main" id="site-main">
                         <section className="home">
-                            {/* On injecte ici les 4 articles récupérés depuis le service API */}
+                            {/* On injecte ici les articles récupérés depuis le service API */}
 
                             {/* 1. Zone d'actualités alimentée par l'API WordPress */}
                             <NewsZone

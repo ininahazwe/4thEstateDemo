@@ -580,43 +580,22 @@ export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
 export async function getStoriesArticles(perPage: number = 6): Promise<StoriesArticle[]> {
     try {
         // Recherche par mot-clé "video" — équivalent de /?s=video
-        const res = await fetch(
-            `https://thefourthestategh.com/wp-json/wp/v2/posts?search=video&per_page=${perPage}&status=publish`,
-            { next: { revalidate: 600 } }
+        // Utilise fetchPosts() comme toutes les autres fonctions : applique déjà
+        // le filtre défensif status=publish, donc plus besoin de le refaire ici.
+        const posts = await fetchPosts(
+            `${WP_BASE}/posts?search=video&per_page=${perPage}&status=publish`,
+            600
         );
-
-        if (!res.ok) return [];
-
-        const rawPosts: WPPost[] = await res.json();
-        // Garde défensive : cet endpoint utilise un fetch direct (pas fetchPosts),
-        // donc le filtre status=publish n'est pas hérité automatiquement.
-        const posts = rawPosts.filter(p => !p.status || p.status === 'publish');
         if (!posts.length) return [];
 
-        // Récupérer médias et catégories en parallèle
-        const mediaIds = Array.from(new Set(posts.map(p => p.featured_media).filter(id => id > 0)));
-        const categoryIds = Array.from(new Set(posts.flatMap(p => p.categories).filter(id => id > 0)));
+        // Médias et catégories récupérés en 2 requêtes groupées au lieu de N+1
+        // (alignement sur fetchMediaBatch/fetchCategoryBatch utilisés partout ailleurs).
+        const { mediaIds, categoryIds } = extractIds(posts);
 
-        const [mediaResults, categoriesResults] = await Promise.all([
-            Promise.all(
-                mediaIds.map(id =>
-                    fetch(`https://thefourthestategh.com/wp-json/wp/v2/media/${id}`)
-                        .then(res => res.ok ? res.json() : null)
-                        .catch(() => null)
-                )
-            ),
-            categoryIds.length > 0
-                ? fetch(`https://thefourthestategh.com/wp-json/wp/v2/categories?include=${categoryIds.join(',')}`)
-                    .then(res => res.ok ? res.json() : [])
-                    .catch(() => [])
-                : Promise.resolve([])
+        const [mediaMap, categoryMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
         ]);
-
-        const mediaMap = new Map<number, WPMedia>();
-        (mediaResults as (WPMedia | null)[]).forEach(m => { if (m) mediaMap.set(m.id, m); });
-
-        const categoryMap = new Map<number, string>();
-        (categoriesResults as WPTerm[]).forEach(c => categoryMap.set(c.id, c.name));
 
         return posts.map((post, index) => {
             const media = mediaMap.get(post.featured_media);
@@ -642,11 +621,11 @@ export async function getStoriesArticles(perPage: number = 6): Promise<StoriesAr
             if (media) {
                 article.image = {
                     src: media.source_url,
-                    srcSet: `${media.source_url} 2x`,
                     // Dimensions portrait — format Stories
                     width: media.media_details?.width ?? 640,
                     height: media.media_details?.height ?? 1138,
                     fetchPriority: index === 0 ? 'high' : 'auto',
+                    blurDataURL: BLUR_PLACEHOLDER,
                 };
             }
 
