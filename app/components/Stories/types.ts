@@ -9,9 +9,10 @@ export interface StoriesArticle {
     index: number;
     image?: {
         src: string;
-        srcSet?: string;
         width: number;
         height: number;
         fetchPriority?: 'high' | 'low' | 'auto';
+        blurDataURL?: string;
     };
+
 }
