@@ -1,93 +1,120 @@
+import { notFound } from "next/navigation";
 import Header from "@/app/components/Header/Header";
-import SiteBanner from "@/app/components/SiteBanner/SiteBanner";
-import NewsZone from "@/app/components/NewsZone/NewsZone";
 import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
-import {
-    getAntiCorruptionArticles,
-    getEnvironmentArticles,
-    getFourthEstateArticles,
-    getGeneralNewsArticles,
-    getHumanRightArticles,
-    getLatestBannerArticles,
-    getOurImpactArticles,
-    getStoriesArticles
-} from "@/app/services/wpApi";
-import GeneralNewsZone from "@/app/components/GeneralNews/GeneralNewsZone";
+import Breadcrumb from "@/app/components/UI/Breadcrumb";
+import ArticleHeader from "@/app/components/Article/ArticleHeader";
+import ArticleBody from "@/app/components/Article/ArticleBody";
+import ArticleAside from "@/app/components/Article/ArticleAside";
+import type { Metadata } from "next";
+import { getArticleBySlug, getMostReadArticles, getReadMoreArticles } from "@/app/services/wpApi.article";
+import ArticleMenu from "@/app/components/Article/ArticleMenu";
+import { Calendar, Clock } from "lucide-react";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
-import EnvironmentZone from "@/app/components/Environmentzone/Environmentzone";
-import AntiCorruptionZone from "@/app/components/AntiCorruption/Corruptionzone";
-import OurImpactZone from "@/app/components/Impact/ImpactZone";
-import StoriesZone from "@/app/components/Stories/Storieszone";
-import HumanRightsZone from "@/app/components/HumanRights/HumanRightZone";
-import TikTokStoriesSlider from "@/app/components/VideoSlider/TikTokStoriesSlider";
 
+interface ArticlePageProps {
+    params: Promise<{ slug: string }>;
+}
 
-export default async function App() {
-    // Récupération automatique et asynchrone des articles en direct de l'API de The Fourth Estate
-    //
-    // Avant : 8 appels séquentiels (chaque await bloque le suivant). Aucune de ces
-    // fonctions ne dépend du résultat d'une autre — les paralléliser via Promise.all
-    // ramène le temps total au temps du fetch le plus lent au lieu de leur somme.
-    const [
-        { zone1, zone2 },
-        articles,
-        generalNews,
-        environmentlNews,
-        antiCorruptionNews,
-        impactNews,
-        storiesNews,
-        humanRightsNews,
-    ] = await Promise.all([
-        getFourthEstateArticles(),
-        getLatestBannerArticles(),
-        getGeneralNewsArticles(3),
-        getEnvironmentArticles(3),
-        getAntiCorruptionArticles(),
-        getOurImpactArticles(),
-        getStoriesArticles(),
-        getHumanRightArticles(),
+export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
+    const { slug } = await params;
+    const article = await getArticleBySlug(slug);
+
+    if (!article) return { title: "Article introuvable" };
+
+    return {
+        title: `${article.title} — The Fourth Estate`,
+        description: article.excerpt,
+        openGraph: {
+            title: article.title,
+            description: article.excerpt,
+            images: article.featuredImage ? [article.featuredImage] : [],
+        },
+    };
+}
+
+export default async function ArticlePage({ params }: ArticlePageProps) {
+    const { slug } = await params;
+
+    // Dédupliqué et lu instantanément en mémoire si generateMetadata est passé avant
+    const article = await getArticleBySlug(slug);
+    if (!article) notFound();
+
+    // Lancement simultané des requêtes secondaires (Désormais ultra-rapides grâce à la suppression de _embed=1)
+    const [readMoreArticles, mostRead] = await Promise.all([
+        getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 3),
+        getMostReadArticles(4),
     ]);
+
+    const relatedArticles = readMoreArticles;
+
+    const breadcrumbs = [
+        ...(article.category
+            ? [{ label: article.category.name, href: `/category/${article.category.slug}` }]
+            : []),
+        ...(article.country
+            ? [{ label: article.country.name, href: `/country/${article.country.slug}` }]
+            : []),
+    ];
+
+    const authorNames = article.authors.length
+        ? article.authors.map((a) => a.displayName).join(" | ")
+        : "The Fourth Estate";
 
     return (
         <>
             <Header />
 
-            <SiteBanner articles={articles} />
+            <ArticleMenu />
 
             <div className="site-content-wrap">
-                <div className="dfpcontainer">
-                    <div id="dfp-habillage" className="dfp-slot" data-format="habillage" aria-hidden="true"></div>
-                </div>
-                <div className="dfpcontainer">
-                    <div id="banniere_haute" className="dfp-slot" data-format="banniere_haute" aria-hidden="true"></div>
-                </div>
-
-                <div className="site-main-wrap">
+                <div id="habillagepub" className="site-main-wrap">
                     <main className="site-main" id="site-main">
-                        <section className="home">
-                            {/* On injecte ici les articles récupérés depuis le service API */}
+                        <article className="article" data-columns="2">
+                            <header className="article-header" data-column="full">
+                                <Breadcrumb items={breadcrumbs} />
+                                <ArticleHeader
+                                    strapline={article.strapline}
+                                    title={article.title}
+                                    category={article.category}
+                                />
+                                <p className="article-lede">{article.excerpt}</p>
 
-                            {/* 1. Zone d'actualités alimentée par l'API WordPress */}
-                            <NewsZone
-                                zone1Articles={zone1}
-                                zone2Articles={zone2}
+                                <div className="article-rule" aria-hidden="true" />
+
+                                <div className="article-metas">
+                                    <span className="article-source">
+                                        {authorNames}
+                                    </span>
+                                    {article.readTime && (
+                                        <div className="article-infos">
+                                            <span className="info-time">
+                                                <Clock size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: "4px" }} />
+                                                {article.readTime}
+                                            </span>
+                                            <span className="info-date">
+                                                <Calendar size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: "4px" }} />
+                                                {article.publishedAt}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </header>
+
+                            <ArticleBody
+                                id={article.id}
+                                title={article.title}
+                                content={article.content}
+                                featuredImage={article.featuredImage}
+                                imageCaption={article.imageCaption}
+                                imageCredit={article.imageCredit}
+                                relatedArticles={relatedArticles}
+                                readMoreArticles={readMoreArticles}
+                                tags={article.tags}
+                                authors={article.authors}
                             />
 
-                            <OurImpactZone articles={impactNews} />
-
-                            <GeneralNewsZone articles={generalNews} />
-
-                            <HumanRightsZone articles={humanRightsNews} />
-
-                            <TikTokStoriesSlider />
-
-                            {/*<StoriesZone articles={storiesNews} />*/}
-
-                            <AntiCorruptionZone articles={antiCorruptionNews} />
-
-                            <EnvironmentZone articles={environmentlNews} />
-
-                        </section>
+                            <ArticleAside mostRead={mostRead} />
+                        </article>
                     </main>
                 </div>
             </div>
