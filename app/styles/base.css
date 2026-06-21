@@ -3061,7 +3061,7 @@ html[class*=page-article-campaign][class*=preview] .site-header .header-logo:bef
 @media screen and (max-width:759px) {
     #site-header~.site-content-wrap .dfpcontainer #banniere_haute {
         max-height:200px!important;
-        min-height:46.875vw!important;
+        /*min-height:46.875vw!important;*/
         overflow:hidden
     }
     #site-header~.site-content-wrap .dfpcontainer #banniere_haute [id^=ogy-root-container]+[id^=google_ads_iframe] {

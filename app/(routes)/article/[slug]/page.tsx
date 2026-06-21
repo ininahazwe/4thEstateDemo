@@ -6,9 +6,9 @@ import ArticleHeader from "@/app/components/Article/ArticleHeader";
 import ArticleBody from "@/app/components/Article/ArticleBody";
 import ArticleAside from "@/app/components/Article/ArticleAside";
 import type { Metadata } from "next";
-import {getArticleBySlug, getMostReadArticles, getReadMoreArticles} from "@/app/services/wpApi.article";
+import { getArticleBySlug, getMostReadArticles, getReadMoreArticles } from "@/app/services/wpApi.article";
 import ArticleMenu from "@/app/components/Article/ArticleMenu";
-import {Calendar, Clock} from "lucide-react";
+import { Calendar, Clock } from "lucide-react";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 
 interface ArticlePageProps {
@@ -17,10 +17,8 @@ interface ArticlePageProps {
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
     const { slug } = await params;
-    // getArticleBySlug est enveloppé dans React.cache() : cet appel et celui
-    // dans ArticlePage() ci-dessous partagent le même résultat — un seul
-    // fetch réseau pour les deux, au lieu de deux fetches identiques.
     const article = await getArticleBySlug(slug);
+
     if (!article) return { title: "Article introuvable" };
 
     return {
@@ -37,19 +35,16 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 export default async function ArticlePage({ params }: ArticlePageProps) {
     const { slug } = await params;
 
-    // Même fetch que dans generateMetadata — dédupliqué automatiquement par React.cache()
+    // Dédupliqué et lu instantanément en mémoire si generateMetadata est passé avant
     const article = await getArticleBySlug(slug);
     if (!article) notFound();
 
-    // Tous les fetches secondaires en parallèle.
-    // Le doublon getReadMoreArticles/getReadMoreArticles a été supprimé :
-    // readMoreArticles et relatedArticles utilisaient les MÊMES arguments,
-    // ce qui doublait inutilement le travail (jusqu'à 2 fetches WordPress en plus).
-    // On réutilise maintenant le même résultat pour les deux usages.
+    // Lancement simultané des requêtes secondaires (Désormais ultra-rapides grâce à la suppression de _embed=1)
     const [readMoreArticles, mostRead] = await Promise.all([
         getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 3),
         getMostReadArticles(4),
     ]);
+
     const relatedArticles = readMoreArticles;
 
     const breadcrumbs = [
@@ -87,23 +82,24 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                 <div className="article-rule" aria-hidden="true" />
 
                                 <div className="article-metas">
-                                    <a className="article-source">
+                                    <span className="article-source">
                                         {authorNames}
-                                    </a>
+                                    </span>
                                     {article.readTime && (
                                         <div className="article-infos">
-                                        <span className="info-time">
-                                            <Clock size={14} strokeWidth={2} aria-hidden="true" style={{marginRight: "4px"}}/>
-                                            {article.readTime}
-                                        </span>
+                                            <span className="info-time">
+                                                <Clock size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: "4px" }} />
+                                                {article.readTime}
+                                            </span>
                                             <span className="info-date">
-                                            <Calendar size={14} strokeWidth={2} aria-hidden="true" style={{marginRight: "4px"}}/>
+                                                <Calendar size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: "4px" }} />
                                                 {article.publishedAt}
-                                        </span>
+                                            </span>
                                         </div>
                                     )}
                                 </div>
                             </header>
+
                             <ArticleBody
                                 id={article.id}
                                 title={article.title}
@@ -116,6 +112,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                 tags={article.tags}
                                 authors={article.authors}
                             />
+
                             <ArticleAside mostRead={mostRead} />
                         </article>
                     </main>
