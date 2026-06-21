@@ -4,7 +4,6 @@ import { useRef, useState } from 'react';
 import TikTokVideoModal from "@/app/components/VideoSlider/Tiktokvideomodal";
 import {TikTokDemoItem} from "@/app/components/VideoSlider/Tiktokdemodata";
 
-
 interface TikTokStoriesSliderClientProps {
     items: TikTokDemoItem[];
 }

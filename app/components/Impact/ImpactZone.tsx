@@ -1,6 +1,5 @@
 import OurImpactCard from './ImpactCard';
-import { type OurImpactArticle } from './types';
-
+import { type OurImpactArticle } from './Types';
 interface OurImpactZoneProps {
     articles: OurImpactArticle[];
 }
