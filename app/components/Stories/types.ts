@@ -14,5 +14,4 @@ export interface StoriesArticle {
         fetchPriority?: 'high' | 'low' | 'auto';
         blurDataURL?: string;
     };
-
 }
