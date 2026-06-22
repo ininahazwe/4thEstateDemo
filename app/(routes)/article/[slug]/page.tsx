@@ -71,7 +71,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
     // Lancement simultané des requêtes secondaires
     const [readMoreArticles, mostRead] = await Promise.all([
-        getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 3),
+        getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 4),
         getMostReadArticles(4),
     ]);
 
