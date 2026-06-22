@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { type ArticleData }          from '../components/NewsZone/types';
 import { type ArticleDataBanner }     from '../components/SiteBanner/types';
 import { type GeneralNewsArticle }    from '../components/GeneralNews/types';
@@ -673,34 +674,73 @@ export async function getTopCategories(limit = 10): Promise<FooterCategory[]> {
     }
 }
 
+// ---------------------------------------------------------------------------
+// getCategoryPageData
+//
+// Optimisations perf (alignées sur celles déjà faites pour getArticleBySlug,
+// la page article) :
+//
+// 1. React.cache() — generateMetadata() ET la page elle-même appellent
+//    getCategoryPageData(slug, page) durant le même rendu serveur. Sans
+//    cache(), ça déclenchait TOUS les fetches internes deux fois par
+//    chargement de page (resolveCategory + posts + médias + catégories =
+//    jusqu'à 5 requêtes WordPress en double). Avec cache(), le second appel
+//    avec les mêmes arguments lit le résultat déjà résolu en mémoire.
+//
+// 2. Fetch redondant supprimé — l'ancienne version refaisait un fetch séparé
+//    vers /categories/{id} (getCategoryDisplayName) uniquement pour .name,
+//    alors que resolveCategory récupère déjà l'objet catégorie complet
+//    (id + name + slug) en un seul appel. getCategoryDisplayName retirée.
+//
+// 3. revalidate du fetch posts passé de 300s à 600s, cohérent avec
+//    getArticleBySlug (contenu éditorial change rarement après publication).
+// ---------------------------------------------------------------------------
+
+interface WPCategoryResolved {
+    id: number;
+    name: string;
+    slug: string;
+}
+
+/**
+ * Résout un slug en objet catégorie complet (id + name + slug) en un seul
+ * fetch — remplace l'usage de resolveCategoryId pour la page catégorie,
+ * qui ne retournait que l'id et forçait un second fetch ailleurs pour le nom.
+ * Mise en cache 1h.
+ */
+async function resolveCategory(slug: string): Promise<WPCategoryResolved | null> {
+    const res = await fetch(`${WP_BASE}/categories?slug=${slug}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const cats: WPCategoryResolved[] = await res.json();
+    return cats[0] ?? null;
+}
+
 const CATEGORY_PER_PAGE = 13;
-export async function getCategoryPageData(
+
+export const getCategoryPageData = cache(async (
     slug: string,
     page: number = 1
-): Promise<CategoryData | null> {
-    // CATEGORY_IDS n'a pas d'entrée générique par slug arbitraire : on passe
-    // toujours null comme knownId ici, donc resolveCategoryId fait un fetch
-    // (mis en cache 1h) plutôt qu'un court-circuit. Si tu ajoutes l'ID dans
-    // CATEGORY_IDS pour une catégorie donnée, tu peux le passer ici à la place.
-    const categoryId = await resolveCategoryId(null, slug);
-    if (!categoryId) return null;
+): Promise<CategoryData | null> => {
+    const category = await resolveCategory(slug);
+    if (!category) return null;
 
     const config = getCategoryConfig(slug);
+    // category.name déjà disponible ici — plus besoin d'un 2e fetch pour l'avoir.
+    const title = config.title ?? category.name;
 
     const url =
         `${WP_BASE}/posts` +
-        `?categories=${categoryId}` +
+        `?categories=${category.id}` +
         `&page=${page}` +
         `&per_page=${CATEGORY_PER_PAGE}` +
         `&status=publish` +
         `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
 
-    const res = await fetch(url, { next: { revalidate: 300 } });
+    const res = await fetch(url, { next: { revalidate: 600 } });
 
     if (!res.ok) {
         if (res.status === 400) {
             // Page hors limites -> WP renvoie 400 au-delà de la dernière page.
-            const title = config.title ?? (await getCategoryDisplayName(categoryId));
             return {
                 title,
                 slug,
@@ -721,7 +761,7 @@ export async function getCategoryPageData(
     const posts = rawPosts.filter((p) => (p as WPPost & { format?: string }).format !== 'video');
     if (!posts.length) {
         return {
-            title: config.title ?? (await getCategoryDisplayName(categoryId)),
+            title,
             slug,
             seoDescription: config.seoDescription,
             tags: config.tags ?? [],
@@ -760,7 +800,7 @@ export async function getCategoryPageData(
     });
 
     return {
-        title: config.title ?? (await getCategoryDisplayName(categoryId)),
+        title,
         slug,
         seoDescription: config.seoDescription,
         tags: config.tags ?? [],
@@ -771,18 +811,7 @@ export async function getCategoryPageData(
             basePath: `/category/${slug}`,
         },
     };
-}
-
-// Helper local : nom affiché de la catégorie (titre H1 par défaut).
-// Utilisé uniquement en fallback, quand categoryConfig n'a pas de titre custom.
-async function getCategoryDisplayName(categoryId: number): Promise<string> {
-    const res = await fetch(`${WP_BASE}/categories/${categoryId}`, {
-        next: { revalidate: 3600 },
-    });
-    if (!res.ok) return '';
-    const cat = await res.json();
-    return cat.name as string;
-}
+});
 
 // ---------------------------------------------------------------------------
 // getBannerCategories — à coller dans wpApi.ts

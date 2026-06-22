@@ -13,12 +13,24 @@ interface CategoryPageProps {
     searchParams: Promise<{ page?: string }>;
 }
 
-export async function generateMetadata({ params }: CategoryPageProps) {
+function resolvePage(pageParam?: string): number {
+    return Number(pageParam) > 0 ? Number(pageParam) : 1;
+}
+
+export async function generateMetadata({ params, searchParams }: CategoryPageProps) {
     const { slug } = await params;
-    const data = await getCategoryPageData(slug, 1);
+    const { page: pageParam } = await searchParams;
+    const page = resolvePage(pageParam);
+
+    // Même slug + même page que l'appel fait dans CategoryPage ci-dessous =>
+    // React.cache() dédoublonne ce fetch sur TOUTES les pages, pas seulement
+    // la page 1 (auparavant generateMetadata appelait toujours page=1, donc
+    // le cache ne matchait jamais sur les pages 2+).
+    const data = await getCategoryPageData(slug, page);
     if (!data) return {};
+
     return {
-        title: data.title,
+        title: page > 1 ? `${data.title} — Page ${page}` : data.title,
         description: data.seoDescription,
     };
 }
@@ -26,7 +38,7 @@ export async function generateMetadata({ params }: CategoryPageProps) {
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
     const { slug } = await params;
     const { page: pageParam } = await searchParams;
-    const page = Number(pageParam) > 0 ? Number(pageParam) : 1;
+    const page = resolvePage(pageParam);
 
     const [data, mostRead, bannerArticles, bannerCategories] = await Promise.all([
         getCategoryPageData(slug, page),
