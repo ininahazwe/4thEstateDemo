@@ -23,12 +23,13 @@
 
 .article .article-text,
 .article .article-header .article-lede {
-    font-family: var(--serifGeorgia);
+    font-family: var(--serifGeorgia), serif;
 }
 
 figcaption, .wp-element-caption{
     font-size: 0.8rem;
     line-height: 1rem;
+    text-align: center;
 }
 /* Image d'illustration (hero) : déborde du conteneur 680px pour aller
    jusqu'aux bords de #site-main. Reproduit en desktop le même principe

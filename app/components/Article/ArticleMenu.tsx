@@ -1,4 +1,4 @@
-import {bannerTags} from "@/app/components/SiteBanner/bannerData";
+import { bannerTags } from "@/app/components/SiteBanner/bannerData";
 
 export default function ArticleMenu() {
     return (
@@ -10,21 +10,20 @@ export default function ArticleMenu() {
                         const className = `item ${tag.type ? tag.type : ''} ithalc`.trim();
 
                         return (
-                            <a
-                                key={index}
-                                href={tag.href}
-                                className={className}
-                                data-ithalc="[cta_nav_banner]"
-                                data-ithal={tag.ithal}
-                                {...(tag.icon && { 'data-icon': tag.icon })}
-                            >
-                                {tag.label}
-                            </a>
-                        );
+                        <a
+                            key={index}
+                            href={tag.href}
+                            className={className}
+                            data-ithalc="[cta_nav_banner]"
+                            data-ithal={tag.ithal}
+                        >
+                            {tag.icon && <tag.icon size={16} style={{ marginRight: 6 }} aria-hidden="true" />}
+                        {tag.label}
+                    </a>
+                    );
                     })}
                 </div>
             </div>
-
         </div>
     );
 }

@@ -1,9 +1,12 @@
+import { type IconType } from "react-icons/lib";
+import { FaRegCirclePlay } from "react-icons/fa6";
+
 export interface BannerTag {
     label: string;
     href: string;
     ithal: string;
     type?: 'type';
-    icon?: string;
+    icon?: IconType;
 }
 
 export interface HotArticle {
@@ -22,6 +25,5 @@ export const bannerTags: BannerTag[] = [
     { label: "Opinions", href: "/opinions", ithal: "opinions" },
     { label: "Honours", href: "/honours", ithal: "honours" },
 
-    // Groupes de types / fonctionnalités secondaires (conservés et nettoyés)
-    { label: "The Fourth Estate TV", href: "/tv", type: "type", ithal: "fourth-estate-tv", icon: "reveil" },
+    { label: "The Fourth Estate TV", href: "/tv", type: "type", ithal: "fourth-estate-tv", icon: FaRegCirclePlay },
 ];

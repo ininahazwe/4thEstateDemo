@@ -23,8 +23,8 @@ export default function SiteBanner({ articles }: SiteBannerProps) {
                                 className={className}
                                 data-ithalc="[cta_nav_banner]"
                                 data-ithal={tag.ithal}
-                                {...(tag.icon && { 'data-icon': tag.icon })}
                             >
+                                {tag.icon && <tag.icon size={16} style={{ marginRight: 6 }} aria-hidden="true" />}
                                 {tag.label}
                             </a>
                         );

@@ -13,7 +13,7 @@
 body {
     background-color: var(--siteBackground);
     color: var(--siteText);
-    font-family: var(--fontSans);
+    font-family: var(--serifGeorgia), serif;
     line-height: 1.3;
     -webkit-font-smoothing: antialiased;
     padding-bottom: 60px; /* Espace pour la barre mobile en bas */
