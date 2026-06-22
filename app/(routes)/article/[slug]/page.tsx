@@ -99,7 +99,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <div className="site-content-wrap">
                 <div id="habillagepub" className="site-main-wrap">
                     <main className="site-main" id="site-main">
-                        <article className="article" data-columns="2">
+                        <article className="article">
                             <header className="article-header" data-column="full">
                                 <Breadcrumb items={breadcrumbs} />
                                 <ArticleHeader
@@ -112,9 +112,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                 <div className="article-rule" aria-hidden="true" />
 
                                 <div className="article-metas">
-                                    <span className="article-source">
+                                    {/*<span className="article-source">
                                         {authorNames}
-                                    </span>
+                                    </span>*/}
                                     {article.readTime && (
                                         <div className="article-infos">
                                             <span className="info-time">

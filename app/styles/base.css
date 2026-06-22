@@ -1,12 +1,13 @@
 :root {
-    --siteBackground:#eee;
+    --siteBackground:#fff;
     --siteBackgroundRGB:238,238,238;
-    --siteBoxBackground:#fff;
+    --siteBoxBackground:#f6f6f6;
     --siteBoxBackgroundRGB:255,255,255;
     --siteBoxShadow:#0000001a;
     --siteText:#111;
     --siteTextRGB:17,17,17;
     --focus:#005fcc;
+    --fontSans: 'TheAntiquaB';
     --adAside:#00000014;
     --menuBackground:#eee;
     --menuBoxBackground:#fff;
@@ -51,6 +52,7 @@
     --pictoY2W:var(--pictoFond);
     --pictoY2T:var(--pictoFond);
     --sitePrimary:#ff5252;
+    --siteLogo:#6d2929;
     --siteBanner:#2c2c54;
     --siteBannerTag:#f7f1e3;
     --siteSecond:#D02752;
@@ -79,6 +81,7 @@
     --error:#da1414;
     --sans:"Fira Sans","Fira Sans Fallback",Helvetica,Arial,sans-serif;
     --serif:"Literata","Literata Fallback",Georgia,serif;
+    --serifGeorgia:Georgia,"Times New Roman",Times,serif;
     --agenceSans:"Noto Sans",serif;
     --agenceSerif:"Noto Serif",serif;
     --radius:8px;
@@ -1579,7 +1582,7 @@ body {
 }
 .section-title {
     background-clip:text;
-    background-color:rgba(var(--siteTextRGB),.4);
+    background-color:var(--siteLogo);
     font-size:24px;
     -webkit-text-fill-color:#0000
 }

@@ -48,8 +48,8 @@
     line-height:1;
     padding:8px 12px;
     width:fit-content;
-    background-color:var(--sitePrincipal);
-    color:#fff;
+    background-color:var(--siteBannerTag);
+    color:#4a4a4a;
     font-size:12px;
 }
 #ci-banner-offre-spe .price {
@@ -57,7 +57,7 @@
     font-size:36px;
     font-weight:bold;
     line-height:1;
-    color:var(--sitePrincipal);
+    color:var(--siteBannerTag);
     margin:0;
 }
 #ci-banner-offre-spe .baseline {
@@ -68,8 +68,8 @@
     max-width:220px;
 }
 #ci-banner-offre-spe [data-model^="button"] {
-    background-color:var(--sitePrincipal);
-    color:#fff;
+    background-color:var(--siteBannerTag);
+    color:#4a4a4a;
 }
 #ci-banner-offre-spe .picto-abo {
     flex-shrink:0;

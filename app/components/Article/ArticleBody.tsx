@@ -42,7 +42,7 @@ export default function ArticleBody({
         : "The Fourth Estate";
 
     return (
-        <div className="article-content" data-column="left">
+        <div className="article-content">
             {featuredImage && (
                 <ArticleIllustration
                     featuredImage={featuredImage}
