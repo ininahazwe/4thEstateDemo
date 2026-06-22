@@ -1,11 +1,11 @@
-import { bannerTags } from "@/app/components/SiteBanner/bannerData";
+
 
 export default function ArticleMenu() {
     return (
         <div className="site-banner">
             {/* Section des catégories (Tags) */}
             <div className="banner-hot-tags">
-                <div className="item-list">
+                {/*<div className="item-list">
                     {bannerTags.map((tag, index) => {
                         const className = `item ${tag.type ? tag.type : ''} ithalc`.trim();
 
@@ -22,7 +22,7 @@ export default function ArticleMenu() {
                     </a>
                     );
                     })}
-                </div>
+                </div>*/}
             </div>
         </div>
     );

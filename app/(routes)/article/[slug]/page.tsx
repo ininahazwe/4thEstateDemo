@@ -7,9 +7,14 @@ import ArticleBody from "@/app/components/Article/ArticleBody";
 import ArticleAside from "@/app/components/Article/ArticleAside";
 import type { Metadata } from "next";
 import { getArticleBySlug, getMostReadArticles, getReadMoreArticles } from "@/app/services/wpApi.article";
-import ArticleMenu from "@/app/components/Article/ArticleMenu";
 import { Calendar, Clock } from "lucide-react";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
+import SiteBanner from "@/app/components/SiteBanner/SiteBanner";
+import {
+    getBannerCategories,
+    getLatestBannerArticles,
+} from "@/app/services/wpApi";
+import {BANNER_CATEGORY_SLUGS} from "@/app/components/SiteBanner/bannerCategorySlugs";
 
 const WP_API =
     process.env.NEXT_PUBLIC_WP_API_URL ?? "https://thefourthestategh.com/wp-json/wp/v2";
@@ -18,20 +23,6 @@ interface ArticlePageProps {
     params: Promise<{ slug: string }>;
 }
 
-/**
- * Pré-génère les pages des articles existants au moment du build/déploiement.
- * Ces pages deviennent statiques et sont servies depuis le CDN — temps de
- * chargement quasi nul, peu importe qui visite en premier.
- *
- * Seuls les articles publiés APRÈS ce déploiement ne sont pas couverts : ils
- * passent par le chemin normal (rendu à la demande + cache ISR de 600s sur
- * getArticleBySlug), donc un premier visiteur sur un article tout neuf
- * connaîtra encore un chargement plus lent — c'est attendu et limité aux
- * articles très récents.
- *
- * _fields=slug réduit la réponse WordPress au strict minimum (juste le slug),
- * évite de transférer titre/contenu/médias pour une liste qui n'en a pas besoin.
- */
 export async function generateStaticParams() {
     try {
         const res = await fetch(`${WP_API}/posts?per_page=100&_fields=slug&status=publish`);
@@ -39,8 +30,6 @@ export async function generateStaticParams() {
         const posts = (await res.json()) as Array<{ slug: string }>;
         return posts.map((post) => ({ slug: post.slug }));
     } catch {
-        // En cas d'échec, Next.js retombe sur le rendu à la demande pour
-        // chaque slug — pas d'interruption du build.
         return [];
     }
 }
@@ -69,6 +58,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     const article = await getArticleBySlug(slug);
     if (!article) notFound();
 
+    // Seuls bannerArticles et bannerCategories sont utilisés sur la page
+    // article (alimenter SiteBanner). Les autres zones (general news,
+    // environment, anti-corruption, our-impact, stories, human-right) sont
+    // homepage-only — les fetcher ici ajouterait 6 requêtes WordPress par vue
+    // d'article pour rien, à l'encontre des optimisations de perf déjà faites.
+    const [bannerArticles, bannerCategories] = await Promise.all([
+        getLatestBannerArticles(),
+        getBannerCategories(BANNER_CATEGORY_SLUGS),
+    ]);
+
     // Lancement simultané des requêtes secondaires
     const [readMoreArticles, mostRead] = await Promise.all([
         getReadMoreArticles(article.id, article.tagIds, article.categoryIds, 4),
@@ -94,7 +93,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <>
             <Header />
 
-            <ArticleMenu />
+            <SiteBanner articles={bannerArticles} categories={bannerCategories} />
 
             <div className="site-content-wrap">
                 <div id="habillagepub" className="site-main-wrap">
@@ -112,9 +111,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                 <div className="article-rule" aria-hidden="true" />
 
                                 <div className="article-metas">
-                                    {/*<span className="article-source">
-                                        {authorNames}
-                                    </span>*/}
                                     {article.readTime && (
                                         <div className="article-infos">
                                             <span className="info-time">

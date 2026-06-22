@@ -6,6 +6,8 @@ import { type AntiCorruptionArticle } from '../components/AntiCorruption/Types';
 import { type OurImpactArticle }      from '../components/Impact/Types';
 import {type StoriesArticle} from "../components/Stories/types";
 import {type HumanRightsArticle} from "../components/HumanRights/Types";
+import {CategoryArticle, CategoryData} from "@/app/components/Category/Types";
+import {getCategoryConfig} from "@/app/components/Category/categoryConfig";
 
 
 // ---------------------------------------------------------------------------
@@ -667,6 +669,170 @@ export async function getTopCategories(limit = 10): Promise<FooterCategory[]> {
 
     } catch (error) {
         console.error('Erreur wpApi [getTopCategories]:', error);
+        return [];
+    }
+}
+
+const CATEGORY_PER_PAGE = 13;
+export async function getCategoryPageData(
+    slug: string,
+    page: number = 1
+): Promise<CategoryData | null> {
+    // CATEGORY_IDS n'a pas d'entrée générique par slug arbitraire : on passe
+    // toujours null comme knownId ici, donc resolveCategoryId fait un fetch
+    // (mis en cache 1h) plutôt qu'un court-circuit. Si tu ajoutes l'ID dans
+    // CATEGORY_IDS pour une catégorie donnée, tu peux le passer ici à la place.
+    const categoryId = await resolveCategoryId(null, slug);
+    if (!categoryId) return null;
+
+    const config = getCategoryConfig(slug);
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?categories=${categoryId}` +
+        `&page=${page}` +
+        `&per_page=${CATEGORY_PER_PAGE}` +
+        `&status=publish` +
+        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+
+    const res = await fetch(url, { next: { revalidate: 300 } });
+
+    if (!res.ok) {
+        if (res.status === 400) {
+            // Page hors limites -> WP renvoie 400 au-delà de la dernière page.
+            const title = config.title ?? (await getCategoryDisplayName(categoryId));
+            return {
+                title,
+                slug,
+                seoDescription: config.seoDescription,
+                tags: config.tags ?? [],
+                articles: [],
+                pagination: { currentPage: page, totalPages: 0, basePath: `/category/${slug}` },
+            };
+        }
+        console.error(`Erreur wpApi [getCategoryPageData]: ${res.status}`);
+        return null;
+    }
+
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '1');
+    const rawPosts: WPPost[] = await res.json();
+
+    // Exclut les contenus "stories"/vidéo de cette liste (décision produit).
+    const posts = rawPosts.filter((p) => (p as WPPost & { format?: string }).format !== 'video');
+    if (!posts.length) {
+        return {
+            title: config.title ?? (await getCategoryDisplayName(categoryId)),
+            slug,
+            seoDescription: config.seoDescription,
+            tags: config.tags ?? [],
+            articles: [],
+            pagination: { currentPage: page, totalPages, basePath: `/category/${slug}` },
+        };
+    }
+
+    const { mediaIds, categoryIds } = extractIds(posts);
+    const [mediaMap, categoryMap] = await Promise.all([
+        fetchMediaBatch(mediaIds),
+        fetchCategoryBatch(categoryIds),
+    ]);
+
+    const articles: CategoryArticle[] = posts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+
+        let source = 'The Fourth Estate';
+        if (post.categories.length > 0) {
+            const cat = categoryMap.get(post.categories[0]);
+            if (cat) source = cat;
+        }
+
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(index),
+        };
+
+        if (media) article.image = buildImage(media, index);
+
+        return article;
+    });
+
+    return {
+        title: config.title ?? (await getCategoryDisplayName(categoryId)),
+        slug,
+        seoDescription: config.seoDescription,
+        tags: config.tags ?? [],
+        articles,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            basePath: `/category/${slug}`,
+        },
+    };
+}
+
+// Helper local : nom affiché de la catégorie (titre H1 par défaut).
+// Utilisé uniquement en fallback, quand categoryConfig n'a pas de titre custom.
+async function getCategoryDisplayName(categoryId: number): Promise<string> {
+    const res = await fetch(`${WP_BASE}/categories/${categoryId}`, {
+        next: { revalidate: 3600 },
+    });
+    if (!res.ok) return '';
+    const cat = await res.json();
+    return cat.name as string;
+}
+
+// ---------------------------------------------------------------------------
+// getBannerCategories — à coller dans wpApi.ts
+//
+// Résout une liste ORDONNÉE de slugs (BANNER_CATEGORY_SLUGS) en vraies
+// catégories WordPress (nom + slug + lien /category/{slug}). Contrairement à
+// getTopCategories (tri par popularité), ici l'ordre et la sélection sont
+// pilotés manuellement par bannerCategorySlugs.ts — pas de tri serveur WP.
+//
+// Une seule requête groupée (slug=a,b,c) plutôt que N requêtes individuelles,
+// puis remappage dans l'ordre d'entrée (WP ne garantit pas l'ordre en sortie
+// quand on filtre par plusieurs slugs à la fois).
+// ---------------------------------------------------------------------------
+
+export interface BannerCategory {
+    label: string;
+    href: string;
+    slug: string;
+}
+
+export async function getBannerCategories(slugs: string[]): Promise<BannerCategory[]> {
+    if (!slugs.length) return [];
+
+    try {
+        const res = await fetch(
+            `${WP_BASE}/categories?slug=${slugs.join(',')}&per_page=${slugs.length}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!res.ok) return [];
+
+        const cats: WPCategoryWithCount[] = await res.json();
+        const bySlug = new Map(cats.map((c) => [c.slug, c]));
+
+        // Remappage dans l'ordre de bannerCategorySlugs.ts ; les slugs introuvables
+        // côté WP (catégorie pas encore créée, faute de frappe…) sont silencieusement
+        // omis plutôt que de casser le rendu du banner.
+        return slugs
+            .map((slug) => {
+                const cat = bySlug.get(slug);
+                if (!cat) return null;
+                return {
+                    label: cat.name,
+                    href: `/category/${cat.slug}`,
+                    slug: cat.slug,
+                };
+            })
+            .filter((c): c is BannerCategory => c !== null);
+
+    } catch (error) {
+        console.error('Erreur wpApi [getBannerCategories]:', error);
         return [];
     }
 }

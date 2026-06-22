@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { navItems } from './navigationData';
-import {Mail, Moon, Search, Sun} from "lucide-react";
+import {ArrowBigRight, ArrowRight, Mail, Moon, Search, Sun} from "lucide-react";
 import Image from 'next/image';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 
@@ -136,7 +136,7 @@ export default function Header() {
                         </section>
 
                         {/* À la une du Hebdo */}
-                        <section className="hebdo-section">
+                        {/*<section className="hebdo-section">
                             <a href="https://www.courrierinternational.com/magazine/2026/1859-magazine">
                                 <div className="item-image">
                                     <figure>
@@ -155,13 +155,13 @@ export default function Header() {
                                 </div>
                                 <div className="item-text">Brexit : un jour sans fin</div>
                             </a>
-                        </section>
+                        </section>*/}
 
-                        {/* Bouton Offres Menu */}
+                        {/* Bouton Offres Menu
                         <a className="menu-abo ithalc" href="https://fourthestate.free.nf" rel="nofollow" data-ithal="menu_navigation_hebdo">
                             <strong>Offres spéciales</strong>
                             <span style={{ fontWeight: 'normal' }}>dès 3,99&nbsp;€/mois</span>
-                        </a>
+                        </a>*/}
 
                         {/* Liste dynamique des rubriques */}
                         <section className="nav-section">
@@ -174,18 +174,19 @@ export default function Header() {
                                         className: `item ${item.type} ithalc`,
                                         'data-ithalc': '[cta_bloc_menu]',
                                         'data-ithal': item.ithal,
-                                        ...(item.icon && { 'data-icon': item.icon })
                                     };
 
                                     return isExternal ? (
                                         // La clé 'key' est maintenant déclarée directement ici
                                         <a key={index} href={item.href} {...itemProps}>
                                             {item.label}
+                                            <ArrowBigRight />
                                         </a>
                                     ) : (
                                         // Et ici
                                         <Link key={index} href={item.href} {...itemProps}>
                                             {item.label}
+                                            <ArrowRight size={14}/>
                                         </Link>
                                     );
                                 })}

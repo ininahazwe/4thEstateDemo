@@ -1,34 +1,41 @@
-import { bannerTags } from './bannerData';
-// 1. Importez le bon type utilisé par votre fonction API
+import { bannerStaticTag } from './bannerData';
 import { type ArticleDataBanner } from './types';
+import { type BannerCategory } from '@/app/services/wpApi';
 
-// 2. Mettez à jour l'interface des props ici
 interface SiteBannerProps {
-    articles: ArticleDataBanner[]; // Remplacement de HotArticle[] par ArticleDataBanner[]
+    articles: ArticleDataBanner[];
+    categories: BannerCategory[];
 }
 
-export default function SiteBanner({ articles }: SiteBannerProps) {
+export default function SiteBanner({ articles, categories }: SiteBannerProps) {
     return (
         <div className="site-banner">
-            {/* Section des catégories (Tags) */}
+            {/* Section des catégories (Tags) — dynamiques (WP) + TV en dur à la fin */}
             <div className="banner-hot-tags">
                 <div className="item-list">
-                    {bannerTags.map((tag, index) => {
-                        const className = `item ${tag.type ? tag.type : ''} ithalc`.trim();
+                    {categories.map((cat) => (
+                        <a
+                            key={cat.slug}
+                            href={cat.href}
+                            className="item ithalc"
+                            data-ithalc="[cta_nav_banner]"
+                            data-ithal={cat.slug}
+                        >
+                            {cat.label}
+                        </a>
+                    ))}
 
-                        return (
-                            <a
-                                key={index}
-                                href={tag.href}
-                                className={className}
-                                data-ithalc="[cta_nav_banner]"
-                                data-ithal={tag.ithal}
-                            >
-                                {tag.icon && <tag.icon size={16} style={{ marginRight: 6 }} aria-hidden="true" />}
-                                {tag.label}
-                            </a>
-                        );
-                    })}
+                    <a
+                        href={bannerStaticTag.href}
+                        className={`item ${bannerStaticTag.type ? bannerStaticTag.type : ''} ithalc`.trim()}
+                        data-ithalc="[cta_nav_banner]"
+                        data-ithal={bannerStaticTag.ithal}
+                    >
+                        {bannerStaticTag.icon && (
+                            <bannerStaticTag.icon size={16} style={{ marginRight: 6 }} aria-hidden="true" />
+                        )}
+                        {bannerStaticTag.label}
+                    </a>
                 </div>
             </div>
 
@@ -39,7 +46,6 @@ export default function SiteBanner({ articles }: SiteBannerProps) {
                         articles.map((article) => (
                             <div className="item" key={article.id}>
                                 <div className="item-tag">
-                                    {/* On affiche la date formatée qui est stockée dans 'source' */}
                                     <span className="time">{article.source}</span>
                                 </div>
                                 <a href={article.href} className="item-title">
@@ -49,7 +55,7 @@ export default function SiteBanner({ articles }: SiteBannerProps) {
                         ))
                     ) : (
                         <p className="no-articles" style={{ padding: '0 10px', fontSize: '14px', color: '#888' }}>
-                            Aucune actualité récente.
+                            No recent news.
                         </p>
                     )}
                 </div>

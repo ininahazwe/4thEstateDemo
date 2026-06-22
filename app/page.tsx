@@ -10,7 +10,8 @@ import {
     getHumanRightArticles,
     getLatestBannerArticles,
     getOurImpactArticles,
-    getStoriesArticles
+    getStoriesArticles,
+    getBannerCategories
 } from "@/app/services/wpApi";
 import GeneralNewsZone from "@/app/components/GeneralNews/GeneralNewsZone";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
@@ -20,6 +21,7 @@ import OurImpactZone from "@/app/components/Impact/ImpactZone";
 import StoriesZone from "@/app/components/Stories/Storieszone";
 import HumanRightsZone from "@/app/components/HumanRights/HumanRightZone";
 import TikTokStoriesSlider from "@/app/components/VideoSlider/TikTokStoriesSlider";
+import {BANNER_CATEGORY_SLUGS} from "@/app/components/SiteBanner/bannerCategorySlugs";
 
 
 export default async function App() {
@@ -30,13 +32,14 @@ export default async function App() {
     // ramène le temps total au temps du fetch le plus lent au lieu de leur somme.
     const [
         { zone1, zone2 },
-        articles,
+        bannerArticles,
         generalNews,
         environmentlNews,
         antiCorruptionNews,
         impactNews,
         storiesNews,
         humanRightsNews,
+        bannerCategories,
     ] = await Promise.all([
         getFourthEstateArticles(),
         getLatestBannerArticles(),
@@ -46,13 +49,14 @@ export default async function App() {
         getOurImpactArticles(),
         getStoriesArticles(),
         getHumanRightArticles(),
+        getBannerCategories(BANNER_CATEGORY_SLUGS),
     ]);
 
     return (
         <>
             <Header />
 
-            <SiteBanner articles={articles} />
+            <SiteBanner articles={bannerArticles} categories={bannerCategories} />
 
             <div className="site-content-wrap">
                 <div className="dfpcontainer">
