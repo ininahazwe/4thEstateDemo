@@ -50,13 +50,13 @@
     --pictoY2B:var(--pictoFond);
     --pictoY2W:var(--pictoFond);
     --pictoY2T:var(--pictoFond);
-    --sitePrimary:#6d2929;
-    --siteBanner:#111F35;
-    --siteBannerTag:#F63049;
+    --sitePrimary:#ff5252;
+    --siteBanner:#2c2c54;
+    --siteBannerTag:#f7f1e3;
     --siteSecond:#D02752;
-    --siteAbo:#33d9b2;
+    --siteAbo:#ff5252;
     --siteAboRGB:255,222,0;
-    --siteAboText:#111;
+    --siteAboText:#fff;
     --siteAboSummer:#cf1212;
     --siteAboTextSummer:#fff;
     --agencePrimary:#f67d6f;

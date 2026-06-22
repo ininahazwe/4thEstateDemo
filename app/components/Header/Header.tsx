@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { navItems } from './navigationData';
 import {Mail, Moon, Search, Sun} from "lucide-react";
 import Image from 'next/image';
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -86,6 +87,9 @@ export default function Header() {
                         <Mail size={18} strokeWidth={2} aria-hidden="true" />
                         <span className="sr-only">Newsletters</span>
                     </a>
+
+                    {/* Switcher de langues (traduction IA via API Anthropic) */}
+                    <LanguageSwitcher />
                 </div>
 
                 {/* Logo */}

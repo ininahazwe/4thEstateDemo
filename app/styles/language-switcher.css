@@ -1,0 +1,95 @@
+/* app/components/LanguageSwitcher/language-switcher.css */
+
+/*
+  .header-wrap (CSS global du projet) a overflow: hidden, ce qui rognait
+  le dropdown quel que soit son display/position. Le dropdown est donc
+  rendu via un portal React directement dans <body> (voir LanguageSwitcher.tsx),
+  avec une position calculee en JS (getBoundingClientRect) plutot qu'en CSS pur.
+  Le bouton, lui, reste dans le flux normal du header.
+*/
+
+.site-header .header-tools .gt_switcher.item {
+    padding: 0;
+    position: relative;
+}
+
+.gt_switcher .gt_selected_btn {
+    align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    width: 100%;
+}
+
+.gt_switcher .gt_selected_btn:hover {
+    opacity: 0.7;
+}
+
+.gt_switcher .gt_selected_btn img {
+    border-radius: 2px;
+    display: block;
+    pointer-events: none;
+}
+
+.gt_switcher .gt_loading {
+    background: var(--sitePrimary, #6d2929);
+    border-radius: 50%;
+    bottom: 2px;
+    height: 6px;
+    position: absolute;
+    right: 2px;
+    width: 6px;
+}
+
+/* Dropdown rendu en portal dans document.body : position: fixed,
+   coordonnees top/right injectees en style inline depuis le composant. */
+.gt_option--portal {
+    background: var(--siteBoxBackground, #fff);
+    border-radius: var(--radius, 8px);
+    box-shadow: 0 4px 12px var(--siteBoxShadow, rgba(0, 0, 0, 0.15));
+    min-width: 170px;
+    overflow-y: auto;
+    padding: 4px 0;
+    position: fixed;
+    z-index: 1000;
+}
+
+.gt_option--portal a {
+    align-items: center;
+    color: var(--siteText);
+    display: flex;
+    gap: 8px;
+    padding: 8px 14px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.gt_option--portal a:hover {
+    background: rgba(var(--siteTextRGB, 17, 17, 17), 0.06);
+}
+
+.gt_option--portal a.gt_current {
+    font-weight: 600;
+}
+
+.gt_option--portal img {
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+[data-theme='dark'] .gt_option--portal,
+.dark .gt_option--portal {
+    background: var(--siteBoxBackground, #2e3844);
+}
+
+/* Sur mobile, .header-tools est display:none dans le CSS global du projet --
+   le switcher est donc actuellement uniquement visible a partir de 760px,
+   comme les autres outils (Recherche, Theme, Newsletter).
+   A revoir si une version mobile dediee est souhaitee (ex: dans le menu burger). */
