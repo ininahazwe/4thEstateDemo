@@ -9,7 +9,7 @@ import {type StoriesArticle} from "../components/Stories/types";
 import {type HumanRightsArticle} from "../components/HumanRights/Types";
 import {CategoryArticle, CategoryData} from "@/app/components/Category/Types";
 import {getCategoryConfig} from "@/app/components/Category/categoryConfig";
-
+import { decode } from 'html-entities';
 
 // ---------------------------------------------------------------------------
 // Interfaces WordPress
@@ -120,8 +120,8 @@ function cleanHtmlTitle(title: string): string {
             .replace(/&amp;/g,   '&')
             .replace(/&#038;/g,  '&');
     }
-    const doc = new DOMParser().parseFromString(title, 'text/html');
-    return doc.body.textContent || title;
+    const decoded = decode(title);
+    return decoded.replace(/<[^>]*>/g, '').trim();
 }
 
 /**

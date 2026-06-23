@@ -54,17 +54,7 @@ export default function ArticleBody({
             <aside className="article-tools" data-hide-kne="">
                 <div className="tools-list">
                     <ArticleShareButton title={title} />
-                    <TTSButton
-                         getText={() => {
-                             const container = document.querySelector('.article-text');
-                             if (!container) return '';
-                             const paragraphs = container.querySelectorAll('p');
-                             return Array.from(paragraphs)
-                                     .map(p => p.textContent?.trim())
-                                 .filter(text => text && text.length > 0)
-                                 .join(' ');
-                         }}
-                    />
+                    <TTSButton containerSelector=".article-text" />
                 </div>
             </aside>
             <div className="article-text">

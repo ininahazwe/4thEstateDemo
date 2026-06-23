@@ -81,10 +81,6 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
                     titleId={titleId}
                     showLabel={false}
                     showStopButton={false}
-                    getText={() => {
-                        const titleEl = document.getElementById(titleId);
-                        return titleEl?.closest('article')?.querySelector('.item-text')?.textContent?.trim() ?? '';
-                    }}
                 />
                 <span className="sr-only">Listen</span>
             </div>

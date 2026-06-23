@@ -81,10 +81,6 @@ export default function HumanRightsCard({ article }: HumanRightsCardProps) {
                     titleId={titleId}
                     showLabel={false}
                     showStopButton={false}
-                    getText={() => {
-                        const titleEl = document.getElementById(titleId);
-                        return titleEl?.closest('article')?.querySelector('.item-text')?.textContent?.trim() ?? '';
-                    }}
                 />
             </div>
         </article>
