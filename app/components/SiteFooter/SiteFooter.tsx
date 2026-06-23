@@ -68,7 +68,7 @@ export default async function SiteFooter({ magazines = defaultMagazines }: SiteF
                     <div className="hero-logo">
                         <Link href="/" title="Back to The Fourth Estate homepage">
                             <Image
-                                src="/assets/img/logo.svg"
+                                src="/assets/img/logo-white.svg"
                                 alt="The Fourth Estate Logo"
                                 width={190}
                                 height={38}
@@ -166,40 +166,9 @@ export default async function SiteFooter({ magazines = defaultMagazines }: SiteF
 
                     {/* Section Externe : Unes de magazines & Apps Mobiles */}
                     <div className="footer-away">
-                        <div className="away-print">
-                            {magazines.map((mag, idx) => (
-                                <a
-                                    key={idx}
-                                    className={`${mag.className} ithalc`}
-                                    href={mag.href}
-                                    data-ithalc="[cta_bloc_footer]"
-                                    data-ithal={mag.ithal}
-                                >
-                                    <div className="item-image">
-                                        <figure>
-                                            <picture>
-                                                <img
-                                                    loading="lazy"
-                                                    src={mag.imgSrc}
-                                                    srcSet={mag.imgSrcSet}
-                                                    width={mag.width}
-                                                    height={mag.height}
-                                                    alt={mag.alt}
-                                                />
-                                            </picture>
-                                        </figure>
-                                    </div>
-                                </a>
-                            ))}
-                        </div>
-
-                        <div className="away-apps">
-                            <div className="footer-title">Mobile app</div>
-                            <div className="wrap">
-                                <a href="https://itunes.apple.com/fr/app/courrier-international-magazine/id921592832" className="app ithalc" data-ithalc="[cta_bloc_footer]" data-ithal="appios"></a>
-                                <a href="https://play.google.com/store/apps/details?id=com.milibris.courrierinternationallemag&hl=fr_FR" className="app ithalc" data-ithalc="[cta_bloc_footer]" data-ithal="appandroid"></a>
-                            </div>
-                        </div>
+                        <p>
+                            The Fourth Estate is a non-profit, public interest and accountability investigative journalism project of the Media Foundation for West Africa (MFWA). Our aim is to promote independent and critical research-based journalism that holds those in power answerable to the people they govern.
+                        </p>
                     </div>
                 </div>
 
