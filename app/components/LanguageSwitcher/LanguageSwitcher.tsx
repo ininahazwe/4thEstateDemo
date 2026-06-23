@@ -42,6 +42,10 @@ export default function LanguageSwitcher() {
     // Nécessaire pour createPortal : document n'existe pas en SSR
     useEffect(() => {
         setMounted(true);
+        // Initialise l'attribut lang dès le montage, pour que tout composant
+        // qui en dépend (ex: TTSButton via resolveSpeechLang) ait une valeur
+        // correcte même sans interaction préalable avec le switcher.
+        document.documentElement.lang = SOURCE_LANG;
     }, []);
 
     // Fermer au clic extérieur (le dropdown étant maintenant dans le body,
@@ -96,10 +100,12 @@ export default function LanguageSwitcher() {
         if (lang === SOURCE_LANG) {
             restoreOriginal();
             setCurrentLang(SOURCE_LANG);
+            document.documentElement.lang = SOURCE_LANG;
             return;
         }
 
         setCurrentLang(lang);
+        document.documentElement.lang = lang;
         await translatePageTo(lang.toUpperCase());
     }
 
@@ -112,40 +118,40 @@ export default function LanguageSwitcher() {
             style={{ top: position.top, right: position.right }}
         >
             {LANGUAGES.map((lang) => (
-                <a
-                    key={lang.code}
-                    href="#"
-                    title={lang.label}
-                    className={lang.code === currentLang ? 'nturl gt_current' : 'nturl'}
-                    data-gt-lang={lang.code}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        handleSelectLang(lang.code);
-                    }}
+            <a
+                key={lang.code}
+                href="#"
+                title={lang.label}
+                className={lang.code === currentLang ? 'nturl gt_current' : 'nturl'}
+                data-gt-lang={lang.code}
+                onClick={(e) => {
+                e.preventDefault();
+                handleSelectLang(lang.code);
+            }}
                 >
-                    <img width={16} height={16} alt={lang.code} src={lang.flag} />
-                    {' '}
-                    {lang.label}
+                <img width={16} height={16} alt={lang.code} src={lang.flag} />
+            {' '}
+            {lang.label}
                 </a>
-            ))}
-        </div>
-    );
+                ))}
+</div>
+);
 
-    return (
-        <div className="gt_switcher notranslate item">
-            <button
-                ref={buttonRef}
-                type="button"
-                className="gt_selected_btn"
-                title={`Langue : ${selected.label}`}
-                onClick={handleToggle}
-            >
-                <img src={selected.flag} height={18} width={18} alt={selected.code} />
-                <span className="sr-only">{selected.label}</span>
-                {isTranslating && <span className="gt_loading" aria-hidden="true" />}
-            </button>
+return (
+    <div className="gt_switcher notranslate item">
+        <button
+            ref={buttonRef}
+            type="button"
+            className="gt_selected_btn"
+            title={`Langue : ${selected.label}`}
+            onClick={handleToggle}
+        >
+            <img src={selected.flag} height={18} width={18} alt={selected.code} />
+            <span className="sr-only">{selected.label}</span>
+            {isTranslating && <span className="gt_loading" aria-hidden="true" />}
+        </button>
 
-            {mounted && dropdown && createPortal(dropdown, document.body)}
-        </div>
-    );
+        {mounted && dropdown && createPortal(dropdown, document.body)}
+    </div>
+);
 }

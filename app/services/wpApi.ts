@@ -106,7 +106,7 @@ function buildHref(post: WPPost): string {
 // ---------------------------------------------------------------------------
 
 function formatWpDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return new Date(dateString).toLocaleDateString('en-EN', {
         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
     });
 }

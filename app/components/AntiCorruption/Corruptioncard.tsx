@@ -3,6 +3,7 @@
 import { type AntiCorruptionArticle } from './Types';
 import { Globe, Headphones, Bookmark } from 'lucide-react';
 import Image from "next/image";
+import TTSButton from "@/app/components/UI/TTSButton";
 
 interface AntiCorruptionCardProps {
     article: AntiCorruptionArticle;
@@ -13,17 +14,6 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.classList.add('img--error');
-    };
-
-    const handlePlayAudio = () => {
-        const titleEl = document.getElementById(titleId);
-        const articleText = titleEl?.closest('article')?.querySelector('.item-text')?.textContent;
-        if (!articleText) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(articleText);
-        utterance.lang = 'fr-FR';
-        utterance.rate = 1.0;
-        window.speechSynthesis.speak(utterance);
     };
 
     return (
@@ -87,27 +77,16 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
             </a>
 
             <div className="item-buttons">
-                <button
-                    type="button"
-                    className="tts"
-                    title="Écouter l'article"
-                    aria-describedby={titleId}
-                    onClick={handlePlayAudio}
-                >
-                    <Headphones size={18} strokeWidth={2} aria-hidden="true" />
-                    <span className="sr-only">Listen</span>
-                </button>
-
-                <button
-                    type="button"
-                    className="favorites"
-                    title="Ajouter aux favoris"
-                    aria-describedby={titleId}
-                    data-article-id={article.id}
-                >
-                    <Bookmark size={18} strokeWidth={2} aria-hidden="true" />
-                    <span className="action sr-only">Ajouter aux favoris</span>
-                </button>
+                <TTSButton
+                    titleId={titleId}
+                    showLabel={false}
+                    showStopButton={false}
+                    getText={() => {
+                        const titleEl = document.getElementById(titleId);
+                        return titleEl?.closest('article')?.querySelector('.item-text')?.textContent?.trim() ?? '';
+                    }}
+                />
+                <span className="sr-only">Listen</span>
             </div>
         </article>
     );

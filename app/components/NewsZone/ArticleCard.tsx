@@ -20,7 +20,7 @@ const handlePlayAudio = () => {
 
     // 3. Créer l'énoncé
     const utterance = new SpeechSynthesisUtterance(articleText);
-    utterance.lang = 'fr-FR'; // Forcer la langue française
+    utterance.lang = 'en-EN'; // Forcer la langue française
     utterance.rate = 1.0;     // Vitesse de lecture (0.5 à 2)
 
     // 4. Lancer la lecture

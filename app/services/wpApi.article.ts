@@ -53,7 +53,7 @@ function stripHtml(html: string): string {
 }
 
 function formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString("fr-FR", {
+    return new Date(iso).toLocaleDateString("en-EN", {
         day: "numeric",
         month: "long",
         year: "numeric",

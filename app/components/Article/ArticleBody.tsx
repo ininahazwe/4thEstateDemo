@@ -2,8 +2,8 @@ import RelatedArticleCard from "./RelatedArticleCard";
 import ArticleContent from "./ArticleContent";
 import { WpArticleCard } from "@/app/services/wpApi.article";
 import ArticleIllustration from "@/app/components/Article/Articleillustration";
-import ArticleTTSButton from "@/app/components/UI/Articlettsbutton";
 import ArticleShareButton from "@/app/components/UI/ArticleShareButton";
+import TTSButton from "@/app/components/UI/TTSButton";
 
 interface Author {
     displayName: string;
@@ -54,7 +54,17 @@ export default function ArticleBody({
             <aside className="article-tools" data-hide-kne="">
                 <div className="tools-list">
                     <ArticleShareButton title={title} />
-                    <ArticleTTSButton  />
+                    <TTSButton
+                         getText={() => {
+                             const container = document.querySelector('.article-text');
+                             if (!container) return '';
+                             const paragraphs = container.querySelectorAll('p');
+                             return Array.from(paragraphs)
+                                     .map(p => p.textContent?.trim())
+                                 .filter(text => text && text.length > 0)
+                                 .join(' ');
+                         }}
+                    />
                 </div>
             </aside>
             <div className="article-text">
