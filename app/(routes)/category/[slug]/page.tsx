@@ -7,6 +7,7 @@ import ArticleAside from '@/app/components/Article/ArticleAside';
 import { getCategoryPageData, getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
 import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
+import Header from "@/app/components/Header/Header";
 
 interface CategoryPageProps {
     params: Promise<{ slug: string }>;
@@ -51,6 +52,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
     return (
         <>
+            <Header />
+
             <SiteBanner articles={bannerArticles} categories={bannerCategories} />
 
             <main className="site-main" id="site-main">

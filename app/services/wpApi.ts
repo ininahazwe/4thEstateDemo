@@ -97,7 +97,10 @@ const BLUR_PLACEHOLDER =
  */
 
 function buildHref(post: WPPost): string {
-    return `/article/${post.slug}`;
+    const date = new Date(post.date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `/${year}/${month}/${post.slug}`;
 }
 
 

@@ -19,6 +19,7 @@ export interface WpArticle {
     authors: WpArticleAuthor[];
     readTime?: string;
     publishedAt: string;
+    publishedAtISO: string;
     featuredImage?: string;
     imageCaption?: string;
     imageCredit?: string;
@@ -146,6 +147,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
                 (acf.read_time as string) ??
                 estimateReadTime((post.content as { rendered: string }).rendered),
             publishedAt: formatDate(post.date as string),
+            publishedAtISO: post.date as string,
             featuredImage: (media?.source_url as string) ?? undefined,
             imageCaption: (media?.caption as { rendered: string })?.rendered
                 ? stripHtml((media.caption as { rendered: string }).rendered)
