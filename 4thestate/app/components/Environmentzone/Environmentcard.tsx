@@ -1,8 +1,9 @@
 'use client';
 
 import { type EnvironmentArticle } from './Types';
-import { Globe, Headphones } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import Image from "next/image";
+import TTSButton from "@/app/components/UI/TTSButton";
 
 interface EnvironmentCardProps {
     article: EnvironmentArticle;
@@ -14,17 +15,6 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.classList.add('img--error');
-    };
-
-    const handlePlayAudio = () => {
-        const titleEl = document.getElementById(titleId);
-        const articleText = titleEl?.closest('article')?.querySelector('.item-text')?.textContent;
-        if (!articleText) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(articleText);
-        utterance.lang = 'fr-FR';
-        utterance.rate = 1.0;
-        window.speechSynthesis.speak(utterance);
     };
 
     return (
@@ -58,7 +48,7 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                 <div className="item-text">
                     <div className="heading">
                         {article.tagOrCategory && (
-                            <span className="strapline">{article.tagOrCategory}.</span>
+                            <span className="strapline">{article.tagOrCategory} -</span>
                         )}
                         <p id={titleId} className="title">
                             {article.title}
@@ -88,16 +78,12 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
             </a>
 
             <div className="item-buttons">
-                <button
-                    type="button"
-                    className="tts"
-                    title="Écouter l'article"
-                    aria-describedby={titleId}
-                    onClick={handlePlayAudio}
-                >
-                    <Headphones size={18} strokeWidth={2} aria-hidden="true" />
-                    <span className="sr-only">Listen</span>
-                </button>
+                <TTSButton
+                    titleId={titleId}
+                    showLabel={false}
+                    showStopButton={false}
+                />
+                <span className="sr-only">Listen</span>
             </div>
         </article>
     );

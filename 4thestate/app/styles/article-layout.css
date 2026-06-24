@@ -1,0 +1,46 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   article-layout.css
+   Overrides pour la refonte single-colonne de la page article.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.article .article-content {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 680px;
+}
+
+.article-text{
+    img{
+        margin: auto;
+        padding: 20px 0;
+    }
+}
+
+.article .article-text{
+    font-size: 1.25rem !important;
+    line-height: 1.875rem;
+}
+
+.article .article-text,
+.article .article-header .article-lede {
+    font-family: var(--serifGeorgia), serif;
+}
+
+figcaption, .wp-element-caption{
+    font-size: 0.8rem;
+    line-height: 1rem;
+    text-align: center;
+}
+/* Image d'illustration (hero) : déborde du conteneur 680px pour aller
+   jusqu'aux bords de #site-main. Reproduit en desktop le même principe
+   que la règle mobile existante dans article-critical.css
+   (.article-illustration[data-type=normal] { margin:0 calc(var(--mainPadding)*-1) }),
+   étendue à la largeur fixe de #site-main plutôt qu'au viewport. */
+@media screen and (min-width: 1000px) {
+    .article .article-content .article-illustration {
+        margin-left: -160px;
+        margin-right: -160px;
+        max-width: none;
+        width: calc(100% + 320px);
+    }
+}

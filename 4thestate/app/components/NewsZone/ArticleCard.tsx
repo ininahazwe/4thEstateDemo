@@ -20,7 +20,7 @@ const handlePlayAudio = () => {
 
     // 3. Créer l'énoncé
     const utterance = new SpeechSynthesisUtterance(articleText);
-    utterance.lang = 'fr-FR'; // Forcer la langue française
+    utterance.lang = 'en-EN'; // Forcer la langue française
     utterance.rate = 1.0;     // Vitesse de lecture (0.5 à 2)
 
     // 4. Lancer la lecture
@@ -67,8 +67,8 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
                 <div className="item-text">
                     <div className="heading">
                         {/* Remplacement de strapline par tagOrCategory provenant de WordPress */}
-                        {article.tagOrCategory && <span className="strapline">{article.tagOrCategory}</span>}
-                        {isLive && <div className="live">Live</div>}
+                        {article.tagOrCategory && <span className="strapline">{article.tagOrCategory} -</span>}
+                        {/*{isLive && <div className="live">Live</div>}*/}
 
                         {/* Niveau de titre dynamique pour respecter vos règles CSS / SEO */}
                         <Heading id={`title-${article.id}`} className="title">

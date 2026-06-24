@@ -1,5 +1,5 @@
 import AntiCorruptionCard from './Corruptioncard';
-import { type AntiCorruptionArticle } from './types';
+import { type AntiCorruptionArticle } from './Types';
 
 interface AntiCorruptionZoneProps {
     articles: AntiCorruptionArticle[];

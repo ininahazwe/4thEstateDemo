@@ -4,7 +4,7 @@ export interface HumanRightsArticle {
     title: string;
     tagOrCategory: string;
     source?: string;
-    section: 'human-gith';
+    section: 'human-right';
     model: 'article' | 'article-vertical';
     type: 'article';
     index: number;

@@ -1,31 +1,28 @@
 // app/layout.tsx
 import type { Metadata } from "next";
+import "./styles/base.css";
+import "./styles/home.css";
+import "./styles/layout.css";
+import "./styles/global.css";
+import "./styles/component-banner.css";
+import "./styles/home-critical.css";
+import "./styles/custom.css";
+import "./styles/article-critical.css";
+import "./styles/swipe.css";
+import "./styles/article.css";
+import "./styles/share-popup.css";
+import "./styles/inline.css";
+import "./styles/video.css";
+import "./styles/language-switcher.css";
+import "./styles/article-layout.css";
+import "./styles/section-critical.css";
 import "./globals.css";
-import localFont from 'next/font/local';
-
 
 export const metadata: Metadata = {
     title: "The Fourth Estate - Réplication & Investigation",
     description: "Plateforme d'investigation journalistique indépendante.",
 };
 
-// 1. Configuration de la police locale
-const maPoliceConfiguration = localFont({
-    src: [
-        {
-            path: './fonts/TheAntiquaB-W5Plain_TRIAL.otf',
-            weight: '400',
-            style: 'normal',
-        },
-        {
-            path: './fonts/TheAntiquaB-W7Bold_TRIAL.otf',
-            weight: '700',
-            style: 'normal',
-        },
-    ],
-    // Définir une variable CSS globale pour l'utiliser dans Tailwind ou du CSS classique
-    variable: '--font-ma-police',
-});
 export default function RootLayout({
                                        children,
                                    }: Readonly<{

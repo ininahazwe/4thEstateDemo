@@ -53,7 +53,7 @@ export default function ArticleTTSButton({ containerSelector = '.article-text' }
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(textToRead);
-        utterance.lang = 'fr-FR';
+        utterance.lang = 'en-EN';
         utterance.rate = 1.0;
 
         utterance.onend = () => {

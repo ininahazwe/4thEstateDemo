@@ -1,6 +1,5 @@
 import {HumanRightsArticle} from "@/app/components/HumanRights/Types";
 import HumanRightsCard from "@/app/components/HumanRights/HumanRightCard";
-
 interface HumanRightsZoneProps {
     articles: HumanRightsArticle[];
 }

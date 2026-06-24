@@ -1,6 +1,6 @@
 'use client';
 
-import { type OurImpactArticle } from './types';
+import { type OurImpactArticle } from './Types';
 
 interface OurImpactCardProps {
     article: OurImpactArticle;
@@ -18,7 +18,7 @@ export default function OurImpactCard({ article }: OurImpactCardProps) {
                 <div className="item-text">
                     <div className="heading">
                         {article.tagOrCategory && (
-                            <span className="strapline">{article.tagOrCategory}.</span>
+                            <span className="strapline">{article.tagOrCategory} -</span>
                         )}
                         <p className="title">{article.title}</p>
                     </div>

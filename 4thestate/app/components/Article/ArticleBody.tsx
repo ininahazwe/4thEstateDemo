@@ -2,12 +2,12 @@ import RelatedArticleCard from "./RelatedArticleCard";
 import ArticleContent from "./ArticleContent";
 import { WpArticleCard } from "@/app/services/wpApi.article";
 import ArticleIllustration from "@/app/components/Article/Articleillustration";
-import ArticleTTSButton from "@/app/components/UI/Articlettsbutton";
 import ArticleShareButton from "@/app/components/UI/ArticleShareButton";
+import TTSButton from "@/app/components/UI/TTSButton";
 
 interface Author {
     displayName: string;
-    // Si tu as un slug pour l'URL de l'auteur, ajoute-le ici, ex: slug: string;
+    slug: string; // nécessaire pour construire /author/{slug}
 }
 
 interface ArticleBodyProps {
@@ -20,7 +20,7 @@ interface ArticleBodyProps {
     relatedArticles: WpArticleCard[];   // grille "Sur le même sujet" en bas
     readMoreArticles: WpArticleCard[];  // encarts "À lire aussi" intercalés dans le texte
     tags: Array<{ label: string; href: string }>;
-    authors: Author[];                  // 1. On ajoute les auteurs dans les Props
+    authors: Author[];
 }
 
 export default function ArticleBody({
@@ -32,17 +32,11 @@ export default function ArticleBody({
                                         readMoreArticles,
                                         tags,
                                         title,
-                                        authors,         // 2. On récupère la prop ici
+                                        authors,
                                     }: ArticleBodyProps) {
 
-    // 3. Logique identique pour générer la chaîne de caractères si nécessaire,
-    // ou "The Fourth Estate" par défaut si aucun auteur n'est rattaché.
-    const authorNames = authors.length
-        ? authors.map((a) => a.displayName).join(" | ")
-        : "The Fourth Estate";
-
     return (
-        <div className="article-content" data-column="left">
+        <div className="article-content">
             {featuredImage && (
                 <ArticleIllustration
                     featuredImage={featuredImage}
@@ -54,7 +48,7 @@ export default function ArticleBody({
             <aside className="article-tools" data-hide-kne="">
                 <div className="tools-list">
                     <ArticleShareButton title={title} />
-                    <ArticleTTSButton  />
+                    <TTSButton containerSelector=".article-text" />
                 </div>
             </aside>
             <div className="article-text">
@@ -65,8 +59,18 @@ export default function ArticleBody({
                 <div className="article-authors-vo">
                     <div className="article-authors">
                         <div className="default-authors">
-                            {/* 4. Remplacement dynamique de Boukari Ouédraogo */}
-                            <span>{authorNames}</span>
+                            {authors.length ? (
+                                authors.map((author, index) => (
+                                    <span key={author.slug}>
+                                        <a href={`/author/${author.slug}`} className="author-link">
+                                            {author.displayName}
+                                        </a>
+                                        {index < authors.length - 1 && " | "}
+                                    </span>
+                                ))
+                            ) : (
+                                <span>The Fourth Estate</span>
+                            )}
                         </div>
                     </div>
                 </div>

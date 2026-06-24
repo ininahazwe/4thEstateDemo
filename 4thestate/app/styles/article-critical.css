@@ -32,7 +32,7 @@ html:not(.v-app) .article .article-header .article-breadcrumbs .item a:hover {
 }
 .article .article-header .article-heading {
     display:block;
-    font-family:var(--sans);
+    font-family: var(--sans), serif;
     font-size:32px;
     font-weight:600;
     line-height:1.1;
@@ -40,9 +40,11 @@ html:not(.v-app) .article .article-header .article-breadcrumbs .item a:hover {
 }
 .article .article-header .article-heading .strapline {
     background-clip:text;
-    background-color:var(--sitePrimary);
+    /*background-color:var(--sitePrimary);*/
     color:var(--sitePrimary);
-    -webkit-text-fill-color:#0000
+    background: #f5f5f5;
+    margin-right: 10px;
+    -webkit-text-fill-color:var(--sitePrimary);
 }
 @media screen and (min-width:1000px) {
     .article .article-header .article-heading {

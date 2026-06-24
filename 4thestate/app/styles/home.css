@@ -1,6 +1,7 @@
 .home .zone-type {
-    background-color:var(--patternDiagonalBackground);
-    background-image:repeating-linear-gradient(45deg,var(--patternDiagonalLine) 0,var(--patternDiagonalLine) 1px,#0000 0,#0000 50%);
+    /*background-color:var(--patternDiagonalBackground);
+    background-image:repeating-linear-gradient(45deg,var(--patternDiagonalLine) 0,var(--patternDiagonalLine) 1px,#0000 0,#0000 50%);*/
+    background-image: radial-gradient(circle, #d4d4d4 1px, transparent 1px);
     background-size:7px 7px;
     padding:var(--mainPadding)
 }

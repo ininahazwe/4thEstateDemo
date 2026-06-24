@@ -2,6 +2,7 @@
 
 import { type StoriesArticle } from './types';
 import { Bookmark } from 'lucide-react';
+import Image from "next/image";
 
 interface StoriesCardProps {
     article: StoriesArticle;
@@ -27,9 +28,10 @@ export default function StoriesCard({ article }: StoriesCardProps) {
                 {article.image && (
                     <div className="item-image">
                         <picture>
-                            <img
+                            <Image
                                 src={article.image.src}
-                                srcSet={article.image.srcSet}
+                                placeholder="blur"
+                                blurDataURL={article.image.blurDataURL}
                                 width={article.image.width}
                                 height={article.image.height}
                                 fetchPriority={article.image.fetchPriority}
@@ -45,7 +47,7 @@ export default function StoriesCard({ article }: StoriesCardProps) {
                     <div className="heading">
                         <span className="sr-only">The Fourth Estate Stories</span>
                         {article.tagOrCategory && (
-                            <span className="strapline">{article.tagOrCategory}.</span>
+                            <span className="strapline">{article.tagOrCategory} -</span>
                         )}
                         <p id={titleId} className="title">
                             {article.title}

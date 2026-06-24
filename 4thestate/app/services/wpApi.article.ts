@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface WpArticleAuthor {
@@ -17,6 +19,7 @@ export interface WpArticle {
     authors: WpArticleAuthor[];
     readTime?: string;
     publishedAt: string;
+    publishedAtISO: string;
     featuredImage?: string;
     imageCaption?: string;
     imageCredit?: string;
@@ -51,7 +54,7 @@ function stripHtml(html: string): string {
 }
 
 function formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString("fr-FR", {
+    return new Date(iso).toLocaleDateString("en-EN", {
         day: "numeric",
         month: "long",
         year: "numeric",
@@ -91,12 +94,23 @@ function buildArticleCard(post: Record<string, unknown>): WpArticleCard {
 
 /**
  * Récupère un article complet par son slug.
+ *
+ * Enveloppé dans React.cache() : si generateMetadata() ET la page elle-même
+ * appellent getArticleBySlug(slug) durant le même rendu serveur, le fetch
+ * réseau n'est exécuté QU'UNE FOIS — le second appel reçoit le résultat
+ * déjà résolu en mémoire. Élimine un fetch WordPress redondant à chaque
+ * chargement de page article.
  */
-export async function getArticleBySlug(slug: string): Promise<WpArticle | null> {
+export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | null> => {
     try {
         const res = await fetch(
             `${WP_API}/posts?slug=${encodeURIComponent(slug)}&_embed=1`,
-            { next: { revalidate: 60 } }
+            // revalidate passé de 60s à 600s : le contenu éditorial change rarement
+            // après publication, donc une fenêtre de cache plus longue réduit la
+            // fréquence des "cache miss" qui déclenchent le fetch réseau lent
+            // (Frankfort ↔ Ghana). Un article déjà visité reste donc rapide
+            // beaucoup plus longtemps qu'avant.
+            { next: { revalidate: 600 } }
         );
         if (!res.ok) return null;
 
@@ -133,6 +147,7 @@ export async function getArticleBySlug(slug: string): Promise<WpArticle | null> 
                 (acf.read_time as string) ??
                 estimateReadTime((post.content as { rendered: string }).rendered),
             publishedAt: formatDate(post.date as string),
+            publishedAtISO: post.date as string,
             featuredImage: (media?.source_url as string) ?? undefined,
             imageCaption: (media?.caption as { rendered: string })?.rendered
                 ? stripHtml((media.caption as { rendered: string }).rendered)
@@ -162,11 +177,16 @@ export async function getArticleBySlug(slug: string): Promise<WpArticle | null> 
     } catch {
         return null;
     }
-}
+});
 
 /**
  * Récupère des articles partageant les mêmes tags ou catégorie.
  * Utilisé à la fois pour les encarts "À lire aussi" et la grille "Sur le même sujet".
+ *
+ * Les deux fetches (tags puis catégorie) restent séquentiels par nécessité :
+ * le second ne se déclenche QUE si le premier n'a pas donné assez de résultats.
+ * Pour limiter l'impact, le fetch par tags est prioritaire et suffit dans la
+ * majorité des cas (count=3 atteint dès le premier fetch si l'article a des tags).
  */
 export async function getReadMoreArticles(
     currentId: number,

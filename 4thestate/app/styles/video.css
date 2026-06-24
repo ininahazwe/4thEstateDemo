@@ -1,0 +1,220 @@
+/* ---------------------------------------------------------------------------
+   zone-insta — carousel vidéo générique (squelette inspiré du widget
+   "Storylines" de Sitestream, sans dépendance propriétaire).
+   À fusionner/adapter avec le CSS déjà existant pour cette zone.
+--------------------------------------------------------------------------- */
+
+.zone-insta .wrap {
+    position: relative;
+    height: 400px;
+}
+
+.zone-insta #stories {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.zone-insta .carousel {
+    display: flex;
+    gap: 8px;
+    height: 388px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+
+.zone-insta .carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.zone-insta .item {
+    flex: 0 0 auto;
+    width: 218px;
+    height: 388px;
+}
+
+.zone-insta .card {
+    width: 100%;
+    height: 100%;
+}
+
+.zone-insta .smudge {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.zone-insta .thumb {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    position: relative;
+}
+
+.zone-insta .player {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    /* Reset des styles natifs : .player est un <button> */
+    border: none;
+    padding: 0;
+    background: transparent;
+    font: inherit;
+    text-align: inherit;
+    color: inherit;
+}
+
+/* Overlay dégradé + métadonnées (durée, titre), affiché au-dessus du player */
+.zone-insta .controls {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    pointer-events: none;
+    background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.9) 0%,
+            rgba(0, 0, 0, 0.4) 40%,
+            transparent 70%
+    );
+    border-radius: 8px;
+}
+
+.zone-insta .meta {
+    padding: 12px;
+    color: #fff;
+    width: 100%;
+}
+
+.zone-insta .duration {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.zone-insta .duration-icon {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    /* Remplacer par une icône play (svg/lucide) selon votre charte */
+    background: currentColor;
+    mask: none;
+}
+
+.zone-insta .headline .text {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Boutons précédent / suivant */
+.zone-insta .navigation-buttons {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    pointer-events: none;
+    padding: 0 8px;
+}
+
+.zone-insta .navigation-buttons button {
+    pointer-events: auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.zone-insta .navigation-buttons button:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.zone-insta .icon-prev,
+.zone-insta .icon-next {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+}
+
+.zone-insta .icon-prev {
+    transform: rotate(-135deg);
+}
+
+.zone-insta .icon-next {
+    transform: rotate(45deg);
+}
+
+/* ---------------------------------------------------------------------------
+   Modal de lecture vidéo (TikTokVideoModal) — ouverture en grand format
+   au clic sur une carte. PhotoSwipe n'est pas réutilisable ici car son
+   moteur attend une image ou un <video> natif, pas un iframe TikTok.
+--------------------------------------------------------------------------- */
+
+.tiktok-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.95);
+}
+
+.tiktok-modal-content {
+    max-width: 420px;
+    width: 90vw;
+    max-height: 90vh;
+}
+
+.tiktok-modal-content .tiktok-embed-wrapper,
+.tiktok-modal-content .tiktok-embed {
+    width: 100%;
+    margin: 0 !important;
+}
+
+.tiktok-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.tiktok-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { type ArticleData }          from '../components/NewsZone/types';
 import { type ArticleDataBanner }     from '../components/SiteBanner/types';
 import { type GeneralNewsArticle }    from '../components/GeneralNews/types';
@@ -6,7 +7,9 @@ import { type AntiCorruptionArticle } from '../components/AntiCorruption/Types';
 import { type OurImpactArticle }      from '../components/Impact/Types';
 import {type StoriesArticle} from "../components/Stories/types";
 import {type HumanRightsArticle} from "../components/HumanRights/Types";
-
+import {CategoryArticle, CategoryData} from "@/app/components/Category/Types";
+import {getCategoryConfig} from "@/app/components/Category/categoryConfig";
+import { decode } from 'html-entities';
 
 // ---------------------------------------------------------------------------
 // Interfaces WordPress
@@ -36,6 +39,18 @@ interface WPTerm {
     name: string;
 }
 
+interface WPCategoryWithCount extends WPTerm {
+    slug: string;
+    count: number;
+}
+
+export interface FooterCategory {
+    id: number;
+    label: string;
+    href: string;
+    ithal: string;
+}
+
 // ---------------------------------------------------------------------------
 // Configuration centrale
 // ---------------------------------------------------------------------------
@@ -51,9 +66,10 @@ const CATEGORY_IDS = {
     politique:      3    as number,
     economie:       5    as number,
     generalNews:    109  as number,
-    environment:    null as number | null, // ⚠️ à renseigner
-    antiCorruption: null as number | null, // ⚠️ à renseigner
-    ourImpact:      null as number | null, // ⚠️ à renseigner
+    environment:    131  as number,
+    antiCorruption: 111  as number,
+    humanRight:     121  as number,
+    ourImpact:      229  as number,
 };
 
 /**
@@ -81,7 +97,10 @@ const BLUR_PLACEHOLDER =
  */
 
 function buildHref(post: WPPost): string {
-    return `/article/${post.slug}`;
+    const date = new Date(post.date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `/${year}/${month}/${post.slug}`;
 }
 
 
@@ -90,7 +109,7 @@ function buildHref(post: WPPost): string {
 // ---------------------------------------------------------------------------
 
 function formatWpDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return new Date(dateString).toLocaleDateString('en-EN', {
         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
     });
 }
@@ -104,8 +123,8 @@ function cleanHtmlTitle(title: string): string {
             .replace(/&amp;/g,   '&')
             .replace(/&#038;/g,  '&');
     }
-    const doc = new DOMParser().parseFromString(title, 'text/html');
-    return doc.body.textContent || title;
+    const decoded = decode(title);
+    return decoded.replace(/<[^>]*>/g, '').trim();
 }
 
 /**
@@ -475,7 +494,7 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
 
 export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
     try {
-        const categoryId = await resolveCategoryId(CATEGORY_IDS.antiCorruption, 'human-right');
+        const categoryId = await resolveCategoryId(CATEGORY_IDS.humanRight, 'human-right');
         const url = categoryId
             ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish`
             : `${WP_BASE}/posts?per_page=5&status=publish`;
@@ -499,8 +518,8 @@ export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
                 if (cat) tagOrCategory = cat;
             }
 
-            const article: AntiCorruptionArticle = {
-                id:            `ac-post-${post.id}`,
+            const article: HumanRightsArticle = {
+                id:            `hr-post-${post.id}`,
                 href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
                 tagOrCategory: cleanHtmlTitle(tagOrCategory),
@@ -567,43 +586,22 @@ export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
 export async function getStoriesArticles(perPage: number = 6): Promise<StoriesArticle[]> {
     try {
         // Recherche par mot-clé "video" — équivalent de /?s=video
-        const res = await fetch(
-            `https://thefourthestategh.com/wp-json/wp/v2/posts?search=video&per_page=${perPage}&status=publish`,
-            { next: { revalidate: 600 } }
+        // Utilise fetchPosts() comme toutes les autres fonctions : applique déjà
+        // le filtre défensif status=publish, donc plus besoin de le refaire ici.
+        const posts = await fetchPosts(
+            `${WP_BASE}/posts?search=video&per_page=${perPage}&status=publish`,
+            600
         );
-
-        if (!res.ok) return [];
-
-        const rawPosts: WPPost[] = await res.json();
-        // Garde défensive : cet endpoint utilise un fetch direct (pas fetchPosts),
-        // donc le filtre status=publish n'est pas hérité automatiquement.
-        const posts = rawPosts.filter(p => !p.status || p.status === 'publish');
         if (!posts.length) return [];
 
-        // Récupérer médias et catégories en parallèle
-        const mediaIds = Array.from(new Set(posts.map(p => p.featured_media).filter(id => id > 0)));
-        const categoryIds = Array.from(new Set(posts.flatMap(p => p.categories).filter(id => id > 0)));
+        // Médias et catégories récupérés en 2 requêtes groupées au lieu de N+1
+        // (alignement sur fetchMediaBatch/fetchCategoryBatch utilisés partout ailleurs).
+        const { mediaIds, categoryIds } = extractIds(posts);
 
-        const [mediaResults, categoriesResults] = await Promise.all([
-            Promise.all(
-                mediaIds.map(id =>
-                    fetch(`https://thefourthestategh.com/wp-json/wp/v2/media/${id}`)
-                        .then(res => res.ok ? res.json() : null)
-                        .catch(() => null)
-                )
-            ),
-            categoryIds.length > 0
-                ? fetch(`https://thefourthestategh.com/wp-json/wp/v2/categories?include=${categoryIds.join(',')}`)
-                    .then(res => res.ok ? res.json() : [])
-                    .catch(() => [])
-                : Promise.resolve([])
+        const [mediaMap, categoryMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
         ]);
-
-        const mediaMap = new Map<number, WPMedia>();
-        (mediaResults as (WPMedia | null)[]).forEach(m => { if (m) mediaMap.set(m.id, m); });
-
-        const categoryMap = new Map<number, string>();
-        (categoriesResults as WPTerm[]).forEach(c => categoryMap.set(c.id, c.name));
 
         return posts.map((post, index) => {
             const media = mediaMap.get(post.featured_media);
@@ -629,11 +627,11 @@ export async function getStoriesArticles(perPage: number = 6): Promise<StoriesAr
             if (media) {
                 article.image = {
                     src: media.source_url,
-                    srcSet: `${media.source_url} 2x`,
                     // Dimensions portrait — format Stories
                     width: media.media_details?.width ?? 640,
                     height: media.media_details?.height ?? 1138,
                     fetchPriority: index === 0 ? 'high' : 'auto',
+                    blurDataURL: BLUR_PLACEHOLDER,
                 };
             }
 
@@ -642,6 +640,231 @@ export async function getStoriesArticles(perPage: number = 6): Promise<StoriesAr
 
     } catch (error) {
         console.error('Erreur wpApi [getStoriesArticles]:', error);
+        return [];
+    }
+}
+
+// ---------------------------------------------------------------------------
+// getTopCategories
+// ---------------------------------------------------------------------------
+
+/**
+ * Retourne les catégories ayant le plus d'articles publiés (champ `count`
+ * natif de l'API WP, déjà calculé côté serveur — aucun scan de posts requis).
+ * `hide_empty=true` exclut les catégories vides ; `orderby=count&order=desc`
+ * trie par popularité décroissante.
+ */
+export async function getTopCategories(limit = 10): Promise<FooterCategory[]> {
+    try {
+        const res = await fetch(
+            `${WP_BASE}/categories?orderby=count&order=desc&hide_empty=true&per_page=${limit}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!res.ok) return [];
+
+        const cats: WPCategoryWithCount[] = await res.json();
+
+        return cats.map(cat => ({
+            id:    cat.id,
+            label: cat.name,
+            href:  `/category/${cat.slug}`,
+            ithal: cat.slug,
+        }));
+
+    } catch (error) {
+        console.error('Erreur wpApi [getTopCategories]:', error);
+        return [];
+    }
+}
+
+// ---------------------------------------------------------------------------
+// getCategoryPageData
+//
+// Optimisations perf (alignées sur celles déjà faites pour getArticleBySlug,
+// la page article) :
+//
+// 1. React.cache() — generateMetadata() ET la page elle-même appellent
+//    getCategoryPageData(slug, page) durant le même rendu serveur. Sans
+//    cache(), ça déclenchait TOUS les fetches internes deux fois par
+//    chargement de page (resolveCategory + posts + médias + catégories =
+//    jusqu'à 5 requêtes WordPress en double). Avec cache(), le second appel
+//    avec les mêmes arguments lit le résultat déjà résolu en mémoire.
+//
+// 2. Fetch redondant supprimé — l'ancienne version refaisait un fetch séparé
+//    vers /categories/{id} (getCategoryDisplayName) uniquement pour .name,
+//    alors que resolveCategory récupère déjà l'objet catégorie complet
+//    (id + name + slug) en un seul appel. getCategoryDisplayName retirée.
+//
+// 3. revalidate du fetch posts passé de 300s à 600s, cohérent avec
+//    getArticleBySlug (contenu éditorial change rarement après publication).
+// ---------------------------------------------------------------------------
+
+interface WPCategoryResolved {
+    id: number;
+    name: string;
+    slug: string;
+}
+
+/**
+ * Résout un slug en objet catégorie complet (id + name + slug) en un seul
+ * fetch — remplace l'usage de resolveCategoryId pour la page catégorie,
+ * qui ne retournait que l'id et forçait un second fetch ailleurs pour le nom.
+ * Mise en cache 1h.
+ */
+async function resolveCategory(slug: string): Promise<WPCategoryResolved | null> {
+    const res = await fetch(`${WP_BASE}/categories?slug=${slug}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const cats: WPCategoryResolved[] = await res.json();
+    return cats[0] ?? null;
+}
+
+const CATEGORY_PER_PAGE = 13;
+
+export const getCategoryPageData = cache(async (
+    slug: string,
+    page: number = 1
+): Promise<CategoryData | null> => {
+    const category = await resolveCategory(slug);
+    if (!category) return null;
+
+    const config = getCategoryConfig(slug);
+    // category.name déjà disponible ici — plus besoin d'un 2e fetch pour l'avoir.
+    const title = config.title ?? category.name;
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?categories=${category.id}` +
+        `&page=${page}` +
+        `&per_page=${CATEGORY_PER_PAGE}` +
+        `&status=publish` +
+        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+
+    const res = await fetch(url, { next: { revalidate: 600 } });
+
+    if (!res.ok) {
+        if (res.status === 400) {
+            // Page hors limites -> WP renvoie 400 au-delà de la dernière page.
+            return {
+                title,
+                slug,
+                seoDescription: config.seoDescription,
+                tags: config.tags ?? [],
+                articles: [],
+                pagination: { currentPage: page, totalPages: 0, basePath: `/category/${slug}` },
+            };
+        }
+        console.error(`Erreur wpApi [getCategoryPageData]: ${res.status}`);
+        return null;
+    }
+
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '1');
+    const rawPosts: WPPost[] = await res.json();
+
+    // Exclut les contenus "stories"/vidéo de cette liste (décision produit).
+    const posts = rawPosts.filter((p) => (p as WPPost & { format?: string }).format !== 'video');
+    if (!posts.length) {
+        return {
+            title,
+            slug,
+            seoDescription: config.seoDescription,
+            tags: config.tags ?? [],
+            articles: [],
+            pagination: { currentPage: page, totalPages, basePath: `/category/${slug}` },
+        };
+    }
+
+    const { mediaIds, categoryIds } = extractIds(posts);
+    const [mediaMap, categoryMap] = await Promise.all([
+        fetchMediaBatch(mediaIds),
+        fetchCategoryBatch(categoryIds),
+    ]);
+
+    const articles: CategoryArticle[] = posts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+
+        let source = 'The Fourth Estate';
+        if (post.categories.length > 0) {
+            const cat = categoryMap.get(post.categories[0]);
+            if (cat) source = cat;
+        }
+
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(index),
+        };
+
+        if (media) article.image = buildImage(media, index);
+
+        return article;
+    });
+
+    return {
+        title,
+        slug,
+        seoDescription: config.seoDescription,
+        tags: config.tags ?? [],
+        articles,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            basePath: `/category/${slug}`,
+        },
+    };
+});
+
+// ---------------------------------------------------------------------------
+// getBannerCategories — à coller dans wpApi.ts
+//
+// Résout une liste ORDONNÉE de slugs (BANNER_CATEGORY_SLUGS) en vraies
+// catégories WordPress (nom + slug + lien /category/{slug}). Contrairement à
+// getTopCategories (tri par popularité), ici l'ordre et la sélection sont
+// pilotés manuellement par bannerCategorySlugs.ts — pas de tri serveur WP.
+//
+// Une seule requête groupée (slug=a,b,c) plutôt que N requêtes individuelles,
+// puis remappage dans l'ordre d'entrée (WP ne garantit pas l'ordre en sortie
+// quand on filtre par plusieurs slugs à la fois).
+// ---------------------------------------------------------------------------
+
+export interface BannerCategory {
+    label: string;
+    href: string;
+    slug: string;
+}
+
+export async function getBannerCategories(slugs: string[]): Promise<BannerCategory[]> {
+    if (!slugs.length) return [];
+
+    try {
+        const res = await fetch(
+            `${WP_BASE}/categories?slug=${slugs.join(',')}&per_page=${slugs.length}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!res.ok) return [];
+
+        const cats: WPCategoryWithCount[] = await res.json();
+        const bySlug = new Map(cats.map((c) => [c.slug, c]));
+
+        // Remappage dans l'ordre de bannerCategorySlugs.ts ; les slugs introuvables
+        // côté WP (catégorie pas encore créée, faute de frappe…) sont silencieusement
+        // omis plutôt que de casser le rendu du banner.
+        return slugs
+            .map((slug) => {
+                const cat = bySlug.get(slug);
+                if (!cat) return null;
+                return {
+                    label: cat.name,
+                    href: `/category/${cat.slug}`,
+                    slug: cat.slug,
+                };
+            })
+            .filter((c): c is BannerCategory => c !== null);
+
+    } catch (error) {
+        console.error('Erreur wpApi [getBannerCategories]:', error);
         return [];
     }
 }
