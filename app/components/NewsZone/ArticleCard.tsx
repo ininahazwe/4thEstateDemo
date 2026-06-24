@@ -67,8 +67,8 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
                 <div className="item-text">
                     <div className="heading">
                         {/* Remplacement de strapline par tagOrCategory provenant de WordPress */}
-                        {article.tagOrCategory && <span className="strapline">{article.tagOrCategory}</span>}
-                        {isLive && <div className="live">Live</div>}
+                        {article.tagOrCategory && <span className="strapline">{article.tagOrCategory} -</span>}
+                        {/*{isLive && <div className="live">Live</div>}*/}
 
                         {/* Niveau de titre dynamique pour respecter vos règles CSS / SEO */}
                         <Heading id={`title-${article.id}`} className="title">

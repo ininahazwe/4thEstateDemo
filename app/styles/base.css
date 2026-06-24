@@ -1202,7 +1202,7 @@ html:not(.v-app) [data-model^=article]:hover {
     display:inline
 }
 [data-model^=article] .item-text .strapline {
-    background:#6d2929;
+    background:var(--sitePrimary);
     background-clip:text;
     -webkit-text-fill-color:#0000;
     padding-right: 4px;

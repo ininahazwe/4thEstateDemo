@@ -70,7 +70,7 @@ export default async function SiteFooter({ magazines = defaultMagazines }: SiteF
                             <Image
                                 src="/assets/img/logo-white.svg"
                                 alt="The Fourth Estate Logo"
-                                width={190}
+                                width={290}
                                 height={38}
                                 priority
                             />

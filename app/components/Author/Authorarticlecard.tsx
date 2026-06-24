@@ -1,12 +1,12 @@
 import Image from 'next/image';
-import { CategoryArticle } from './Types';
+import { AuthorArticle } from './Types';
 
-interface CategoryArticleCardProps {
-    article: CategoryArticle;
+interface AuthorArticleCardProps {
+    article: AuthorArticle;
     highlight?: boolean;
 }
 
-export default function CategoryArticleCard({ article, highlight = false }: CategoryArticleCardProps) {
+export default function AuthorArticleCard({ article, highlight = false }: AuthorArticleCardProps) {
     const { href, title, source, publishedAt, image, isPremium, imagePriority = 'auto' } = article;
 
     return (
@@ -38,7 +38,7 @@ export default function CategoryArticleCard({ article, highlight = false }: Cate
                 <div className="item-text">
                     <div className="heading">
                         {isPremium && <span className="sr-only">Subscriber-only article</span>}
-                        <span className="strapline">{source} -</span>
+                        <span className="strapline">{source}.</span>
                         <p id={`title-${article.id}`} className="title">
                             {title}
                         </p>

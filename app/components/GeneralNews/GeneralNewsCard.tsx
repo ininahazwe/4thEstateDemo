@@ -1,7 +1,7 @@
 'use client';
 
 import { type GeneralNewsArticle } from './types';
-import { Globe, Headphones, Bookmark } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import Image from "next/image";
 import TTSButton from "@/app/components/UI/TTSButton";
 
@@ -46,7 +46,7 @@ export default function GeneralNewsCard({ article, index }: GeneralNewsCardProps
                 <div className="item-text">
                     <div className="heading">
                         {article.tagOrCategory && (
-                            <span className="strapline">{article.tagOrCategory}.</span>
+                            <span className="strapline">{article.tagOrCategory} -</span>
                         )}
                         <p id={titleId} className="title">
                             {article.title}

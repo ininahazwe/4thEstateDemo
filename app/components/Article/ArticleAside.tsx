@@ -19,7 +19,7 @@ export default function ArticleAside({ mostRead }: ArticleAsideProps) {
                                 <div className="item-text">
                                     <div className="heading">
                                         <p className="most-read-title">{item.category && (
-                                            <span className="strapline">{item.category}</span>
+                                            <span className="strapline">{item.category} -</span>
                                         )}{item.title}</p>
                                     </div>
                                 </div>

@@ -48,7 +48,7 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                 <div className="item-text">
                     <div className="heading">
                         {article.tagOrCategory && (
-                            <span className="strapline">{article.tagOrCategory}.</span>
+                            <span className="strapline">{article.tagOrCategory} -</span>
                         )}
                         <p id={titleId} className="title">
                             {article.title}

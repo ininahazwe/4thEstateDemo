@@ -47,7 +47,7 @@ export default function StoriesCard({ article }: StoriesCardProps) {
                     <div className="heading">
                         <span className="sr-only">The Fourth Estate Stories</span>
                         {article.tagOrCategory && (
-                            <span className="strapline">{article.tagOrCategory}.</span>
+                            <span className="strapline">{article.tagOrCategory} -</span>
                         )}
                         <p id={titleId} className="title">
                             {article.title}
