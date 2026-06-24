@@ -601,8 +601,8 @@ html:not(.v-app) .author-infos a:hover {
 }
 @media screen and (min-width:760px) {
     .stories .stories-river article.item {
-        max-width:237px;
-        min-width:200px
+        max-width:316px;
+        min-width:320px
     }
 }
 .page-weekend-home .section-description {

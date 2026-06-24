@@ -26,7 +26,7 @@ export default function SpecialOfferBanner() {
 
             <Link
                 className="wrap"
-                href="https://abos.courrierinternational.com/"
+                href="https://4thestatedemo.vercel.app/"
                 data-ithalc="[cta_abo]"
                 data-ithal="home_bandeau_offre_spe"
             >
