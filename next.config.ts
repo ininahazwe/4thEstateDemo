@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         hostname: 'thefourthestategh.com',
         pathname: '/wp-content/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+      },
     ],
   },
   async headers() {
