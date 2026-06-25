@@ -25,6 +25,10 @@
     display: block;
 }
 
+.item-image.podcast{
+    aspect-ratio: 1 / 1 !important;
+}
+
 p.wp-block-paragraph{
     margin-top: 1rem;
 }

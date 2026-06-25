@@ -56,7 +56,7 @@ export default function Header() {
 
                 {/* Outils (Recherche, Thème, Newsletter) */}
                 <div className="header-tools">
-                    <Link href="/recherche" className="item" title="Recherche">
+                    <Link href="/search" className="item" title="Search">
                         <Search size={18} strokeWidth={2} aria-hidden="true" />
                         <span className="sr-only">Recherche</span>
                     </Link>
@@ -64,7 +64,7 @@ export default function Header() {
                     <button
                         type="button"
                         className="item"
-                        title={theme === 'light' ? "Activer le mode sombre" : "Activer le mode clair"}
+                        title={theme === 'light' ? "Turn on dark mode" : "Turn on light mode"}
                         onClick={toggleTheme}
                         aria-pressed={theme === 'dark'}
                     >
@@ -74,19 +74,19 @@ export default function Header() {
                             <Sun size={18} strokeWidth={2} aria-hidden="true" />
                         )}
                         <span className="sr-only">
-                            {theme === 'light' ? "Mode sombre" : "Mode clair"}
+                            {theme === 'light' ? "Dark mode" : "Light mode"}
                         </span>
                     </button>
 
                     {/* Lien de la Newsletter */}
-                    <a
+                    <Link
                         href="/newsletter" // Pensez à adapter ce lien vers votre future page locale !
                         className="item"
                         title="Newsletters"
                     >
                         <Mail size={18} strokeWidth={2} aria-hidden="true" />
                         <span className="sr-only">Newsletters</span>
-                    </a>
+                    </Link>
 
                     {/* Switcher de langues (traduction IA via API Anthropic) */}
                     <LanguageSwitcher />
@@ -95,10 +95,10 @@ export default function Header() {
                 {/* Logo */}
                 <Link href="/" className="header-logo" title="The Fourth Estate - Return to home">
                     <Image
-                        src="/assets/img/logo.svg"
+                        src="/assets/img/logo-short-red.png"
                         alt="The Fourth Estate Logo"
-                        width={190}
-                        height={38}
+                        width={102}
+                        height={52}
                         priority
                     />
                 </Link>
@@ -127,9 +127,9 @@ export default function Header() {
                         {/* Outils du menu */}
                         <section className="tools-section">
                             <div className="tool-list">
-                                <Link href="/recherche" className="item" data-icon="magnifying-glass">Recherche</Link>
+                                <Link href="/recherche" className="item" data-icon="magnifying-glass">Search</Link>
                                 <button type="button" className="item" data-icon="circle-half-stroke" onClick={toggleTheme} aria-pressed={theme === 'dark'}>
-                                    Mode {theme === 'light' ? 'sombre' : 'clair'}
+                                    Mode {theme === 'light' ? 'dark' : 'light'}
                                 </button>
                                 <a href="https://4thestatedemo.vercel.app/" className="item" data-icon="envelope">Newsletters</a>
                             </div>

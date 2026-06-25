@@ -72,7 +72,7 @@
 }
 .section-header .page-title[data-flag]:before {
     background-color:var(--adAside);
-    background-image:var(--flag);
+    /*background-image:var(--flag);*/
     background-position:50%;
     background-size:cover;
     content:"";
@@ -83,7 +83,7 @@
     width:46px
 }
 .section-header .page-title.avatar:before {
-    background-image:var(--avatar);
+    /*background-image:var(--avatar);*/
     background-position:50%;
     background-size:cover;
     border-radius:50%;
@@ -548,7 +548,7 @@ html:not(.v-app) .author-infos a:hover {
     --sitePrimary:#1da1f2
 }
 .section[data-expat] .page-title {
-    background:var(--logoExpat) no-repeat;
+    /*background:var(--logoExpat) no-repeat;*/
     background-size:contain;
     color:#0000;
     overflow:hidden;
@@ -572,7 +572,7 @@ html:not(.v-app) .author-infos a:hover {
         text-align:center
     }
 }
-.stories .stories-header .page-title:before {
+/*.stories .stories-header .page-title:before {
     background-image:url(https://focus.courrierinternational.com/2025/04/09/9ad65b7_sirius-fs-upload-1-pdkuxl4x4gxz-1744193841725-stories-icon-180x180.png);
     background-size:cover;
     border-radius:4px;
@@ -582,7 +582,7 @@ html:not(.v-app) .author-infos a:hover {
     margin:-6px 8px 0 0;
     vertical-align:middle;
     width:34px
-}
+}*/
 .stories .stories-river {
     display:flex;
     flex-wrap:wrap;

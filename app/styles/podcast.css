@@ -1,0 +1,30 @@
+.podcast-item-trigger {
+    display: block;
+    width: 100%;
+}
+
+.podcast-play-button {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.podcast-play-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* L'iframe Spotify occupe le même espace que l'image qu'elle remplace */
+.item-image iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+}

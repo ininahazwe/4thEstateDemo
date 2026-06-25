@@ -18,6 +18,7 @@ export const navItems: NavItem[] = [
 
     // Groupes de types / fonctionnalités secondaires (conservés et nettoyés)
     { label: "The Fourth Estate TV", href: "/tv", type: "type", ithal: "fourth-estate-tv", icon: "reveil" },
+    { label: "Podcasts", href: "/podcasts", type: "type", ithal: "fourth-estate-postcasts", icon: "reveil" },
     { label: "Application Mobile", href: "/telecharger-application", type: "type", ithal: "application", icon: "mobile-screen-button" },
     { label: "Nos Sources", href: "/sources", type: "type", ithal: "nos-sources", icon: "earth-americas" }
 ];

@@ -7,6 +7,7 @@ import { getTvPageData } from '@/app/services/wpApi.tv';
 import { getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
 import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
+import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
 
 interface TvPageProps {
     searchParams: Promise<{ page?: string; pageToken?: string }>;
@@ -48,6 +49,8 @@ export default async function TvPage({ searchParams }: TvPageProps) {
                     </div>
                 </section>
             </main>
+
+            <SiteFooter />
         </>
     );
 }
