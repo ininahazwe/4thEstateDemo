@@ -3,12 +3,8 @@ export async function getSpotifyShowEpisodes() {
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
     const showId = "4YWOssmCac8ulV9LzDZIDp";
 
-    // --- Vérification temporaire : les variables sont-elles bien lues en prod ? ---
     if (!clientId || !clientSecret) {
-        console.error(
-            "Spotify Debug: SPOTIFY_CLIENT_ID ou SPOTIFY_CLIENT_SECRET manquante.",
-            { hasClientId: !!clientId, hasClientSecret: !!clientSecret }
-        );
+        console.error("getSpotifyShowEpisodes: variables d'environnement Spotify manquantes.");
         return { items: [] };
     }
 
@@ -23,18 +19,12 @@ export async function getSpotifyShowEpisodes() {
         next: { revalidate: 3600 } // Cache le token pendant 1h
     });
 
-    const tokenData = await tokenResponse.json();
-
-    // --- Vérification temporaire : le token a-t-il bien été obtenu ? ---
-    if (!tokenResponse.ok || !tokenData.access_token) {
-        console.error("Spotify Debug: échec de récupération du token.", {
-            status: tokenResponse.status,
-            body: tokenData,
-        });
+    if (!tokenResponse.ok) {
+        console.error(`getSpotifyShowEpisodes: échec d'authentification (status ${tokenResponse.status}).`);
         return { items: [] };
     }
 
-    const { access_token } = tokenData;
+    const { access_token } = await tokenResponse.json();
 
     // 2. Récupération des épisodes du Show
     const dataResponse = await fetch(`https://api.spotify.com/v1/shows/${showId}/episodes?limit=10`, {
@@ -44,19 +34,68 @@ export async function getSpotifyShowEpisodes() {
         next: { revalidate: 86400 } // Mise à jour automatique du flux toutes les 24h
     });
 
-    const data = await dataResponse.json();
-
-    // --- Vérification temporaire : la requête episodes a-t-elle réussi ? ---
     if (!dataResponse.ok) {
-        console.error("Spotify Debug: échec de récupération des épisodes.", {
-            status: dataResponse.status,
-            body: data,
-            showId,
-        });
+        console.error(`getSpotifyShowEpisodes: échec de récupération des épisodes (status ${dataResponse.status}).`);
         return { items: [] };
     }
 
-    console.log("Spotify Debug: succès, nombre d'épisodes reçus:", data.items?.length ?? 0);
+    return dataResponse.json();
+}
 
-    return data;
+// ---------------------------------------------------------------------------
+// getLatestPodcastEpisode — utilisée par LatestPodcastWidget.tsx (aside de
+// la page article). Réutilise getSpotifyShowEpisodes() ci-dessus, donc le
+// même client/token Spotify, plutôt que de dupliquer l'authentification.
+// Trie explicitement par release_date décroissant avant de prendre le
+// premier élément, par sécurité si l'API ne garantit pas l'ordre
+// chronologique (comportement standard de l'API Spotify Shows : déjà du
+// plus récent au plus ancien, mais le tri explicite coûte peu et protège
+// contre un changement de comportement côté Spotify).
+// ---------------------------------------------------------------------------
+
+import { type PodcastEpisode } from '@/app/components/Podcasts/Types';
+
+interface SpotifyEpisode {
+    id: string;
+    name: string;
+    description: string;
+    release_date: string;
+    images: { url: string }[];
+    external_urls: { spotify: string };
+}
+
+function formatDisplayDate(isoDate: string): string {
+    return new Date(isoDate).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
+}
+
+function mapToPodcastEpisode(episode: SpotifyEpisode): PodcastEpisode {
+    return {
+        id: episode.id,
+        title: episode.name,
+        description: episode.description,
+        cover: episode.images?.[0]?.url ?? '',
+        publishedAt: formatDisplayDate(episode.release_date),
+        spotifyUrl: episode.external_urls.spotify,
+    };
+}
+
+export async function getLatestPodcastEpisode(): Promise<PodcastEpisode | null> {
+    try {
+        const data = await getSpotifyShowEpisodes();
+        const episodes: SpotifyEpisode[] = data?.items ?? [];
+        if (!episodes.length) return null;
+
+        const sorted = [...episodes].sort(
+            (a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
+        );
+
+        return mapToPodcastEpisode(sorted[0]);
+    } catch (error) {
+        console.error('getLatestPodcastEpisode:', error);
+        return null;
+    }
 }
