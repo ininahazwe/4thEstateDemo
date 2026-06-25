@@ -53,6 +53,38 @@ function stripHtml(html: string): string {
     return html.replace(/<[^>]+>/g, "").trim();
 }
 
+/**
+ * Tailles WP disponibles sur l'install (thème Foxiz) : thumbnail (150),
+ * medium (300), medium_large (768), large (1024), 1536x1536, 2048x2048, full.
+ * Les foxiz_crop_* sont des crops à ratio fixe — ignorées, on garde le ratio
+ * original de l'image.
+ *
+ * 'hero' (featuredImage, ~3/4 écran desktop) → large (1024px), suffisant en
+ * netteté pour cet usage et nettement plus léger que le full-size (souvent
+ * 2500px / plusieurs Mo).
+ * 'card' (vignettes ReadMore/Related/MostRead) → medium_large (768px).
+ */
+function pickWpImageUrl(
+    media: Record<string, unknown> | undefined,
+    sizePriority: string[]
+): string | undefined {
+    if (!media) return undefined;
+    const mediaDetails = media.media_details as
+        | { sizes?: Record<string, { source_url: string }> }
+        | undefined;
+    const sizes = mediaDetails?.sizes;
+    if (sizes) {
+        for (const sizeName of sizePriority) {
+            const url = sizes[sizeName]?.source_url;
+            if (url) return url;
+        }
+    }
+    return (media.source_url as string) ?? undefined;
+}
+
+const HERO_SIZE_PRIORITY = ['large', 'medium_large', '1536x1536'];
+const CARD_SIZE_PRIORITY = ['medium_large', 'large', 'medium'];
+
 function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString("en-EN", {
         day: "numeric",
@@ -83,7 +115,7 @@ function buildArticleCard(post: Record<string, unknown>): WpArticleCard {
         slug,
         title: (post.title as { rendered: string }).rendered,
         href: `/article/${slug}`,
-        image: (media?.source_url as string) ?? undefined,
+        image: pickWpImageUrl(media, CARD_SIZE_PRIORITY),
         strapline: (acf.strapline as string) ?? undefined,
         isPremium: (acf.is_premium as boolean) ?? false,
         category: (terms[0]?.name as string) ?? undefined,
@@ -148,7 +180,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
                 estimateReadTime((post.content as { rendered: string }).rendered),
             publishedAt: formatDate(post.date as string),
             publishedAtISO: post.date as string,
-            featuredImage: (media?.source_url as string) ?? undefined,
+            featuredImage: pickWpImageUrl(media, HERO_SIZE_PRIORITY),
             imageCaption: (media?.caption as { rendered: string })?.rendered
                 ? stripHtml((media.caption as { rendered: string }).rendered)
                 : undefined,
