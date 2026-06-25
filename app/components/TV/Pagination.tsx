@@ -1,4 +1,4 @@
-import { TvPagination } from './Types';
+import {TvPagination} from "@/app/components/TV/Types";
 
 interface PaginationProps {
     pagination: TvPagination;
