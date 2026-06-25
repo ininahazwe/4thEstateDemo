@@ -10,6 +10,7 @@ import "./styles/custom.css";
 import "./styles/article-critical.css";
 import "./styles/swipe.css";
 import "./styles/podcast.css";
+import "./styles/latest-podcast-widget.css";
 import "./styles/article.css";
 import "./styles/share-popup.css";
 import "./styles/inline.css";

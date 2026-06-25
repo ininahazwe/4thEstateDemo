@@ -1,0 +1,75 @@
+/* Le CSS hérité .ci-services .item-text peut dépendre d'un système de
+   slider (data-slider-wrap, JS d'initialisation) qu'on a volontairement
+   retiré pour ce widget à un seul item. On force l'affichage ici plutôt
+   que de dépendre de cet héritage. */
+.latest-podcast-widget .item {
+    display: block;
+}
+
+.latest-podcast-widget .latest-podcast-text {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 12px 0 0;
+    position: relative; /* repasse au-dessus du flux normal, par sécurité */
+    z-index: 1;
+}
+
+.latest-podcast-widget .latest-podcast-text .title {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.latest-podcast-widget .latest-podcast-text .description {
+    font-size: 0.9em;
+    color: var(--text-secondary, #555);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* PAS de min-height ici : .item-image hérite déjà du padding-bottom hack
+   (.ci-services .item .item-image { padding-bottom: 66.6%; position: relative })
+   qui calcule sa hauteur depuis sa propre largeur. Lui ajouter un min-height
+   fixe entre en conflit et fait déborder l'image (position:absolute interne)
+   par-dessus le texte qui suit dans le flux normal — c'était la cause du bug. */
+
+.latest-podcast-widget .podcast-play-button {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    position: absolute; /* remplit .item-image comme le ferait l'img seule */
+    inset: 0;
+}
+
+.latest-podcast-widget .podcast-play-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* L'iframe, elle, n'a pas de ratio imposé par le hack hérité : on lui donne
+   une hauteur fixe raisonnable pour les contrôles Spotify (recommandation
+   Spotify : 232px), sans toucher au conteneur .item-image lui-même. */
+.latest-podcast-widget .item-image iframe {
+    display: block;
+    width: 100%;
+    height: 232px;
+    border: none;
+    position: relative; /* sort du contexte absolute du hack, occupe sa propre place */
+}
+
+/* Quand l'iframe est affichée, .item-image n'a plus besoin du ratio forcé
+   du hack hérité (pas d'image à habiller) — on neutralise le padding-bottom
+   pour cet état précis, sinon un espace vide resterait sous l'iframe. */
+.latest-podcast-widget .item-image:has(iframe) {
+    padding-bottom: 0;
+    height: auto;
+}

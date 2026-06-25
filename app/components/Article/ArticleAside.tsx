@@ -1,11 +1,15 @@
 import Link from "next/link";
 import {WpArticleCard} from "@/app/services/wpApi.article";
+import LatestPodcastWidget from "@/app/components/Article/Latestpodcastwidget";
+import {getLatestPodcastEpisode} from "@/app/components/Article/Getlatestpodcastepisode.snippet";
 
 interface ArticleAsideProps {
     mostRead: WpArticleCard[];
 }
 
-export default function ArticleAside({ mostRead }: ArticleAsideProps) {
+export default async function ArticleAside({ mostRead }: ArticleAsideProps) {
+    const latestPodcast = await getLatestPodcastEpisode();
+
     return (
         <aside className="article-aside" data-column="right">
             <section className="forecast-top-articles">
@@ -28,6 +32,8 @@ export default function ArticleAside({ mostRead }: ArticleAsideProps) {
                     ))}
                 </div>
             </section>
+
+            {latestPodcast && <LatestPodcastWidget episode={latestPodcast} />}
         </aside>
     );
 }
