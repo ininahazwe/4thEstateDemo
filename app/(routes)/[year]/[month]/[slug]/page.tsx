@@ -169,8 +169,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                 tags={article.tags}
                                 authors={article.authors}
                             />
-
-                            <ArticleAside mostRead={mostRead} />
                         </article>
                     </main>
                 </div>
