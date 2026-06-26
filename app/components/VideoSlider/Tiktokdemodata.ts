@@ -16,7 +16,7 @@ export interface TikTokDemoItem {
 export const tiktokDemoItems: TikTokDemoItem[] = [
     {
         id: 'demo-1',
-        url: 'https://www.tiktok.com/@thefourthestategh/photo/7529957852090207494',
+        url: 'https://www.tiktok.com/@thefourthestategh/video/7641544951981034769',
         caption: 'Caption',
         duration: '1:42',
     },
@@ -28,7 +28,7 @@ export const tiktokDemoItems: TikTokDemoItem[] = [
     },
     {
         id: 'demo-3',
-        url: 'https://www.tiktok.com/@thefourthestategh/photo/7604879632935963920',
+        url: 'https://www.tiktok.com/@thefourthestategh/video/7621124686704872721',
         caption: 'Caption',
         duration: '0:58',
     },
