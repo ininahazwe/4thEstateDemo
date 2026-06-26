@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { buildHref, WPPost } from "./wpApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -108,13 +109,12 @@ function buildArticleCard(post: Record<string, unknown>): WpArticleCard {
     const terms = (
         embedded["wp:term"] as Array<Array<Record<string, unknown>>>
     )?.[0] ?? [];
-    const slug = post.slug as string;
 
     return {
         id: post.id as number,
-        slug,
+        slug: post.slug as string,
         title: (post.title as { rendered: string }).rendered,
-        href: `/article/${slug}`,
+        href: buildHref(post as unknown as WPPost),
         image: pickWpImageUrl(media, CARD_SIZE_PRIORITY),
         strapline: (acf.strapline as string) ?? undefined,
         isPremium: (acf.is_premium as boolean) ?? false,

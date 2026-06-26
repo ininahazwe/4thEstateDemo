@@ -15,7 +15,7 @@ import { decode } from 'html-entities';
 // Interfaces WordPress
 // ---------------------------------------------------------------------------
 
-interface WPPost {
+export interface WPPost {
     id: number;
     slug: string;
     link: string;
@@ -27,7 +27,6 @@ interface WPPost {
     date: string;
     status?: string; // présent sur requêtes authentifiées ; absent en public (déjà filtré par WP)
 }
-
 interface WPMediaSize {
     source_url: string;
     width: number;
@@ -106,7 +105,7 @@ const BLUR_PLACEHOLDER =
  * }
  */
 
-function buildHref(post: WPPost): string {
+export function buildHref(post: WPPost): string {
     const date = new Date(post.date);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');

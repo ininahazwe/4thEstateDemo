@@ -14,7 +14,7 @@ export default function ReadMoreCard({ category, title, href }: ReadMoreCardProp
                 <div className="wrap">
                     <span className="read-more-label">Also read:</span>
                     {category && (
-                        <span className="strapline">{category} -</span>
+                        <span className="strapline">{category} - </span>
                     )}
                     {title}
                 </div>
