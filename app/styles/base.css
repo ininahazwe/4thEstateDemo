@@ -2190,7 +2190,7 @@ label.item-action input:not(:checked)~span[data-icon=toggle-large-off] {
 .site-banner .banner-hot-articles {
     scrollbar-width:none;
     -ms-overflow-style:none;
-    border-bottom:1px solid #ababab;
+    border-bottom:1px solid #e7e7e7;
     background: none;
     color:#454545;
     overflow:auto
