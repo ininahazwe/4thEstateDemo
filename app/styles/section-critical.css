@@ -561,12 +561,20 @@ html:not(.v-app) .author-infos a:hover {
     font-weight:400;
     text-transform:uppercase
 }
+.stories-header{
+    margin-bottom: 20px;
+}
 .stories .stories-header .page-title {
     font-family:var(--serif);
     font-size:30px;
     font-weight:200;
     opacity:1
 }
+
+.title p{
+    font-size: 1.2rem;
+}
+
 @media screen and (max-width:759px) {
     .stories .stories-header .page-title {
         text-align:center

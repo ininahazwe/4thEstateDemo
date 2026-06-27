@@ -8,6 +8,7 @@ import { getBannerCategories, getLatestBannerArticles } from '@/app/services/wpA
 import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
 import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
+import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 
 interface TvPageProps {
     searchParams: Promise<{ page?: string; pageToken?: string }>;
@@ -49,6 +50,8 @@ export default async function TvPage({ searchParams }: TvPageProps) {
                     </div>
                 </section>
             </main>
+
+            <SubscriptionBanner />
 
             <SiteFooter />
         </>

@@ -8,6 +8,7 @@ import PodcastHeader from '@/app/components/Podcasts/PodcastHeader';
 import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
+import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 
 interface SpotifyEpisode {
     id: string;
@@ -76,6 +77,8 @@ export default async function PodcastPage() {
                     </div>
                 </section>
             </main>
+
+            <SubscriptionBanner />
 
             <SiteFooter />
         </>

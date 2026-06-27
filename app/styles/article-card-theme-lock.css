@@ -1,0 +1,48 @@
+/* article-card-theme-lock.css
+ * Verrouille les couleurs des article cards (NewsZone) en mode light
+ * Les article cards conservent leur style light même en dark mode
+ * Ce fichier doit être importé APRÈS base.css dans layout.tsx
+ */
+
+/* Article Card - Light theme locked
+:root[data-user-color-scheme="dark"] .item,*/
+:root[data-user-color-scheme="dark"] .item a,
+:root[data-user-color-scheme="dark"] .item-text,
+:root[data-user-color-scheme="dark"] .item-text .title,
+:root[data-user-color-scheme="dark"] .item-text .strapline,
+:root[data-user-color-scheme="dark"] .item-text .infos,
+:root[data-user-color-scheme="dark"] .item-text .source {
+    /* Force light mode colors for article cards */
+    --siteBoxBackground: #f6f6f6 !important;
+    --siteBoxBackgroundRGB: 255,255,255 !important;
+    --siteText: #111 !important;
+    --siteTextRGB: 17,17,17 !important;
+    color: whitesmoke;
+}
+
+/* Ensure article card links and text remain readable */
+:root[data-user-color-scheme="dark"] .item-text .title {
+    color: #111 !important;
+}
+
+:root[data-user-color-scheme="dark"] .item-text .strapline {
+    color: #ff5252 !important; /* Keep the orange/red brand color */
+}
+
+:root[data-user-color-scheme="dark"] .item-text .source {
+    color: #666 !important;
+}
+
+:root[data-user-color-scheme="dark"] .item-text .infos {
+    color: #999 !important;
+}
+
+:root[data-user-color-scheme="dark"] .article .article-header .article-heading .strapline {
+    background: none !important;
+}
+
+
+/* If article cards have a background defined, keep it light
+:root[data-user-color-scheme="dark"] .item {
+    background-color: #f6f6f6 !important;
+}*/

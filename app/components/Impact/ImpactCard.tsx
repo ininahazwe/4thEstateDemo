@@ -15,7 +15,7 @@ export default function OurImpactCard({ article }: OurImpactCardProps) {
             data-index={article.index}
         >
             <a href={article.href}>
-                <div className="item-text">
+                <div className="item-text impact">
                     <div className="heading">
                         {article.tagOrCategory && (
                             <span className="strapline">{article.tagOrCategory} -</span>

@@ -1333,11 +1333,24 @@ html:not(.v-app) [data-model^=article]:hover {
 }
 [data-model=article-horizontal] .item-text,
 [data-model=article] .item-text {
-    box-shadow:0 0 20px -10px #000;
+    /*box-shadow:0 0 20px -10px #000;*/
     display:flex;
     flex-direction:column;
     justify-content:space-between;
-    width:100%
+    width:100%;
+    position: relative;
+    padding-left: 12px;
+}
+[data-model="article-horizontal"] .item-text.impact::before,
+[data-model="article"] .item-text.impact::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%; /* Centrer verticalement les 60% (20% + 60% + 20%) */
+    width: 3px; /* Épaisseur de la barre */
+    height: 60%;
+    background-color: #ffffff; /* Couleur brand */
+    border-radius: 2px; /* Arrondir légèrement les coins */
 }
 [data-model=article-vertical] a {
     display:flex;
@@ -2177,8 +2190,9 @@ label.item-action input:not(:checked)~span[data-icon=toggle-large-off] {
 .site-banner .banner-hot-articles {
     scrollbar-width:none;
     -ms-overflow-style:none;
-    background-color:var(--siteBanner);
-    color:#fff;
+    border-bottom:1px solid #ababab;
+    background: none;
+    color:#454545;
     overflow:auto
 }
 .site-banner .banner-hot-articles::-webkit-scrollbar {
@@ -2200,7 +2214,7 @@ label.item-action input:not(:checked)~span[data-icon=toggle-large-off] {
     width:100%
 }
 .site-banner .banner-hot-articles .item .item-tag {
-    color:var(--siteBannerTag);
+    color:var(--menuText);
     display:block;
     font-size:14px;
     font-weight:600;
@@ -3133,17 +3147,17 @@ body.isMobile #site-header~[id*=ftdiv]+[id*=ftdiv] {
 .forecast-top-articles .item a {
     counter-increment:topIndex
 }
-.forecast-top-articles .item a:before {
-    align-self:center;
-    content:counter(topIndex);
-    font-family:var(--serif);
-    font-size:40px;
-    line-height:30px;
-    min-width:40px;
-    opacity:.4;
-    padding-bottom:6px;
-    padding-right:10px;
-    text-align:right
+.forecast-top-articles .item a::before {
+    align-self: center;
+    content: "➜"; /* Chevron/flèche fancy */
+    font-size: 22px;
+    line-height: 30px;
+    min-width: 40px;
+    opacity: 0.6;
+    padding-bottom: 6px;
+    padding-right: 10px;
+    text-align: right;
+    color: #AEBDE1;
 }
 .forecast-top-articles .item:first-of-type {
     border-radius:var(--radius) var(--radius) 0 0

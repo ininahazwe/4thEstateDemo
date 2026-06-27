@@ -129,9 +129,9 @@
     text-align:center
 }
 .home .zone-puzzle .item .icon {
-    background-color:#000;
+    background-color:var(--siteLogo);
     border-radius:4px;
-    box-shadow:0 10px 10px -10px #000;
+    /*box-shadow:0 10px 10px -10px #000;*/
     display:inline-block;
     height:58px;
     margin-bottom:4px;
@@ -141,14 +141,14 @@
     width:58px
 }
 .home .zone-puzzle .item .icon:before {
-    animation:puzzle 4s 0s infinite alternate;
-    background-color:#0000;
-    border-radius:2px;
-    box-shadow:inset 17px 0 #fff,17px 0 #fff,34px 0 #fff,0 17px #fff,17px 17px #000,34px 17px #fff,0 34px #fff,17px 34px #fff,34px 34px #fff;
-    content:"";
-    display:block;
-    height:16px;
-    width:16px
+    content: "";
+    width: 50px;
+    height: 50px;
+    display: block;
+    background:
+        /* Horizontal line (première partie du checkmark) */
+            linear-gradient(135deg, transparent 45%, #fff 45%, #fff 55%, transparent 55%) no-repeat 0 50%;
+    animation: 2s infinite checkmarkDraw;
 }
 .home .zone-puzzle .item .title {
     color:#000;
@@ -476,7 +476,7 @@ html:not(.v-app) .home .zone-hebdo .issue-cover:hover:after {
     }
 }
 #ci-banner-offre-speciale .OffreSpe-text:before {
-    background:url(/dist/assets/img/icons/abo/8-color-fixed-special.svg);
+    /*background:url(/dist/assets/img/icons/abo/8-color-fixed-special.svg);*/
     background-repeat:no-repeat;
     background-size:100%;
     content:"";
@@ -617,5 +617,247 @@ html:not(.v-app) .home .zone-hebdo .issue-cover:hover:after {
     }
     #ci-banner-edition-weekend .banner-edition-weekend-content .bloc-text-argus p:nth-of-type(2) {
         font-weight:400
+    }
+}
+
+/* New Animation Concepts - Progression & Achievement
+ * Utilise toujours box-shadow + ::before, mais designs radicalement différents
+ */
+
+/* =========================================
+   CONCEPT 1: "Progress Bar" - Barre de progression qui se remplit
+   ========================================= */
+.zone-impact .item .icon.progress-bar::before {
+    content: "";
+    width: 60px;
+    height: 8px;
+    background: linear-gradient(90deg, #ff5252 0%, #ff5252 0%, transparent 0%);
+    border-radius: 4px;
+    display: block;
+    box-shadow: inset 0 0 0 1px #ddd;
+    animation: 3s infinite progressBar;
+}
+
+@keyframes progressBar {
+    0% { background: linear-gradient(90deg, #ff5252 0%, #ff5252 0%, transparent 0%); }
+    25% { background: linear-gradient(90deg, #ff5252 0%, #ff5252 25%, transparent 25%); }
+    50% { background: linear-gradient(90deg, #ff5252 0%, #ff5252 50%, transparent 50%); }
+    75% { background: linear-gradient(90deg, #ff5252 0%, #ff5252 75%, transparent 75%); }
+    100% { background: linear-gradient(90deg, #ff5252 0%, #ff5252 100%, transparent 100%); }
+}
+
+/* =========================================
+   CONCEPT 2: "Milestones" - Jalons qui s'illuminent progressivement
+   ========================================= */
+.zone-impact .item .icon.milestones::before {
+    content: "";
+    width: 70px;
+    height: 10px;
+    display: block;
+    animation: 3.5s infinite milestones;
+    /* 3 cercles alignés horizontalement via box-shadow */
+    box-shadow:
+            0 0 0 2px #ddd,           /* cercle 1 - border inactif */
+            25px 0 0 2px #ddd,        /* cercle 2 - border inactif */
+            50px 0 0 2px #ddd;        /* cercle 3 - border inactif */
+}
+
+@keyframes milestones {
+    0% {
+        box-shadow:
+                0 0 0 2px #ff5252, inset 0 0 0 2px #ff5252,          /* cercle 1 actif */
+                25px 0 0 2px #ddd,                                    /* cercle 2 inactif */
+                50px 0 0 2px #ddd;                                    /* cercle 3 inactif */
+    }
+    33% {
+        box-shadow:
+                0 0 0 2px #ff5252, inset 0 0 0 2px #ff5252,          /* cercle 1 actif */
+                25px 0 0 2px #ff5252, inset 25px 0 0 2px #ff5252,    /* cercle 2 actif */
+                50px 0 0 2px #ddd;                                    /* cercle 3 inactif */
+    }
+    66% {
+        box-shadow:
+                0 0 0 2px #ff5252, inset 0 0 0 2px #ff5252,          /* cercle 1 actif */
+                25px 0 0 2px #ff5252, inset 25px 0 0 2px #ff5252,    /* cercle 2 actif */
+                50px 0 0 2px #ff5252, inset 50px 0 0 2px #ff5252;    /* cercle 3 actif */
+    }
+    100% {
+        box-shadow:
+                0 0 0 2px #ff5252, inset 0 0 0 2px #ff5252,          /* cercle 1 actif */
+                25px 0 0 2px #ff5252, inset 25px 0 0 2px #ff5252,    /* cercle 2 actif */
+                50px 0 0 2px #ff5252, inset 50px 0 0 2px #ff5252;    /* cercle 3 actif */
+    }
+}
+
+/* Connecteur entre les jalons (optionnel, ajouter une ligne) */
+.zone-impact .item .icon.milestones::after {
+    content: "";
+    position: absolute;
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, #ddd 0%, #ddd 0%, transparent 0%);
+    top: 4px;
+    left: 5px;
+    animation: 3.5s infinite milestoneConnector;
+}
+
+@keyframes milestoneConnector {
+    0% { background: linear-gradient(90deg, #ddd 0%, #ddd 0%, transparent 0%); }
+    33% { background: linear-gradient(90deg, #ff5252 0%, #ff5252 50%, transparent 50%); }
+    66% { background: linear-gradient(90deg, #ff5252 0%, #ff5252 100%, transparent 100%); }
+    100% { background: linear-gradient(90deg, #ff5252 0%, #ff5252 100%, transparent 100%); }
+}
+
+/* =========================================
+   CONCEPT 3: "Growth Curve" - Courbe de croissance ascendante
+   ========================================= */
+.zone-impact .item .icon.growth-curve::before {
+    content: "";
+    width: 60px;
+    height: 40px;
+    display: block;
+    background:
+        /* Base line */
+            linear-gradient(90deg, #ff5252 0%, #ff5252 100%) no-repeat center bottom/60px 2px,
+                /* Vertical marks */
+            linear-gradient(90deg, #ff5252 0%, #ff5252 100%) no-repeat 0 center/2px 40px,
+            linear-gradient(90deg, #ff5252 0%, #ff5252 100%) no-repeat right center/2px 40px;
+    animation: 3s infinite growthCurve;
+}
+
+@keyframes growthCurve {
+    0% {
+        background:
+                linear-gradient(90deg, #ff5252 0%, #ff5252 100%) no-repeat center bottom/60px 2px,
+                linear-gradient(90deg, #ddd 0%, #ddd 100%) no-repeat 0 center/2px 40px,
+                linear-gradient(90deg, #ddd 0%, #ddd 100%) no-repeat right center/2px 40px;
+        box-shadow:
+                0 30px 0 1px #ddd,           /* point 1 - bas gauche */
+                30px 15px 0 1px #ddd,        /* point 2 - milieu */
+                60px 5px 0 1px #ddd;         /* point 3 - haut droit */
+    }
+    50% {
+        box-shadow:
+                0 30px 0 2px #ff5252,        /* point 1 - actif */
+                30px 15px 0 1px #ddd,        /* point 2 - inactif */
+                60px 5px 0 1px #ddd;         /* point 3 - inactif */
+    }
+    75% {
+        box-shadow:
+                0 30px 0 2px #ff5252,        /* point 1 - actif */
+                30px 15px 0 2px #ff5252,     /* point 2 - actif */
+                60px 5px 0 1px #ddd;         /* point 3 - inactif */
+    }
+    100% {
+        box-shadow:
+                0 30px 0 2px #ff5252,        /* point 1 - actif */
+                30px 15px 0 2px #ff5252,     /* point 2 - actif */
+                60px 5px 0 2px #ff5252;      /* point 3 - actif */
+    }
+}
+
+/* =========================================
+   CONCEPT 4: "Rising Bars" - Barres montantes (style graphique)
+   ========================================= */
+.zone-impact .item .icon.rising-bars::before {
+    content: "";
+    width: 50px;
+    height: 40px;
+    display: block;
+    animation: 3s infinite risingBars;
+    /* 3 barres verticales via box-shadow */
+    box-shadow:
+            0 20px 0 4px #ddd,           /* barre 1 - courte */
+            18px 15px 0 4px #ddd,        /* barre 2 - moyenne */
+            36px 5px 0 4px #ddd;         /* barre 3 - longue */
+}
+
+@keyframes risingBars {
+    0% {
+        box-shadow:
+                0 20px 0 4px #ddd,           /* barre 1 */
+                18px 15px 0 4px #ddd,        /* barre 2 */
+                36px 5px 0 4px #ddd;         /* barre 3 */
+    }
+    33% {
+        box-shadow:
+                0 20px 0 4px #ff5252,        /* barre 1 - active */
+                18px 15px 0 4px #ddd,        /* barre 2 */
+                36px 5px 0 4px #ddd;         /* barre 3 */
+    }
+    66% {
+        box-shadow:
+                0 20px 0 4px #ff5252,        /* barre 1 - active */
+                18px 15px 0 4px #ff5252,     /* barre 2 - active */
+                36px 5px 0 4px #ddd;         /* barre 3 */
+    }
+    100% {
+        box-shadow:
+                0 20px 0 4px #ff5252,        /* barre 1 - active */
+                18px 15px 0 4px #ff5252,     /* barre 2 - active */
+                36px 5px 0 4px #ff5252;      /* barre 3 - active */
+    }
+}
+
+/* =========================================
+   CONCEPT 5: "Expanding Circles" - Cercles concentriques qui s'élargissent
+   ========================================= */
+.zone-impact .item .icon.expanding-circles::before {
+    content: "";
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #ff5252;
+    display: block;
+    animation: 2.5s infinite expandingCircles;
+    box-shadow:
+            0 0 0 6px rgba(255, 82, 82, 0.3),
+            0 0 0 12px rgba(255, 82, 82, 0.1);
+}
+
+@keyframes expandingCircles {
+    0% {
+        width: 40px;
+        height: 40px;
+        border: 2px solid #ff5252;
+        box-shadow:
+                0 0 0 6px rgba(255, 82, 82, 0.3),
+                0 0 0 12px rgba(255, 82, 82, 0.1);
+        opacity: 1;
+    }
+    100% {
+        width: 80px;
+        height: 80px;
+        border: 2px solid #ff5252;
+        box-shadow:
+                0 0 0 6px rgba(255, 82, 82, 0.2),
+                0 0 0 12px rgba(255, 82, 82, 0);
+        opacity: 0;
+    }
+}
+
+/* =========================================
+   BONUS: "Checkmark" - Trait de validation qui se trace
+   ========================================= */
+.zone-impact .item .icon.checkmark::before {
+    content: "";
+    width: 50px;
+    height: 50px;
+    display: block;
+    background:
+        /* Horizontal line (première partie du checkmark) */
+            linear-gradient(135deg, transparent 45%, #ff5252 45%, #ff5252 55%, transparent 55%) no-repeat 0 50%;
+    animation: 2s infinite checkmarkDraw;
+}
+
+@keyframes checkmarkDraw {
+    0%, 20% {
+        background-size: 0% 100%, 0% 0%;
+    }
+    50% {
+        background-size: 100% 100%, 0% 0%;
+    }
+    100% {
+        background-size: 100% 100%, 100% 100%;
     }
 }

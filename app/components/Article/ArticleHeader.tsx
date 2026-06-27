@@ -12,11 +12,11 @@ export default function ArticleHeader({
     return (
         <div className="article-heading">
             {category && (
-                <span className="strapline">{category.name} -</span>
+                <span className="strapline">{category.name}</span>
             )}
 
             {strapline && (
-                <span className="strapline">{strapline} -</span>
+                <span className="strapline">{strapline}</span>
             )}
 
             <h1

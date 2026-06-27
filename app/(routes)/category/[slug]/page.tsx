@@ -8,6 +8,8 @@ import { getCategoryPageData, getBannerCategories, getLatestBannerArticles } fro
 import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
 import Header from "@/app/components/Header/Header";
+import SubscriptionBanner from "@/app/components/SubscriptionBanner";
+import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
 
 interface CategoryPageProps {
     params: Promise<{ slug: string }>;
@@ -67,6 +69,10 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                     <ArticleAside mostRead={mostRead} />
                 </section>
             </main>
+
+            <SubscriptionBanner />
+
+            <SiteFooter />
         </>
     );
 }

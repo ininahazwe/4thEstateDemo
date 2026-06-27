@@ -12,6 +12,7 @@ import "./styles/swipe.css";
 import "./styles/podcast.css";
 import "./styles/latest-podcast-widget.css";
 import "./styles/article.css";
+import "./styles/article-card-theme-lock.css";
 import "./styles/share-popup.css";
 import "./styles/inline.css";
 import "./styles/video.css";
