@@ -46,3 +46,7 @@
 :root[data-user-color-scheme="dark"] .item {
     background-color: #f6f6f6 !important;
 }*/
+
+:root[data-user-color-scheme="dark"] .site-banner .banner-hot-articles{
+    border-bottom: none;
+}
