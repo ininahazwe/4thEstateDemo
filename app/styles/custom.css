@@ -88,3 +88,13 @@ p.wp-block-paragraph{
     height: 20px;
     fill: currentColor; /* Permet à l'icône de prendre la couleur du texte du lien */
 }
+
+#site-header .header-welcome,
+#site-header .header-renew {
+    color: #6D2929;
+    font-size: 16px;      /* annule un éventuel font-size: 0 hérité */
+    text-indent: 0;       /* annule un éventuel text-indent négatif */
+    overflow: visible;
+    width: auto;
+    height: auto;
+}

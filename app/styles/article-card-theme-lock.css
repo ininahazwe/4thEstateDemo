@@ -50,3 +50,8 @@
 :root[data-user-color-scheme="dark"] .site-banner .banner-hot-articles{
     border-bottom: none;
 }
+
+[data-user-color-scheme="dark"] #site-header .header-welcome,
+[data-user-color-scheme="dark"] #site-header .header-renew {
+    color: #ffffff;
+}

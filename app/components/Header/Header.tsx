@@ -2,13 +2,27 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
 import { navItems } from './navigationData';
 import {ArrowBigRight, ArrowRight, Mail, Moon, Search, Sun} from "lucide-react";
 import Image from 'next/image';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 
+// Le site membership gère l'inscription et l'abonnement payant ; le front
+// Next.js ne fait que l'authentification. « Join Us » mène donc au membership.
+// ⚠️ À pointer vers la vraie page d'abonnement/inscription du membership.
+const MEMBERSHIP_JOIN_URL = 'https://membership.thefourthestategh.com';
+
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // status : 'loading' | 'authenticated' | 'unauthenticated'.
+    // Au premier rendu (SSR statique + hydratation), status vaut 'loading' ;
+    // on le traite comme déconnecté pour l'affichage. Pour un membre connecté,
+    // l'icône passe de « Connexion » à « Déconnexion » une fois la session
+    // récupérée côté client — léger flash assumé (cf. choix SessionProvider).
+    const { data: session, status } = useSession();
+    const isAuthenticated = status === 'authenticated';
 
     const [theme, setTheme] = useState(() => {
         if (typeof window === 'undefined') return 'light'; // SSR guard
@@ -103,19 +117,45 @@ export default function Header() {
                     />
                 </Link>
 
-                {/* Zone Abonnement */}
+                {/* Zone Abonnement — « Join Us » pour les visiteurs,
+                    « Welcome » pour les utilisateurs connectés.
+                    .header-welcome est volontairement laissée sans style :
+                    balise vierge à habiller librement. */}
                 <div className="header-hebdo">
-                    <a className="header-abo ithalc" href="https://fourthestate.free.nf" data-model="button" data-premium="" rel="nofollow" data-ithal="header_abo">
-                        Join Us
-                        <span style={{display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px'}}>from 50ghs/mois</span>
-                    </a>
+                    {!isAuthenticated ? (
+                        <a className="header-abo ithalc" href={MEMBERSHIP_JOIN_URL} data-model="button" data-premium="" rel="nofollow" data-ithal="header_abo">
+                            Join Us
+                            <span style={{display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px'}}>from 50ghs/month</span>
+                        </a>
+                    ) : session?.user?.isActive ? (
+                        <div className="header-welcome">
+                            Welcome
+                        </div>
+                    ) : (
+                        <a className="header-renew" href={MEMBERSHIP_JOIN_URL}>
+                            Renew your support
+                        </a>
+                    )}
                 </div>
 
-                {/* Profil Utilisateur */}
-                <a className="header-user"
-                   href="https://fourthestate.free.nf/connexion" title="Connexion">
-                    <span className="sr-only">Connexion</span>
-                </a>
+                {/* Profil Utilisateur — bascule connexion / déconnexion selon la session */}
+                {isAuthenticated ? (
+                    <button
+                        type="button"
+                        className="header-user"
+                        title="Déconnexion"
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        // Reset des styles par défaut du bouton pour qu'il hérite
+                        // de l'apparence de .header-user (pensée pour un <a>).
+                        style={{ background: 'none', border: 0, padding: 0, font: 'inherit', cursor: 'pointer' }}
+                    >
+                        <span className="sr-only">Déconnexion</span>
+                    </button>
+                ) : (
+                    <Link className="header-user" href="/connexion" title="Connexion">
+                        <span className="sr-only">Connexion</span>
+                    </Link>
+                )}
             </div>
 
             {/* Menu de navigation (Burger Drawer) */}

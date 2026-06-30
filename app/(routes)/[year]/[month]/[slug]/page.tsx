@@ -15,6 +15,8 @@ import {
     getLatestBannerArticles,
 } from "@/app/services/wpApi";
 import { BANNER_CATEGORY_SLUGS } from "@/app/components/SiteBanner/bannerCategorySlugs";
+import TrackReader from "@/app/components/track-reader";
+
 
 const WP_API =
     process.env.NEXT_PUBLIC_WP_API_URL ?? "https://thefourthestategh.com/wp-json/wp/v2";
@@ -170,6 +172,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                 authors={article.authors}
                             />
                         </article>
+
+                        {/* Tracking de lecture (membre connecté uniquement, garde
+                            côté client). Rend null — n'affecte ni le rendu ni le
+                            SSG de la page. */}
+                        <TrackReader articleId={article.id} slug={slug} />
                     </main>
                 </div>
             </div>

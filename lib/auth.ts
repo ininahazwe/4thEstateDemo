@@ -29,8 +29,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return null;
                 }
 
+                // La base d'URL contient déjà /wp-json/tfe/v1 (cf. .env.local),
+                // on n'ajoute donc que le segment de l'endpoint.
                 const res = await fetch(
-                    `${process.env.TFE_MEMBERSHIP_API_URL}/wp-json/tfe/v1/authenticate`,
+                    `${process.env.TFE_MEMBERSHIP_API_URL}/authenticate`,
                     {
                         method: "POST",
                         headers: {

@@ -20,6 +20,7 @@ import "./styles/language-switcher.css";
 import "./styles/article-layout.css";
 import "./styles/section-critical.css";
 import "./globals.css";
+import Providers from "@/app/providers";
 
 export const metadata: Metadata = {
     title: "The Fourth Estate - Réplication & Investigation",
@@ -47,7 +48,9 @@ export default function RootLayout({
         </head>*/}
         {/* Vous pouvez ajouter les classes globales ici si nécessaire (ex: ci-phalcon v-web) */}
         <body className="ci-phalcon not-logged special-abo variantB page-home v-web {maPoliceConfiguration.className}">
-        {children}
+            <Providers>
+                {children}
+            </Providers>
         </body>
         </html>
     );

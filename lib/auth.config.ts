@@ -4,17 +4,16 @@ import type { NextAuthConfig } from "next-auth";
  * Config Edge-safe — PAS de Credentials Provider ici.
  *
  * Le Credentials Provider exécute du code Node.js (appel fetch vers le WP
- * membership, mais surtout potentiellement d'autres dépendances lourdes
- * selon comment le projet évolue) et n'est de toute façon jamais nécessaire
- * dans le runtime Edge : le middleware n'a besoin que de LIRE le JWT déjà
- * émis (tier, is_active), jamais de ré-authentifier quelqu'un.
+ * membership) et n'est de toute façon jamais nécessaire dans le runtime
+ * Edge : le middleware n'a besoin que de LIRE le JWT déjà émis (tier,
+ * is_active), jamais de ré-authentifier quelqu'un.
  *
- * Ce fichier reste minimal : seuls les callbacks qui doivent absolument
- * être identiques entre Edge et Node.js vivent ici. lib/auth.ts (Node.js)
- * réutilise cette config et y ajoute le provider.
+ * lib/auth.ts (Node.js) réutilise cette config et y ajoute le provider.
+ *
+ * Pas de `secret:` explicite : Auth.js v5 lit AUTH_SECRET depuis l'env
+ * automatiquement, en Edge comme en Node — une seule source de vérité.
  */
 export const authConfig: NextAuthConfig = {
-    secret: process.env.NEXTAUTH_SECRET,
     session: {
         strategy: "jwt",
     },
@@ -32,7 +31,10 @@ export const authConfig: NextAuthConfig = {
          */
         async jwt({ token, user }) {
             if (user) {
-                token.wpUserId = user.id;
+                // user provient d'authorize() qui garantit un id non-null
+                // (String(data.id)). Le ?? "" satisfait le type optionnel
+                // de User.id sans jamais s'activer en pratique.
+                token.wpUserId = user.id ?? "";
                 token.isActive = user.isActive;
                 token.tier = user.tier;
                 token.syncPending = user.syncPending;
@@ -43,13 +45,15 @@ export const authConfig: NextAuthConfig = {
         /**
          * Expose les champs membership sur session.user, pour lecture côté
          * composants (ex: <AdSlot> qui vérifie session.user.isActive).
+         * id reste une string (natif NextAuth) ; WordPress coerce vers int
+         * à l'insertion dans tfem_tfe_reading_history.
          */
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.wpUserId as number;
-                session.user.isActive = token.isActive as boolean;
-                session.user.tier = token.tier as string | null;
-                session.user.syncPending = token.syncPending as boolean;
+                session.user.id = token.wpUserId;
+                session.user.isActive = token.isActive;
+                session.user.tier = token.tier;
+                session.user.syncPending = token.syncPending;
             }
             return session;
         },

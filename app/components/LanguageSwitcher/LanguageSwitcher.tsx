@@ -10,7 +10,7 @@ export type LangCode = 'en' | 'fr' | 'pt' | 'sw';
 interface LanguageOption {
     code: LangCode;
     label: string;
-    flag: string; // chemin vers le SVG, ex: /flags/en.svg
+    flag: string; // Gardé au cas où tu en aurais besoin ailleurs
 }
 
 const LANGUAGES: LanguageOption[] = [
@@ -20,7 +20,6 @@ const LANGUAGES: LanguageOption[] = [
     { code: 'sw', label: 'Swahili', flag: '/assets/flags/sw.svg' },
 ];
 
-// Langue source réelle du contenu WordPress (celle dans laquelle les articles sont écrits)
 const SOURCE_LANG: LangCode = 'en';
 
 interface DropdownPosition {
@@ -39,17 +38,11 @@ export default function LanguageSwitcher() {
 
     const { translatePageTo, restoreOriginal, isTranslating } = useTranslatePage();
 
-    // Nécessaire pour createPortal : document n'existe pas en SSR
     useEffect(() => {
         setMounted(true);
-        // Initialise l'attribut lang dès le montage, pour que tout composant
-        // qui en dépend (ex: TTSButton via resolveSpeechLang) ait une valeur
-        // correcte même sans interaction préalable avec le switcher.
         document.documentElement.lang = SOURCE_LANG;
     }, []);
 
-    // Fermer au clic extérieur (le dropdown étant maintenant dans le body,
-    // on vérifie qu'on n'a cliqué ni sur le bouton ni dans le dropdown lui-même)
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
             const target = e.target as Node;
@@ -63,7 +56,6 @@ export default function LanguageSwitcher() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Recalcule la position si la fenêtre est redimensionnée pendant que le menu est ouvert
     useEffect(() => {
         if (!isOpen) return;
         function recompute() {
@@ -81,7 +73,7 @@ export default function LanguageSwitcher() {
         const rect = buttonRef.current?.getBoundingClientRect();
         if (!rect) return;
         setPosition({
-            top: rect.bottom + 8, // 8px d'espace sous le bouton
+            top: rect.bottom + 8,
             right: window.innerWidth - rect.right,
         });
     }
@@ -118,40 +110,46 @@ export default function LanguageSwitcher() {
             style={{ top: position.top, right: position.right }}
         >
             {LANGUAGES.map((lang) => (
-            <a
-                key={lang.code}
-                href="#"
-                title={lang.label}
-                className={lang.code === currentLang ? 'nturl gt_current' : 'nturl'}
-                data-gt-lang={lang.code}
-                onClick={(e) => {
-                e.preventDefault();
-                handleSelectLang(lang.code);
-            }}
+                <a
+                    key={lang.code}
+                    href="#"
+                    title={lang.label}
+                    className={lang.code === currentLang ? 'nturl gt_current' : 'nturl'}
+                    data-gt-lang={lang.code}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        handleSelectLang(lang.code);
+                    }}
                 >
-                <img width={16} height={16} alt={lang.code} src={lang.flag} />
-            {' '}
-            {lang.label}
+                    {/* Affichage du code de la langue en majuscules à la place du flag */}
+                    <span className="gt_lang_code" style={{ marginRight: '8px', fontWeight: 'bold' }}>
+                        {lang.code.toUpperCase()}
+                    </span>
+                    {lang.label}
                 </a>
-                ))}
-</div>
-);
+            ))}
+        </div>
+    );
 
-return (
-    <div className="gt_switcher notranslate item">
-        <button
-            ref={buttonRef}
-            type="button"
-            className="gt_selected_btn"
-            title={`Langue : ${selected.label}`}
-            onClick={handleToggle}
-        >
-            <img src={selected.flag} height={18} width={18} alt={selected.code} />
-            <span className="sr-only">{selected.label}</span>
-            {isTranslating && <span className="gt_loading" aria-hidden="true" />}
-        </button>
+    return (
+        <div className="gt_switcher notranslate item">
+            <button
+                ref={buttonRef}
+                type="button"
+                className="gt_selected_btn"
+                title={`Langue : ${selected.label}`}
+                onClick={handleToggle}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+                {/* Remplacement du flag ici aussi pour l'harmonie UI */}
+                <span className="gt_current_code" style={{ fontWeight: 'bold' }}>
+                    {selected.code.toUpperCase()}
+                </span>
+                <span className="sr-only">{selected.label}</span>
+                {isTranslating && <span className="gt_loading" aria-hidden="true" />}
+            </button>
 
-        {mounted && dropdown && createPortal(dropdown, document.body)}
-    </div>
-);
+            {mounted && dropdown && createPortal(dropdown, document.body)}
+        </div>
+    );
 }
