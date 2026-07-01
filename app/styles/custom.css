@@ -97,4 +97,11 @@ p.wp-block-paragraph{
     overflow: visible;
     width: auto;
     height: auto;
+    display: flex;
+    align-items: center;
+}
+
+.header-welcome p{
+    max-width: 150px;
+    font-size: small;
 }

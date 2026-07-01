@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
+import Header from "@/app/components/Header/Header";
 
 // ⚠️ À CONFIRMER — routes WordPress membership pour création de compte et
 // réinitialisation du mot de passe. Remplace par les vraies URL du site
@@ -38,7 +39,7 @@ export default function LoginForm() {
             // une erreur serveur (clé API invalide, WP down). On ne distingue
             // pas les deux côté UI → message générique unique.
             if (!res || res.error) {
-                setError("Email ou mot de passe incorrect.");
+                setError("Incorrect email or password.");
                 setLoading(false);
                 return;
             }
@@ -46,15 +47,16 @@ export default function LoginForm() {
             router.push(callbackUrl);
             router.refresh(); // revalide les composants serveur qui lisent la session
         } catch {
-            setError("Une erreur est survenue. Réessaie dans un instant.");
+            setError("Something went wrong. Please try again in a moment.");
             setLoading(false);
         }
     }
 
     return (
-        <div className="card">
-            <h1 className="title">Connexion</h1>
-            <p className="subtitle">Accède à ton compte The Fourth Estate.</p>
+        <>
+            <div className="card">
+            <h1 className="title">Sign In</h1>
+            <p className="subtitle">Access your The Fourth Estate account.</p>
 
             {error && (
                 <div className="error" role="alert">
@@ -64,12 +66,13 @@ export default function LoginForm() {
 
             <form onSubmit={handleSubmit} noValidate>
                 <label className="label" htmlFor="email">
-                    Email
+                    Email Address
                 </label>
                 <input
                     id="email"
                     type="email"
                     className="input"
+                    placeholder="e.g., alex@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
@@ -78,12 +81,13 @@ export default function LoginForm() {
                 />
 
                 <label className="label" htmlFor="password">
-                    Mot de passe
+                    Password
                 </label>
                 <input
                     id="password"
                     type="password"
                     className="input"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
@@ -92,19 +96,19 @@ export default function LoginForm() {
                 />
 
                 <button type="submit" className="button" disabled={loading}>
-                    {loading ? "Connexion…" : "Se connecter"}
+                    {loading ? "Signing in…" : "Sign In"}
                 </button>
             </form>
 
             <div className="links">
                 <a className="link" href={WP_RESET_URL}>
-                    Mot de passe oublié ?
+                    Forgot password?
                 </a>
                 <span className="sep" aria-hidden="true">
                     ·
                 </span>
                 <a className="link" href={WP_REGISTER_URL}>
-                    Créer un compte
+                    Create an account
                 </a>
             </div>
 
@@ -116,11 +120,9 @@ export default function LoginForm() {
                     border-radius: 0;
                     padding: 32px;
                     background: #ffffff;
-                    font-family: Arial, Helvetica, sans-serif;
                     color: #282828;
                 }
                 .title {
-                    font-family: Georgia, "Times New Roman", serif;
                     font-size: 28px;
                     font-weight: 700;
                     margin: 0 0 8px;
@@ -153,11 +155,14 @@ export default function LoginForm() {
                     border-radius: 0;
                     padding: 10px 12px;
                     font-size: 15px;
-                    font-family: Arial, Helvetica, sans-serif;
                     color: #282828;
                     background: #ffffff;
                     margin-bottom: 18px;
                     outline: none;
+                }
+                .input::placeholder {
+                    color: #a0a0a0;
+                    opacity: 1;
                 }
                 .input:focus {
                     border-color: #6d2929;
@@ -173,7 +178,6 @@ export default function LoginForm() {
                     border-radius: 0;
                     background: #6d2929;
                     color: #ffffff;
-                    font-family: Arial, Helvetica, sans-serif;
                     font-size: 15px;
                     font-weight: 700;
                     padding: 12px;
@@ -205,5 +209,6 @@ export default function LoginForm() {
                 }
             `}</style>
         </div>
+        </>
     );
 }

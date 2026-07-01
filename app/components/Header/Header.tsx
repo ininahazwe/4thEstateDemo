@@ -129,7 +129,16 @@ export default function Header() {
                         </a>
                     ) : session?.user?.isActive ? (
                         <div className="header-welcome">
-                            Welcome
+                            <Link href="/https://membership.thefourthestategh.com/mon-espace/" className="" title="My account">
+                            <Image
+                                src="/assets/badges/badge1.png"
+                                alt="The Fourth Estate Logo"
+                                width={40}
+                                height={52}
+                                priority
+                            />
+                            </Link>
+                            <p>Thanks to your support, we keep it up</p>
                         </div>
                     ) : (
                         <a className="header-renew" href={MEMBERSHIP_JOIN_URL}>
@@ -149,11 +158,11 @@ export default function Header() {
                         // de l'apparence de .header-user (pensée pour un <a>).
                         style={{ background: 'none', border: 0, padding: 0, font: 'inherit', cursor: 'pointer' }}
                     >
-                        <span className="sr-only">Déconnexion</span>
+                        <span className="sr-only">Log out</span>
                     </button>
                 ) : (
                     <Link className="header-user" href="/connexion" title="Connexion">
-                        <span className="sr-only">Connexion</span>
+                        <span className="sr-only">Log in</span>
                     </Link>
                 )}
             </div>
