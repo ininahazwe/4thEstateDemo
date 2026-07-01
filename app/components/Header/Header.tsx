@@ -109,10 +109,10 @@ export default function Header() {
                 {/* Logo */}
                 <Link href="/" className="header-logo" title="The Fourth Estate - Return to home">
                     <Image
-                        src="/assets/img/logo-short-red.png"
+                        src="/assets/img/logo-long-red.png"
                         alt="The Fourth Estate Logo"
-                        width={102}
-                        height={52}
+                        width={320}
+                        height={100}
                         priority
                     />
                 </Link>

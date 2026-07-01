@@ -8,7 +8,7 @@ import Header from "@/app/components/Header/Header";
 // ⚠️ À CONFIRMER — routes WordPress membership pour création de compte et
 // réinitialisation du mot de passe. Remplace par les vraies URL du site
 // membership.thefourthestategh.com (cf. ton plugin tfe-membership).
-const WP_REGISTER_URL = "https://membership.thefourthestategh.com/inscription";
+const WP_REGISTER_URL = "https://membership.thefourthestategh.com";
 const WP_RESET_URL = "https://membership.thefourthestategh.com/mot-de-passe-oublie";
 
 export default function LoginForm() {
@@ -116,11 +116,11 @@ export default function LoginForm() {
                 .card {
                     width: 100%;
                     max-width: 380px;
-                    border: 1px solid #282828;
                     border-radius: 0;
                     padding: 32px;
                     background: #ffffff;
                     color: #282828;
+                    margin: auto;
                 }
                 .title {
                     font-size: 28px;
@@ -151,8 +151,8 @@ export default function LoginForm() {
                 .input {
                     width: 100%;
                     box-sizing: border-box;
-                    border: 1px solid #282828;
-                    border-radius: 0;
+                    border: 1px solid #e3e3e3;
+                    border-radius: 8px;
                     padding: 10px 12px;
                     font-size: 15px;
                     color: #282828;
@@ -175,7 +175,7 @@ export default function LoginForm() {
                 .button {
                     width: 100%;
                     border: none;
-                    border-radius: 0;
+                    border-radius: 8px;
                     background: #6d2929;
                     color: #ffffff;
                     font-size: 15px;
