@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { navItems } from './navigationData';
-import {ArrowBigRight, ArrowRight, Mail, Moon, Search, Sun} from "lucide-react";
+import { ArrowBigRight, ArrowRight, Mail, Moon, Search, Sun } from "lucide-react";
 import Image from 'next/image';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 
 // Le site membership gère l'inscription et l'abonnement payant ; le front
-// Next.js ne fait que l'authentification. « Join Us » mène donc au membership.
+// Next.js ne fait que l'authentification. « Join Us » / « Renew » y mènent.
 // ⚠️ À pointer vers la vraie page d'abonnement/inscription du membership.
 const MEMBERSHIP_JOIN_URL = 'https://membership.thefourthestategh.com';
 
@@ -17,10 +17,10 @@ export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // status : 'loading' | 'authenticated' | 'unauthenticated'.
-    // Au premier rendu (SSR statique + hydratation), status vaut 'loading' ;
-    // on le traite comme déconnecté pour l'affichage. Pour un membre connecté,
-    // l'icône passe de « Connexion » à « Déconnexion » une fois la session
-    // récupérée côté client — léger flash assumé (cf. choix SessionProvider).
+    // Au premier rendu (hydratation), status vaut 'loading' → traité comme
+    // déconnecté. Un membre connecté voit l'affichage basculer une fois la
+    // session récupérée côté client (léger flash assumé, cf. SessionProvider
+    // sans session serveur pour préserver le SSG des pages article).
     const { data: session, status } = useSession();
     const isAuthenticated = status === 'authenticated';
 
@@ -109,83 +109,105 @@ export default function Header() {
                 {/* Logo */}
                 <Link href="/" className="header-logo" title="The Fourth Estate - Return to home">
                     <Image
-                        src="/assets/img/logo-long-red.png"
+                        src="/assets/img/logo-short-red.png"
                         alt="The Fourth Estate Logo"
-                        width={320}
-                        height={100}
+                        width={102}
+                        height={52}
                         priority
                     />
                 </Link>
 
-                {/* Zone Abonnement — « Join Us » pour les visiteurs,
-                    « Welcome » pour les utilisateurs connectés.
-                    .header-welcome est volontairement laissée sans style :
-                    balise vierge à habiller librement. */}
+                {/* Zone Abonnement — trois états :
+                    • non connecté          → « Join Us » (CTA abonnement)
+                    • connecté + actif       → badge + message (SSO vers le dashboard)
+                    • connecté + non actif   → « Renew your support »
+                    Les liens vers le membership s'ouvrent dans un nouvel onglet. */}
                 <div className="header-hebdo">
                     {!isAuthenticated ? (
-                        <a className="header-abo ithalc" href={MEMBERSHIP_JOIN_URL} data-model="button" data-premium="" rel="nofollow" data-ithal="header_abo">
-                            Join Us
-                            <span style={{display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px'}}>from 50ghs/month</span>
+                        <a
+                            className="header-abo ithalc"
+                            href={MEMBERSHIP_JOIN_URL}
+                            data-model="button"
+                            data-premium=""
+                            rel="nofollow noopener noreferrer"
+                            target="_blank"
+                            data-ithal="header_abo"
+                        >
+                        Join Us
+                        <span style={{ display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px' }}>from 50ghs/month</span>
                         </a>
-                    ) : session?.user?.isActive ? (
+                        ) : session?.user?.isActive ? (
                         <div className="header-welcome">
-                            <a href="/api/sso/to-membership" title="My account">
-                                <Image
-                                    src="/assets/badges/badge1.png"
-                                    alt="Active member badge"
-                                    width={40}
-                                    height={52}
-                                    priority
-                                />
-                            </a>
-                            <p>Thanks to your support, we keep it up</p>
-                        </div>
-                    ) : (
-                        <a className="header-renew" href={MEMBERSHIP_JOIN_URL}>
-                            Renew your support
+                    {/* SSO : mène au dashboard membership déjà connecté (nouvel onglet).
+                                <a> natif car la route serveur finit par une redirection
+                                cross-domaine — navigation plein page voulue. */}
+                            <a
+                                href="/api/sso/to-membership"
+                                title="My account"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                            <Image
+                                src="/assets/badges/badge1.png"
+                                alt="Active member badge"
+                                width={40}
+                                height={52}
+                                priority
+                            />
                         </a>
-                    )}
+                    <p>Thanks to your support, we keep it up</p>
                 </div>
-
-                {/* Profil Utilisateur — bascule connexion / déconnexion selon la session */}
-                {isAuthenticated ? (
-                    <button
-                        type="button"
-                        className="header-user"
-                        title="Déconnexion"
-                        onClick={() => signOut({ callbackUrl: '/' })}
-                        // Reset des styles par défaut du bouton pour qu'il hérite
-                        // de l'apparence de .header-user (pensée pour un <a>).
-                        style={{ background: 'none', border: 0, padding: 0, font: 'inherit', cursor: 'pointer' }}
-                    >
-                        <span className="sr-only">Log out</span>
-                    </button>
-                ) : (
-                    <Link className="header-user" href="/connexion" title="Connexion">
-                        <span className="sr-only">Log in</span>
-                    </Link>
-                )}
+            ) : (
+                <a
+                    className="header-renew"
+                    href={MEMBERSHIP_JOIN_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                Renew your support
+                </a>
+            )}
             </div>
 
-            {/* Menu de navigation (Burger Drawer) */}
-            <nav className={`site-menu ${isMenuOpen ? 'is-active' : ''}`}>
-                <div className="menu-nav">
-                    <label htmlFor="toggle-menu" className="menu-overlay" onClick={toggleMenu}></label>
+{/* Profil Utilisateur — connecté : SSO vers le dashboard membership
+                    (nouvel onglet, déjà connecté) ; déconnecté : page de connexion
+                    du front. La déconnexion réelle se fait DEPUIS le dashboard. */}
+{isAuthenticated ? (
+    <a
+        className="header-user"
+        href="/api/sso/to-membership"
+        title="My account"
+        target="_blank"
+        rel="noopener noreferrer"
+    >
+        <span className="sr-only">My account</span>
+    </a>
+) : (
+    <Link className="header-user" href="/connexion" title="Connexion">
+        <span className="sr-only">Connexion</span>
+    </Link>
+)}
+</div>
 
-                    <div className="menu-wrap align-left">
-                        {/* Outils du menu */}
-                        <section className="tools-section">
-                            <div className="tool-list">
-                                <Link href="/recherche" className="item" data-icon="magnifying-glass">Search</Link>
-                                <button type="button" className="item" data-icon="circle-half-stroke" onClick={toggleTheme} aria-pressed={theme === 'dark'}>
-                                    Mode {theme === 'light' ? 'dark' : 'light'}
-                                </button>
-                                <a href="https://4thestatedemo.vercel.app/" className="item" data-icon="envelope">Newsletters</a>
-                            </div>
-                        </section>
+{/* Menu de navigation (Burger Drawer) */}
+<nav className={`site-menu ${isMenuOpen ? 'is-active' : ''}`}>
+    <div className="menu-nav">
+        <label htmlFor="toggle-menu" className="menu-overlay" onClick={toggleMenu}></label>
 
-                        {/* À la une du Hebdo */}
-                        {/*<section className="hebdo-section">
+        <div className="menu-wrap align-left">
+            {/* Outils du menu */}
+            <section className="tools-section">
+                <div className="tool-list">
+                    <Link href="/recherche" className="item" data-icon="magnifying-glass">Search</Link>
+                    <button type="button" className="item" data-icon="circle-half-stroke" onClick={toggleTheme} aria-pressed={theme === 'dark'}>
+                        Mode {theme === 'light' ? 'dark' : 'light'}
+                    </button>
+                    <a href="https://4thestatedemo.vercel.app/" className="item" data-icon="envelope">Newsletters</a>
+                </div>
+            </section>
+
+            {/* À la une du Hebdo */}
+            {/*<section className="hebdo-section">
                             <a href="https://www.courrierinternational.com/magazine/2026/1859-magazine">
                                 <div className="item-image">
                                     <figure>
@@ -206,44 +228,44 @@ export default function Header() {
                             </a>
                         </section>*/}
 
-                        {/* Bouton Offres Menu
+            {/* Bouton Offres Menu
                         <a className="menu-abo ithalc" href="https://fourthestate.free.nf" rel="nofollow" data-ithal="menu_navigation_hebdo">
                             <strong>Offres spéciales</strong>
                             <span style={{ fontWeight: 'normal' }}>dès 3,99&nbsp;€/mois</span>
                         </a>*/}
 
-                        {/* Liste dynamique des rubriques */}
-                        <section className="nav-section">
-                            <div className="simple-list arrows">
-                                {navItems.map((item, index) => {
-                                    const isExternal = item.href.startsWith('http');
+            {/* Liste dynamique des rubriques */}
+            <section className="nav-section">
+                <div className="simple-list arrows">
+                    {navItems.map((item, index) => {
+                        const isExternal = item.href.startsWith('http');
 
-                                    // La clé 'key' a été retirée de cet objet pour éliminer le bug
-                                    const itemProps = {
-                                        className: `item ${item.type} ithalc`,
-                                        'data-ithalc': '[cta_bloc_menu]',
-                                        'data-ithal': item.ithal,
-                                    };
+                        // La clé 'key' a été retirée de cet objet pour éliminer le bug
+                        const itemProps = {
+                            className: `item ${item.type} ithalc`,
+                            'data-ithalc': '[cta_bloc_menu]',
+                            'data-ithal': item.ithal,
+                        };
 
-                                    return isExternal ? (
-                                        // La clé 'key' est maintenant déclarée directement ici
-                                        <a key={index} href={item.href} {...itemProps}>
-                                            {item.label}
-                                            <ArrowBigRight />
-                                        </a>
-                                    ) : (
-                                        // Et ici
-                                        <Link key={index} href={item.href} {...itemProps}>
-                                            {item.label}
-                                            <ArrowRight size={14}/>
-                                        </Link>
-                                    );
-                                })}
-                            </div>
-                        </section>
-                    </div>
+                        return isExternal ? (
+                            // La clé 'key' est maintenant déclarée directement ici
+                            <a key={index} href={item.href} {...itemProps}>
+                                {item.label}
+                                <ArrowBigRight />
+                            </a>
+                        ) : (
+                            // Et ici
+                            <Link key={index} href={item.href} {...itemProps}>
+                                {item.label}
+                                <ArrowRight size={14} />
+                            </Link>
+                        );
+                    })}
                 </div>
-            </nav>
-        </header>
-    );
+            </section>
+        </div>
+    </div>
+</nav>
+</header>
+);
 }
