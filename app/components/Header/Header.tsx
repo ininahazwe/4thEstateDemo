@@ -129,15 +129,15 @@ export default function Header() {
                         </a>
                     ) : session?.user?.isActive ? (
                         <div className="header-welcome">
-                            <Link href="/https://membership.thefourthestategh.com/mon-espace/" className="" title="My account">
-                            <Image
-                                src="/assets/badges/badge1.png"
-                                alt="The Fourth Estate Logo"
-                                width={40}
-                                height={52}
-                                priority
-                            />
-                            </Link>
+                            <a href="/api/sso/to-membership" title="My account">
+                                <Image
+                                    src="/assets/badges/badge1.png"
+                                    alt="Active member badge"
+                                    width={40}
+                                    height={52}
+                                    priority
+                                />
+                            </a>
                             <p>Thanks to your support, we keep it up</p>
                         </div>
                     ) : (
