@@ -21,6 +21,16 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "missing_fields" }, { status: 400 });
     }
 
+    // Pays du lecteur : dérivé par Vercel depuis l'IP entrante et exposé via
+    // l'en-tête x-vercel-ip-country (code ISO-3166-1 alpha-2, ex. "GH").
+    // On ne manipule JAMAIS l'IP brute — seulement le pays déjà dérivé.
+    // Absent en dev local (next dev) ou hors Vercel → on n'envoie rien.
+    const countryHeader = req.headers.get("x-vercel-ip-country");
+    const country =
+        countryHeader && /^[A-Z]{2}$/i.test(countryHeader)
+            ? countryHeader.toUpperCase()
+            : null;
+
     try {
         // user_id vient de la SESSION, jamais du client.
         const res = await fetch(
@@ -35,6 +45,8 @@ export async function POST(req: Request) {
                     user_id: session.user.id,
                     article_id: articleId,
                     slug,
+                    // Ajouté uniquement si présent/valide (spread conditionnel).
+                    ...(country ? { country } : {}),
                 }),
             }
         );
