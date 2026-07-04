@@ -24,23 +24,12 @@ export async function POST(req: Request) {
     // Pays du lecteur : dérivé par Vercel depuis l'IP entrante et exposé via
     // l'en-tête x-vercel-ip-country (code ISO-3166-1 alpha-2, ex. "GH").
     // On ne manipule JAMAIS l'IP brute — seulement le pays déjà dérivé.
+    // Absent en dev local (next dev) ou hors Vercel → on n'envoie rien.
     const countryHeader = req.headers.get("x-vercel-ip-country");
     const country =
         countryHeader && /^[A-Z]{2}$/i.test(countryHeader)
             ? countryHeader.toUpperCase()
             : null;
-
-    // --- DIAGNOSTIC TEMPORAIRE (à retirer après debug) ---------------------
-    const vercelGeoHeaders: Record<string, string> = {};
-    req.headers.forEach((value, key) => {
-        if (key.startsWith("x-vercel-ip")) vercelGeoHeaders[key] = value;
-    });
-    console.log("[track-read] DIAG", {
-        vercelGeoHeaders,               // vide = Vercel n'injecte AUCUN en-tête géo
-        countryHeaderRaw: countryHeader, // valeur brute de x-vercel-ip-country
-        countryComputed: country,        // ce qu'on relaiera (null = non envoyé)
-    });
-    // ----------------------------------------------------------------------
 
     try {
         // user_id vient de la SESSION, jamais du client.
@@ -56,6 +45,7 @@ export async function POST(req: Request) {
                     user_id: session.user.id,
                     article_id: articleId,
                     slug,
+                    // Ajouté uniquement si présent/valide (spread conditionnel).
                     ...(country ? { country } : {}),
                 }),
             }
