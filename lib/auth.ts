@@ -31,18 +31,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return null;
                 }
 
-                // --- DIAGNOSTIC TEMPORAIRE (à retirer après debug) -----------
-                // N'affiche JAMAIS la clé : seulement sa longueur et si elle
-                // contient des espaces/retours ligne parasites.
-                const rawKey = process.env.TFE_MEMBERSHIP_API_KEY ?? "";
-                console.log("[auth] DIAG clé", {
-                    apiUrl: process.env.TFE_MEMBERSHIP_API_URL,
-                    keyLength: rawKey.length,                 // doit être 64
-                    hasWhitespace: /\s/.test(rawKey),          // doit être false
-                    trimmedLength: rawKey.trim().length,       // 64 aussi si propre
-                });
-                // -------------------------------------------------------------
-
                 const res = await fetch(
                     `${process.env.TFE_MEMBERSHIP_API_URL}/authenticate`,
                     {
@@ -57,10 +45,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         }),
                     }
                 );
-
-                // --- DIAGNOSTIC TEMPORAIRE (à retirer après debug) -----------
-                console.log("[auth] DIAG réponse WP", { status: res.status });
-                // -------------------------------------------------------------
 
                 if (!res.ok) {
                     return null;
