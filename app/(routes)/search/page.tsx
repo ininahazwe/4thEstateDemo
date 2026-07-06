@@ -92,7 +92,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         )}
                     </div>
 
-                    <ArticleAside mostRead={mostRead} />
+                    <ArticleAside mostRead={mostRead} showPodcast={false} />
                 </section>
             </main>
 

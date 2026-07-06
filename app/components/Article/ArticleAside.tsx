@@ -5,10 +5,12 @@ import {getLatestPodcastEpisode} from "@/app/components/Article/Getlatestpodcast
 
 interface ArticleAsideProps {
     mostRead: WpArticleCard[];
+    showPodcast?: boolean;
 }
 
-export default async function ArticleAside({ mostRead }: ArticleAsideProps) {
-    const latestPodcast = await getLatestPodcastEpisode();
+export default async function ArticleAside({ mostRead, showPodcast = true }: ArticleAsideProps) {
+
+    const latestPodcast = showPodcast ? await getLatestPodcastEpisode() : null;
 
     return (
         <aside className="article-aside" data-column="right">
@@ -33,7 +35,7 @@ export default async function ArticleAside({ mostRead }: ArticleAsideProps) {
                 </div>
             </section>
 
-            {latestPodcast && <LatestPodcastWidget episode={latestPodcast} />}
+            {showPodcast && latestPodcast && <LatestPodcastWidget episode={latestPodcast} />}
         </aside>
     );
 }

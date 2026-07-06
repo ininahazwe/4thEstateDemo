@@ -150,28 +150,38 @@ async function translateBatch(
     const numbered = texts.map((t, i) => `${i}: ${t}`).join('\n');
 
     const systemPrompt = `You are a professional news translator for a Ghanaian news outlet called The Fourth Estate.
-Translate each numbered text segment into ${langName}.
+Each input line has the form "<i>: <text>" where <i> is a segment index.
+Translate every segment's text into ${langName}.
 Rules:
 - Preserve journalistic tone and meaning. Do not summarize, add commentary, or omit information.
 - Use the surrounding segments as context to disambiguate meaning and keep terminology consistent across the page.
 - Keep proper nouns, names, and place names unchanged unless they have a standard translated form.
 - Preserve any HTML tags exactly as they appear in the source segment.
-- Return exactly ${texts.length} translations, in the same order as the input segments.
-- Do not include the numbering in your translated output.
-- Respond ONLY with a JSON object: {"translations": ["...", ...]}.`;
+- You MUST return one object per input segment, echoing back its index i. Never merge, split, drop, or reorder segments.
+- Respond ONLY with a JSON object of the form: {"translations": [{"i": 0, "t": "<translation>"}, {"i": 1, "t": "..."}]}.`;
 
-    const translations =
+    const pairs =
         PROVIDER === 'groq'
             ? await callGroq(numbered, systemPrompt, apiKey)
             : await callGemini(numbered, systemPrompt, apiKey);
 
-    if (!Array.isArray(translations) || translations.length !== texts.length) {
-        throw new Error(
-            `Translation count mismatch: expected ${texts.length}, got ${translations?.length}`
-        );
+    // Reconstruction par index : robuste aux omissions / réordonnancements du
+    // LLM. Un index manquant retombe silencieusement sur le texte original
+    // plutôt que de casser tout l'alignement (ancien bug "count mismatch").
+    const byIndex = new Map<number, string>();
+    for (const p of pairs) {
+        if (p && typeof p.i === 'number' && typeof p.t === 'string') {
+            byIndex.set(p.i, p.t);
+        }
     }
 
-    return translations;
+    return texts.map((original, k) => byIndex.get(k) ?? original);
+}
+
+// Segment traduit renvoyé par le LLM : index + texte.
+interface TranslationPair {
+    i: number;
+    t: string;
 }
 
 // ---- Appel Gemini ----
@@ -180,7 +190,7 @@ async function callGemini(
     numbered: string,
     systemPrompt: string,
     apiKey: string
-): Promise<string[]> {
+): Promise<TranslationPair[]> {
     const url = `${GEMINI_API_BASE}/${GEMINI_MODEL}:generateContent`;
 
     const response = await fetch(url, {
@@ -211,7 +221,14 @@ async function callGemini(
                     properties: {
                         translations: {
                             type: 'ARRAY',
-                            items: { type: 'STRING' },
+                            items: {
+                                type: 'OBJECT',
+                                properties: {
+                                    i: { type: 'INTEGER' },
+                                    t: { type: 'STRING' },
+                                },
+                                required: ['i', 't'],
+                            },
                         },
                     },
                     required: ['translations'],
@@ -235,14 +252,14 @@ async function callGemini(
         throw new Error(`No text content in Gemini response (finishReason: ${reason})`);
     }
 
-    let parsed: { translations: string[] };
+    let parsed: { translations: TranslationPair[] };
     try {
         parsed = JSON.parse(textBlock);
     } catch {
         throw new Error(`Failed to parse translation JSON: ${String(textBlock).slice(0, 200)}`);
     }
 
-    return parsed.translations;
+    return parsed.translations ?? [];
 }
 
 // ---- Appel Groq (API compatible OpenAI, JSON mode) ----
@@ -251,7 +268,7 @@ async function callGroq(
     numbered: string,
     systemPrompt: string,
     apiKey: string
-): Promise<string[]> {
+): Promise<TranslationPair[]> {
     const response = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
@@ -280,12 +297,12 @@ async function callGroq(
         throw new Error('No content in Groq response');
     }
 
-    let parsed: { translations: string[] };
+    let parsed: { translations: TranslationPair[] };
     try {
         parsed = JSON.parse(content);
     } catch {
         throw new Error(`Failed to parse translation JSON: ${String(content).slice(0, 200)}`);
     }
 
-    return parsed.translations;
+    return parsed.translations ?? [];
 }

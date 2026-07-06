@@ -1721,7 +1721,7 @@ img[loading=lazy].loading {
         display:flex;
         flex-wrap:wrap;
         justify-content:space-between;
-        min-height: 180vh;
+        /*min-height: 180vh;*/
     }
     #site-main [data-columns="2"]>[data-column=full] {
         width:100%

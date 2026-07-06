@@ -1,5 +1,6 @@
 import OurImpactCard from './ImpactCard';
 import { type OurImpactArticle } from './Types';
+import Link from "next/link";
 interface OurImpactZoneProps {
     articles: OurImpactArticle[];
 }
@@ -22,8 +23,8 @@ export default function OurImpactZone({ articles }: OurImpactZoneProps) {
 
             {/* Colonne droite : bloc statique — reproduit à l'identique du HTML de référence */}
             <section className="zone zone-puzzle" data-column="right">
-                <a
-                    href="https://thefourthestategh.com/category/our-impact/"
+                <Link
+                    href="/category/our-impact/"
                     className="item ithalc"
                 >
                     <div className="item-text">
@@ -36,7 +37,7 @@ export default function OurImpactZone({ articles }: OurImpactZoneProps) {
                             <div className="button" data-model="button">Read more</div>
                         </div>
                     </div>
-                </a>
+                </Link>
             </section>
 
         </section>
