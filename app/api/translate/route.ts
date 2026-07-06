@@ -26,8 +26,29 @@ const LANG_NAMES: Record<SupportedLang, string> = {
     SW: 'Swahili',
 };
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
+// ---------------------------------------------------------------------------
+// Backend de traduction — switchable via TRANSLATE_PROVIDER ('gemini' | 'groq').
+// Les deux sont des LLM contextuels à tier gratuit ; on bascule sans toucher
+// au code, juste aux variables d'environnement.
+//
+//   gemini : Google Gemini. Clé gratuite https://aistudio.google.com/apikey.
+//            Free tier ~1500 req/jour, 1 M tokens/min. ATTENTION : certains
+//            projets/régions ont un quota gratuit à 0 (erreur 429 limit:0) —
+//            créer la clé dans un NOUVEAU projet AI Studio corrige souvent ça.
+//   groq   : Groq (Llama). Clé gratuite https://console.groq.com/keys.
+//            Free tier fiable (pas de limit:0), très rapide, API JSON mode.
+//
+// Modèle override : GEMINI_MODEL / GROQ_MODEL.
+// ---------------------------------------------------------------------------
+
+type Provider = 'gemini' | 'groq';
+const PROVIDER: Provider = process.env.TRANSLATE_PROVIDER === 'groq' ? 'groq' : 'gemini';
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash';
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+const GROQ_MODEL = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 // Cache en mémoire : clé = hash(texte + langue) -> traduction
 // NB : vidé à chaque cold start de la fonction serverless (Vercel).
@@ -66,10 +87,10 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = PROVIDER === 'groq' ? process.env.GROQ_API_KEY : process.env.GEMINI_API_KEY;
     if (!apiKey) {
         return NextResponse.json(
-            { error: 'Translation service not configured' },
+            { error: `Translation service not configured (missing ${PROVIDER === 'groq' ? 'GROQ_API_KEY' : 'GEMINI_API_KEY'})` },
             { status: 500 }
         );
     }
@@ -110,13 +131,13 @@ export async function POST(req: NextRequest) {
     } catch (err) {
         console.error('Translation error:', err);
         return NextResponse.json(
-            { error: 'Translation failed' },
+            { error: 'Translation failed', detail: err instanceof Error ? err.message : String(err) },
             { status: 502 }
         );
     }
 }
 
-// ---- Appel Anthropic ----
+// ---- Dispatcher ----
 
 async function translateBatch(
     texts: string[],
@@ -125,66 +146,145 @@ async function translateBatch(
 ): Promise<string[]> {
     const langName = LANG_NAMES[targetLang];
 
-    // On numérote les segments pour garantir l'alignement de la réponse,
-    // même si Claude reformule légèrement la structure du JSON.
+    // On numérote les segments pour donner au modèle un ancrage d'ordre clair.
     const numbered = texts.map((t, i) => `${i}: ${t}`).join('\n');
 
     const systemPrompt = `You are a professional news translator for a Ghanaian news outlet called The Fourth Estate.
 Translate each numbered text segment into ${langName}.
 Rules:
 - Preserve journalistic tone and meaning. Do not summarize, add commentary, or omit information.
+- Use the surrounding segments as context to disambiguate meaning and keep terminology consistent across the page.
 - Keep proper nouns, names, and place names unchanged unless they have a standard translated form.
 - Preserve any HTML tags exactly as they appear in the source segment.
-- Respond ONLY with a valid JSON object: {"translations": ["...", "...", ...]}
-- The translations array must have exactly ${texts.length} elements, in the same order as the input segments.
+- Return exactly ${texts.length} translations, in the same order as the input segments.
 - Do not include the numbering in your translated output.
-- Do not include any text outside the JSON object — no preamble, no markdown fences.`;
+- Respond ONLY with a JSON object: {"translations": ["...", ...]}.`;
 
-    const response = await fetch(ANTHROPIC_API_URL, {
+    const translations =
+        PROVIDER === 'groq'
+            ? await callGroq(numbered, systemPrompt, apiKey)
+            : await callGemini(numbered, systemPrompt, apiKey);
+
+    if (!Array.isArray(translations) || translations.length !== texts.length) {
+        throw new Error(
+            `Translation count mismatch: expected ${texts.length}, got ${translations?.length}`
+        );
+    }
+
+    return translations;
+}
+
+// ---- Appel Gemini ----
+
+async function callGemini(
+    numbered: string,
+    systemPrompt: string,
+    apiKey: string
+): Promise<string[]> {
+    const url = `${GEMINI_API_BASE}/${GEMINI_MODEL}:generateContent`;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        // Auth par header (x-goog-api-key) plutôt que ?key= en query : requis
+        // par le nouveau format de clé Gemini (préfixe AQ.) que l'ancien passage
+        // en query param rejette selon la route.
+        headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify({
+            systemInstruction: {
+                parts: [{ text: systemPrompt }],
+            },
+            contents: [
+                {
+                    role: 'user',
+                    parts: [{ text: numbered }],
+                },
+            ],
+            generationConfig: {
+                temperature: 0.2,
+                // Sortie JSON garantie + schéma strict : plus de parsing de markdown.
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: 'OBJECT',
+                    properties: {
+                        translations: {
+                            type: 'ARRAY',
+                            items: { type: 'STRING' },
+                        },
+                    },
+                    required: ['translations'],
+                },
+            },
+        }),
+    });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Gemini API error ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+
+    // Gemini renvoie le JSON contraint dans candidates[0].content.parts[0].text.
+    const textBlock = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!textBlock) {
+        // Cause fréquente : blocage safety ou finishReason != STOP.
+        const reason = data?.candidates?.[0]?.finishReason ?? 'unknown';
+        throw new Error(`No text content in Gemini response (finishReason: ${reason})`);
+    }
+
+    let parsed: { translations: string[] };
+    try {
+        parsed = JSON.parse(textBlock);
+    } catch {
+        throw new Error(`Failed to parse translation JSON: ${String(textBlock).slice(0, 200)}`);
+    }
+
+    return parsed.translations;
+}
+
+// ---- Appel Groq (API compatible OpenAI, JSON mode) ----
+
+async function callGroq(
+    numbered: string,
+    systemPrompt: string,
+    apiKey: string
+): Promise<string[]> {
+    const response = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
+            Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-            model: ANTHROPIC_MODEL,
-            max_tokens: 4096,
-            system: systemPrompt,
+            model: GROQ_MODEL,
+            temperature: 0.2,
+            response_format: { type: 'json_object' },
             messages: [
-                {
-                    role: 'user',
-                    content: numbered,
-                },
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: numbered },
             ],
         }),
     });
 
     if (!response.ok) {
         const errText = await response.text();
-        throw new Error(`Anthropic API error ${response.status}: ${errText}`);
+        throw new Error(`Groq API error ${response.status}: ${errText}`);
     }
 
     const data = await response.json();
-
-    const textBlock = data.content?.find((block: any) => block.type === 'text');
-    if (!textBlock?.text) {
-        throw new Error('No text content in Anthropic response');
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) {
+        throw new Error('No content in Groq response');
     }
-
-    const cleaned = textBlock.text.trim().replace(/^```json\s*|\s*```$/g, '');
 
     let parsed: { translations: string[] };
     try {
-        parsed = JSON.parse(cleaned);
+        parsed = JSON.parse(content);
     } catch {
-        throw new Error(`Failed to parse translation JSON: ${cleaned.slice(0, 200)}`);
-    }
-
-    if (!Array.isArray(parsed.translations) || parsed.translations.length !== texts.length) {
-        throw new Error(
-            `Translation count mismatch: expected ${texts.length}, got ${parsed.translations?.length}`
-        );
+        throw new Error(`Failed to parse translation JSON: ${String(content).slice(0, 200)}`);
     }
 
     return parsed.translations;

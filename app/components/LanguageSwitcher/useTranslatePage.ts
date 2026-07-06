@@ -71,7 +71,10 @@ export function useTranslatePage() {
                     });
 
                     if (!res.ok) {
-                        throw new Error(`Translate API error: ${res.status}`);
+                        const detail = await res.json().catch(() => null);
+                        throw new Error(
+                            `Translate API error: ${res.status} — ${detail?.detail ?? detail?.error ?? 'no detail'}`
+                        );
                     }
 
                     const data: { translations: string[] } = await res.json();

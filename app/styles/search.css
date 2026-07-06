@@ -1,0 +1,164 @@
+/* -------------------------------------------------------------------------
+ * search.css — styles de la page /search (formulaire de recherche + états).
+ * Fichier override autonome (jamais d'édition des CSS hérités du thème).
+ * Importé dans layout.tsx après les CSS de base.
+ * ---------------------------------------------------------------------------
+ */
+
+.search-form {
+    margin: 0 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.search-form-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.search-input-wrap {
+    flex: 1 1 240px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--border-color, #d9d9d9);
+    border-radius: 6px;
+    background: var(--surface, #fff);
+}
+
+.search-input-wrap svg {
+    flex: 0 0 auto;
+    opacity: 0.55;
+}
+
+.search-input {
+    flex: 1 1 auto;
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    padding: 0.7rem 0;
+    font-size: 1rem;
+    color: inherit;
+}
+
+.search-input::placeholder {
+    opacity: 0.6;
+}
+
+.search-submit {
+    flex: 0 0 auto;
+    padding: 0.7rem 1.4rem;
+    border: 0;
+    border-radius: 6px;
+    background: #ff5252;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.search-submit:hover {
+    background: #e64545;
+}
+
+.search-filters-toggle {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--border-color, #d9d9d9);
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.search-filters-toggle.is-active {
+    border-color: #ff5252;
+    color: #ff5252;
+}
+
+.search-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #e5e5e5);
+    border-radius: 6px;
+    background: var(--surface-muted, #fafafa);
+}
+
+.search-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.search-filter-field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    opacity: 0.7;
+}
+
+.search-filter-field input[type='date'] {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border-color, #d9d9d9);
+    border-radius: 6px;
+    background: var(--surface, #fff);
+    color: inherit;
+    font-size: 0.95rem;
+}
+
+.search-filter-clear {
+    align-self: flex-end;
+    padding: 0.5rem 0.8rem;
+    border: 0;
+    background: transparent;
+    color: #ff5252;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.search-results-count {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    opacity: 0.75;
+}
+
+.search-empty {
+    margin: 1.5rem 0;
+    padding: 1.25rem 1.5rem;
+    border: 1px dashed var(--border-color, #d9d9d9);
+    border-radius: 8px;
+    background: var(--surface-muted, #fafafa);
+    opacity: 0.85;
+}
+
+/* Mode sombre — s'aligne sur le data-attribute du thème. */
+[data-user-color-scheme='dark'] .search-input-wrap,
+[data-user-color-scheme='dark'] .search-filter-field input[type='date'] {
+    background: #1c1c1c;
+    border-color: #333;
+}
+
+[data-user-color-scheme='dark'] .search-filters,
+[data-user-color-scheme='dark'] .search-empty {
+    background: #161616;
+    border-color: #333;
+}
+
+
+.search-input:focus-visible {
+    outline: none !important;
+    border: none;
+}

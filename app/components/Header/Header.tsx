@@ -198,7 +198,7 @@ export default function Header() {
             {/* Outils du menu */}
             <section className="tools-section">
                 <div className="tool-list">
-                    <Link href="/recherche" className="item" data-icon="magnifying-glass">Search</Link>
+                    <Link href="/search" className="item" data-icon="magnifying-glass">Search</Link>
                     <button type="button" className="item" data-icon="circle-half-stroke" onClick={toggleTheme} aria-pressed={theme === 'dark'}>
                         Mode {theme === 'light' ? 'dark' : 'light'}
                     </button>
