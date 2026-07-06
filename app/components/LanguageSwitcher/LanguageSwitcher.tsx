@@ -146,10 +146,25 @@ export default function LanguageSwitcher() {
                     {selected.code.toUpperCase()}
                 </span>
                 <span className="sr-only">{selected.label}</span>
-                {isTranslating && <span className="gt_loading" aria-hidden="true" />}
             </button>
 
             {mounted && dropdown && createPortal(dropdown, document.body)}
+
+            {/* Voile de chargement pendant la traduction : filigrane translucide
+                sur le contenu de l'article (#site-main), plutôt qu'un petit
+                spinner dans le switcher. Portalé dans #site-main pour ne couvrir
+                que le contenu (header/footer restent actifs). Fallback body. */}
+            {mounted &&
+                isTranslating &&
+                createPortal(
+                    <div className="translate-overlay notranslate" role="status" aria-live="polite">
+                        <div className="translate-overlay-pill">
+                            <span className="translate-overlay-spinner" aria-hidden="true" />
+                            <span>Translating…</span>
+                        </div>
+                    </div>,
+                    document.getElementById('site-main') ?? document.body
+                )}
         </div>
     );
 }

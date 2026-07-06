@@ -38,14 +38,74 @@
     pointer-events: none;
 }
 
-.gt_switcher .gt_loading {
-    background: var(--sitePrimary, #6d2929);
-    border-radius: 50%;
-    bottom: 2px;
-    height: 6px;
+/* -------------------------------------------------------------------------
+ * Voile de chargement traduction (#site-main). Portalé depuis LanguageSwitcher
+ * quand isTranslating. Filigrane translucide + pastille "Translating…".
+ * ---------------------------------------------------------------------------
+ */
+
+/* #site-main doit être positionné pour ancrer l'overlay en absolute ; scopé
+   via :has() pour ne rien changer quand l'overlay n'est pas là. */
+#site-main:has(.translate-overlay) {
+    position: relative;
+}
+
+.translate-overlay {
     position: absolute;
-    right: 2px;
-    width: 6px;
+    inset: 0;
+    z-index: 900;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    /* Filigrane : voile translucide + léger flou du contenu dessous. */
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    cursor: progress;
+    animation: translate-overlay-in 0.15s ease-out;
+}
+
+@keyframes translate-overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.translate-overlay-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: var(--siteBoxBackground, #fff);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--siteText, #111);
+    position: sticky;
+    top: 12vh;
+}
+
+.translate-overlay-spinner {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(var(--siteTextRGB, 17, 17, 17), 0.2);
+    border-top-color: var(--sitePrimary, #6d2929);
+    animation: translate-spin 0.7s linear infinite;
+}
+
+@keyframes translate-spin {
+    to { transform: rotate(360deg); }
+}
+
+[data-user-color-scheme='dark'] .translate-overlay {
+    background: rgba(0, 0, 0, 0.55);
+}
+
+[data-user-color-scheme='dark'] .translate-overlay-pill {
+    background: var(--siteBoxBackground, #2e3844);
+    color: var(--siteText, #fff);
 }
 
 /* Dropdown rendu en portal dans document.body : position: fixed,
