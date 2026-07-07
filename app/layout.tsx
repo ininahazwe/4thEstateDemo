@@ -21,6 +21,7 @@ import "./styles/language-switcher.css";
 import "./styles/article-layout.css";
 import "./styles/section-critical.css";
 import "./styles/search.css";
+import "./styles/dark.css";
 import "./globals.css";
 import Providers from "@/app/providers";
 

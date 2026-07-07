@@ -104,4 +104,5 @@ p.wp-block-paragraph{
 .header-welcome p{
     max-width: 150px;
     font-size: small;
+    margin-left: 6px;
 }

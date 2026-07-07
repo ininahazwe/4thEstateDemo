@@ -3230,7 +3230,8 @@ body.isMobile #site-header~[id*=ftdiv]+[id*=ftdiv] {
 .ci-services .item .item-text .title {
     font-size:16px;
     font-weight:600;
-    margin-bottom:4px
+    margin-bottom:4px;
+    color:#ffffff;
 }
 .ci-services .item .item-text .description {
     display:-webkit-box;

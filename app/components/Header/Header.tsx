@@ -155,7 +155,7 @@ export default function Header() {
                                 priority
                             />
                         </a>
-                    <p>Thanks to your support, we keep it up</p>
+                    <p>Thanks to your support</p>
                 </div>
             ) : (
                 <a
