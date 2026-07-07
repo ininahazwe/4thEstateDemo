@@ -191,10 +191,19 @@ export const getSearchPageData = cache(async (
     const res = await fetch(`${WP_BASE}/posts?${params.toString()}`, { next: { revalidate: 300 } });
 
     if (!res.ok) {
-        // WP renvoie 400 au-delà de la dernière page — on retourne une page vide
-        // en conservant le contexte (query/dates) plutôt que de planter.
+        // WordPress returns 400 beyond last page — return empty page
+        // preserving context (query/dates) instead of crashing
         if (res.status === 400) return { ...empty, articles: [] };
-        console.error(`Erreur wpApi [getSearchPageData]: ${res.status}`);
+
+        // Log error for debugging (5xx errors are server issues)
+        console.error(`Search API error [getSearchPageData]: ${res.status}`, {
+            url: `${WP_BASE}/posts?${params.toString()}`,
+            status: res.status,
+            statusText: res.statusText,
+        });
+
+        // Return empty results on any error (including 500)
+        // to prevent page crash — user sees "no results" instead
         return empty;
     }
 

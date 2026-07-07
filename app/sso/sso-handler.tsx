@@ -41,14 +41,14 @@ export default function SsoHandler() {
         return (
             <div style={{ textAlign: "center", maxWidth: 380 }}>
                 <p style={{ marginBottom: 16 }}>
-                    Ce lien de connexion a expiré ou n’est plus valide.
+                    This login link has expired or is no longer valid.
                 </p>
                 <a href="/connexion" style={{ color: "#6D2929", fontWeight: 700 }}>
-                    Se connecter
+                    Log ig
                 </a>
             </div>
         );
     }
 
-    return <p>Connexion en cours…</p>;
+    return <p>Connecting…</p>;
 }

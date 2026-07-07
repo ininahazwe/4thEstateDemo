@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import Script from "next/script";
 import Header from "@/app/components/Header/Header";
 import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
 import Breadcrumb from "@/app/components/UI/Breadcrumb";
@@ -52,24 +53,84 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
-    const { slug } = await params;
+    const { slug, year, month } = await params;
     const article = await getArticleBySlug(slug);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
+    const canonicalUrl = `${baseUrl}/${year}/${month}/${slug}`;
 
-    if (!article) return { title: "Article introuvable" };
+    if (!article) {
+        return {
+            title: "Article Not Found",
+            robots: { index: false },
+        };
+    }
+
+    const publishedDate = new Date(article.publishedAtISO);
+    const authorNames = article.authors.length
+        ? article.authors.map((a) => a.displayName).join(", ")
+        : "The Fourth Estate";
 
     return {
-        title: `${article.title} — The Fourth Estate`,
+        title: article.title,
         description: article.excerpt,
+        keywords: [
+            ...article.tags.map((t) => t.name),
+            article.category?.name || "",
+            article.country?.name || "",
+        ].filter(Boolean),
+        authors: article.authors.map((a) => ({
+            name: a.displayName,
+            url: `${baseUrl}/author/${a.slug}`,
+        })),
+        creator: authorNames,
+        robots: {
+            index: true,
+            follow: true,
+        },
         openGraph: {
+            type: "article",
+            url: canonicalUrl,
+            title: article.title,
+            description: article.excerpt,
+            images: article.featuredImage
+                ? [
+                    {
+                        url: article.featuredImage,
+                        width: 1200,
+                        height: 630,
+                        alt: article.title,
+                        type: "image/jpeg",
+                    },
+                ]
+                : [],
+            locale: "en_GH",
+            publishedTime: publishedDate.toISOString(),
+            modifiedTime: publishedDate.toISOString(), // Adapt with modified date if available
+            authors: article.authors.map((a) => a.displayName),
+            section: article.category?.name || "News",
+            tags: article.tags.map((t) => t.name),
+        },
+        twitter: {
+            card: "summary_large_image",
             title: article.title,
             description: article.excerpt,
             images: article.featuredImage ? [article.featuredImage] : [],
+            creator: `@${article.authors[0]?.twitterHandle || "thefourthestate"}`,
+        },
+        alternates: {
+            canonical: canonicalUrl,
+        },
+        other: {
+            "article:published_time": publishedDate.toISOString(),
+            "article:author": authorNames,
+            "article:section": article.category?.name || "Actualités",
         },
     };
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
     const { year, month, slug } = await params;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
 
     // Dédupliqué et lu instantanément en mémoire si generateMetadata est passé avant
     const article = await getArticleBySlug(slug);
@@ -122,8 +183,81 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         ? article.authors.map((a) => a.displayName).join(" | ")
         : "The Fourth Estate";
 
+    // JSON-LD Article schema
+    const articleSchema = {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        headline: article.title,
+        description: article.excerpt,
+        image: article.featuredImage
+            ? [
+                {
+                    "@type": "ImageObject",
+                    url: article.featuredImage,
+                    width: 1200,
+                    height: 630,
+                },
+            ]
+            : [],
+        datePublished: article.publishedAtISO,
+        dateModified: article.publishedAtISO,
+        author: article.authors.map((a) => ({
+            "@type": "Person",
+            name: a.displayName,
+        })),
+        publisher: {
+            "@type": "Organization",
+            name: "The Fourth Estate",
+            logo: {
+                "@type": "ImageObject",
+                url: `${baseUrl}/logo.png`,
+            },
+        },
+        mainEntityOfPage: {
+            "@type": "WebPage",
+            "@id": `${baseUrl}/${year}/${month}/${slug}`,
+        },
+    };
+
+    // JSON-LD BreadcrumbList schema
+    const breadcrumbItems = [
+        { name: "Home", url: baseUrl },
+        ...(article.category
+            ? [{ name: article.category.name, url: `${baseUrl}/category/${article.category.slug}` }]
+            : []),
+        ...(article.country
+            ? [{ name: article.country.name, url: `${baseUrl}/country/${article.country.slug}` }]
+            : []),
+        { name: article.title, url: `${baseUrl}/${year}/${month}/${slug}` },
+    ];
+
+    const breadcrumbSchema = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: breadcrumbItems.map((item, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: item.name,
+            item: item.url,
+        })),
+    };
+
     return (
         <>
+            {/* JSON-LD Structured Data - injected after hydration */}
+            <Script
+                id={`article-schema-${slug}`}
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+                strategy="afterInteractive"
+            />
+            <Script
+                id={`breadcrumb-schema-${slug}`}
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+                strategy="afterInteractive"
+            />
+
             <Header />
 
             <SiteBanner articles={bannerArticles} categories={bannerCategories} />

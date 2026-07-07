@@ -19,12 +19,31 @@ function resolvePage(pageParam?: string): number {
     return Number(pageParam) > 0 ? Number(pageParam) : 1;
 }
 
-export async function generateMetadata({ searchParams }: SearchPageProps) {
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
     const { q } = await searchParams;
     const query = (q ?? '').trim();
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
+
     return {
-        title: query ? `Search: “${query}” — The Fourth Estate` : 'Search — The Fourth Estate',
-        robots: { index: false, follow: true }, // pages de résultats non indexées
+        title: query ? `Search results for “${query}” - The Fourth Estate` : "Search - The Fourth Estate",
+        description: query
+            ? `Search results for “${query}” on The Fourth Estate`
+            : "Search our investigation articles and news",
+        robots: {
+            index: false, // Search results pages are not indexed
+            follow: true,
+        },
+        openGraph: {
+            type: "website",
+            url: query ? `${baseUrl}/search?q=${encodeURIComponent(query)}` : `${baseUrl}/search`,
+            title: query ? `Search: “${query}”` : "Search",
+            locale: "en_GH",
+        },
+        alternates: {
+            canonical: `${baseUrl}/search`,
+        },
     };
 }
 

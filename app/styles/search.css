@@ -61,8 +61,34 @@
     cursor: pointer;
 }
 
-.search-submit:hover {
+.search-submit:hover:not(:disabled) {
     background: #e64545;
+}
+
+.search-submit:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.search-submit.is-loading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.2rem;
+}
+
+.search-submit-loader {
+    animation: search-spin 1s linear infinite;
+}
+
+@keyframes search-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .search-filters-toggle {
@@ -81,6 +107,33 @@
 .search-filters-toggle.is-active {
     border-color: #ff5252;
     color: #ff5252;
+}
+
+.search-reset {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: transparent;
+    color: #666;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-reset:hover:not(:disabled) {
+    border-color: #ff5252;
+    color: #ff5252;
+    background: rgba(255, 82, 82, 0.05);
+}
+
+.search-reset:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .search-filters {
@@ -144,7 +197,7 @@
     opacity: 0.85;
 }
 
-/* Mode sombre — s'aligne sur le data-attribute du thème. */
+/* Dark mode — aligns with theme data-attribute */
 [data-user-color-scheme='dark'] .search-input-wrap,
 [data-user-color-scheme='dark'] .search-filter-field input[type='date'] {
     background: #1c1c1c;
@@ -155,6 +208,21 @@
 [data-user-color-scheme='dark'] .search-empty {
     background: #161616;
     border-color: #333;
+}
+
+[data-user-color-scheme='dark'] .search-submit:hover:not(:disabled) {
+    background: #ff6b6b;
+}
+
+[data-user-color-scheme='dark'] .search-reset {
+    border-color: #444;
+    color: #999;
+}
+
+[data-user-color-scheme='dark'] .search-reset:hover:not(:disabled) {
+    border-color: #ff5252;
+    color: #ff5252;
+    background: rgba(255, 82, 82, 0.1);
 }
 
 

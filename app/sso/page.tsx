@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import SsoHandler from "./sso-handler";
 
 export const metadata = {
-    title: "Connexion en cours — The Fourth Estate",
+    title: "Connecting — The Fourth Estate",
 };
 
 export default function SsoPage() {

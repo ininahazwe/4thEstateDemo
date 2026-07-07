@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search as SearchIcon, SlidersHorizontal } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, Loader, X } from 'lucide-react';
 
 interface SearchFormProps {
     initialQuery?: string;
@@ -27,6 +27,7 @@ export default function SearchForm({
     initialTo = '',
 }: SearchFormProps) {
     const router = useRouter();
+    const [isPending, startTransition] = useTransition();
 
     const [query, setQuery] = useState(initialQuery);
     const [from, setFrom] = useState(initialFrom);
@@ -43,7 +44,19 @@ export default function SearchForm({
         if (from) params.set('from', from);
         if (to) params.set('to', to);
 
-        router.push(`/search?${params.toString()}`);
+        startTransition(() => {
+            router.push(`/search?${params.toString()}`);
+        });
+    };
+
+    const handleReset = () => {
+        setQuery('');
+        setFrom('');
+        setTo('');
+        setShowFilters(false);
+        startTransition(() => {
+            router.push('/search');
+        });
     };
 
     return (
@@ -65,8 +78,21 @@ export default function SearchForm({
                     />
                 </div>
 
-                <button type="submit" className="search-submit" data-model="button">
-                    Search
+                <button
+                    type="submit"
+                    className={`search-submit${isPending ? ' is-loading' : ''}`}
+                    data-model="button"
+                    disabled={isPending}
+                    aria-busy={isPending}
+                >
+                    {isPending ? (
+                        <>
+                            <Loader size={18} strokeWidth={2} className="search-submit-loader" aria-hidden="true" />
+                            <span>Searching…</span>
+                        </>
+                    ) : (
+                        'Search'
+                    )}
                 </button>
 
                 <button
@@ -81,6 +107,21 @@ export default function SearchForm({
                     <SlidersHorizontal size={16} strokeWidth={2} aria-hidden="true" />
                     <span>Filters</span>
                 </button>
+
+                {(query || from || to) && (
+                    <button
+                        type="button"
+                        className="search-reset"
+                        data-model="button"
+                        onClick={handleReset}
+                        disabled={isPending}
+                        title="Clear search and filters"
+                        aria-label="Clear search"
+                    >
+                        <X size={16} strokeWidth={2} aria-hidden="true" />
+                        <span>Clear</span>
+                    </button>
+                )}
             </div>
 
             {showFilters && (
