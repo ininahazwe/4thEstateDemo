@@ -115,7 +115,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
             title: article.title,
             description: article.excerpt,
             images: article.featuredImage ? [article.featuredImage] : [],
-            creator: `@${article.authors[0]?.twitterHandle || "thefourthestate"}`,
+            creator: "@thefourthestate",
         },
         alternates: {
             canonical: canonicalUrl,
