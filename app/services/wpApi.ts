@@ -897,12 +897,82 @@ export const getCategoryPageData = cache(async (
         seoDescription: config.seoDescription,
         tags: config.tags ?? [],
         articles,
+        hasMore: page < totalPages,
         pagination: {
             currentPage: page,
             totalPages,
             basePath: `/category/${slug}`,
         },
     };
+});
+
+/**
+ * Batch supplémentaire pour le bouton "Load more" de la page catégorie
+ * (remplace la pagination classique). Utilise `offset` plutôt que `page`
+ * pour permettre des tranches de taille arbitraire (5 par clic) qui ne
+ * correspondent pas forcément aux limites de page WP.
+ *
+ * On demande `limit + 1` articles pour savoir avec certitude s'il en reste
+ * au-delà du batch retourné, sans dépendre d'un header de comptage séparé.
+ */
+export const getCategoryArticlesOffset = cache(async (
+    slug: string,
+    offset: number,
+    limit: number = 5
+): Promise<{ articles: CategoryArticle[]; hasMore: boolean }> => {
+    const category = await resolveCategory(slug);
+    if (!category) return { articles: [], hasMore: false };
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?categories=${category.id}` +
+        `&offset=${offset}` +
+        `&per_page=${limit + 1}` +
+        `&status=publish` +
+        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+
+    const res = await fetch(url, { next: { revalidate: 600 } });
+    if (!res.ok) return { articles: [], hasMore: false };
+
+    const rawPosts: WPPost[] = await res.json();
+    const posts = rawPosts
+        .filter((p) => (p as WPPost & { format?: string }).format !== 'video')
+        .slice(0, limit + 1);
+
+    const hasMore = posts.length > limit;
+    const pagePosts = posts.slice(0, limit);
+    if (!pagePosts.length) return { articles: [], hasMore: false };
+
+    const { mediaIds, categoryIds } = extractIds(pagePosts);
+    const [mediaMap, categoryMap] = await Promise.all([
+        fetchMediaBatch(mediaIds),
+        fetchCategoryBatch(categoryIds),
+    ]);
+
+    const articles: CategoryArticle[] = pagePosts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+
+        let source = 'The Fourth Estate';
+        if (post.categories.length > 0) {
+            const cat = categoryMap.get(post.categories[0]);
+            if (cat) source = cat;
+        }
+
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(offset + index),
+        };
+
+        if (media) article.image = buildImage(media, offset + index);
+
+        return article;
+    });
+
+    return { articles, hasMore };
 });
 
 // ---------------------------------------------------------------------------

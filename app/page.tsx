@@ -1,5 +1,4 @@
 import Header from "@/app/components/Header/Header";
-import SiteBanner from "@/app/components/SiteBanner/SiteBanner";
 import NewsZone from "@/app/components/NewsZone/NewsZone";
 import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
 import {
@@ -22,6 +21,7 @@ import StoriesZone from "@/app/components/Stories/Storieszone";
 import HumanRightsZone from "@/app/components/HumanRights/HumanRightZone";
 import TikTokStoriesSlider from "@/app/components/VideoSlider/TikTokStoriesSlider";
 import {BANNER_CATEGORY_SLUGS} from "@/app/components/SiteBanner/bannerCategorySlugs";
+import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
 
 export default async function App() {
@@ -56,7 +56,8 @@ export default async function App() {
         <>
             <Header />
 
-            <SiteBanner articles={bannerArticles} categories={bannerCategories} />
+            {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
 
             <div className="site-content-wrap">
                 <div className="dfpcontainer">

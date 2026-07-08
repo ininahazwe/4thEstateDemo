@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { decode } from "html-entities";
 import { buildHref, WPPost } from "./wpApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -51,7 +52,10 @@ const WP_API =
 // ─── Helpers privés ───────────────────────────────────────────────────────────
 
 function stripHtml(html: string): string {
-    return html.replace(/<[^>]+>/g, "").trim();
+    // decode() convertit les entités HTML (&#8220;, &#8217;, &hellip;, etc.)
+    // en caractères réels — sans ça, WordPress renvoie l'entité brute et
+    // React l'affiche telle quelle puisque le texte n'est pas injecté en HTML.
+    return decode(html.replace(/<[^>]+>/g, "")).trim();
 }
 
 /**

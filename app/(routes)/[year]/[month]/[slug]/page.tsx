@@ -17,6 +17,7 @@ import {
 } from "@/app/services/wpApi";
 import { BANNER_CATEGORY_SLUGS } from "@/app/components/SiteBanner/bannerCategorySlugs";
 import TrackReader from "@/app/components/track-reader";
+import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
 
 const WP_API =
@@ -260,7 +261,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
             <Header />
 
-            <SiteBanner articles={bannerArticles} categories={bannerCategories} />
+            {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
 
             <div className="site-content-wrap">
                 <div id="habillagepub" className="site-main-wrap">
@@ -273,6 +275,28 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                     title={article.title}
                                     category={article.category}
                                 />
+
+                                {/* Auteur — même markup que ArticleBody (.article-authors-vo) */}
+                                <div className="article-authors-vo">
+                                    <div className="article-authors">
+                                        <div className="default-authors" style={{marginBottom:"20px"}}>
+                                            <span style={{marginRight:"5px"}}>By</span>
+                                            {article.authors.length ? (
+                                                article.authors.map((author, index) => (
+                                                    <span key={author.slug}>
+                                                        <a href={`/author/${author.slug}`} className="author-link" style={{fontWeight: "bold"}}>
+                                                            {author.displayName}
+                                                        </a>
+                                                        {index < article.authors.length - 1 && " | "}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span>The Fourth Estate</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <p className="article-lede">{article.excerpt}</p>
 
                                 <div className="article-rule" aria-hidden="true" />

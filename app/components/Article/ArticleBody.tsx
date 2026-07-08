@@ -56,7 +56,7 @@ export default function ArticleBody({
             </div>
 
             <div className="article-secondary">
-                <div className="article-authors-vo">
+                {/*<div className="article-authors-vo">
                     <div className="article-authors">
                         <div className="default-authors">
                             {authors.length ? (
@@ -73,7 +73,7 @@ export default function ArticleBody({
                             )}
                         </div>
                     </div>
-                </div>
+                </div>*/}
                 {/* Tags */}
                 {tags.length > 0 && (
                     <div className="article-tags" aria-label="Mots-clés">

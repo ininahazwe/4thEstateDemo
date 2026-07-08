@@ -24,9 +24,9 @@ export default async function ArticleAside({ mostRead, showPodcast = true }: Art
                             <Link href={item.href} style={{flex: 1}}>
                                 <div className="item-text">
                                     <div className="heading">
-                                        <p className="most-read-title">{item.category && (
+                                        <p className="most-read-title">{/*{item.category && (
                                             <span className="strapline">{item.category} -</span>
-                                        )}{item.title}</p>
+                                        )}*/}{item.title}</p>
                                     </div>
                                 </div>
                             </Link>

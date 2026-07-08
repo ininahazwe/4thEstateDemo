@@ -46,9 +46,9 @@ export default function HumanRightsCard({ article }: HumanRightsCardProps) {
 
                 <div className="item-text">
                     <div className="heading">
-                        {article.tagOrCategory && (
+                       {/* {article.tagOrCategory && (
                             <span className="strapline">{article.tagOrCategory} -</span>
-                        )}
+                        )}*/}
                         <p id={titleId} className="title">
                             {article.title}
                         </p>
@@ -56,7 +56,7 @@ export default function HumanRightsCard({ article }: HumanRightsCardProps) {
 
                     <div className="infos">
                         <div className="wrapper">
-                            {article.source && (
+                            {/*{article.source && (
                                 <span className="source">
                                     <Globe
                                         size={14}
@@ -66,7 +66,7 @@ export default function HumanRightsCard({ article }: HumanRightsCardProps) {
                                     />
                                     <span style={{ verticalAlign: 'middle' }}>{article.source}</span>
                                 </span>
-                            )}
+                            )}*/}
                         </div>
                         <div className="placeholders">
                             <span></span>

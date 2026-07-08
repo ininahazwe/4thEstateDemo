@@ -38,9 +38,9 @@ export default function TvVideoCard({ video, index }: TvVideoCardProps) {
 
                     <div className="infos">
                         <div className="wrapper">
-              <span className="date" data-icon="calendar-days">
-                {video.publishedAt}
-              </span>
+                          <span className="date" data-icon="calendar-days">
+                            {video.publishedAt}
+                          </span>
                         </div>
                         <div className="placeholders">
                             <span></span>

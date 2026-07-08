@@ -46,9 +46,9 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
 
                 <div className="item-text">
                     <div className="heading">
-                        {article.tagOrCategory && (
-                            <span className="strapline">{article.tagOrCategory} -</span>
-                        )}
+                        {/*{article.tagOrCategory && (*/}
+                        {/*    <span className="strapline">{article.tagOrCategory} -</span>*/}
+                        {/*)}*/}
                         <p id={titleId} className="title">
                             {article.title}
                         </p>
@@ -56,7 +56,7 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
 
                     <div className="infos">
                         <div className="wrapper">
-                            {article.source && (
+                            {/*{article.source && (
                                 <span className="source">
                                     <Globe
                                         size={14}
@@ -66,7 +66,7 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
                                     />
                                     <span style={{ verticalAlign: 'middle' }}>{article.source}</span>
                                 </span>
-                            )}
+                            )}*/}
                         </div>
                         <div className="placeholders">
                             <span></span>

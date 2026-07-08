@@ -1,3 +1,4 @@
+import { type IconType } from "react-icons/lib";
 import { HeadphonesIcon, PlayCircleIcon } from "lucide-react";
 
 export interface BannerTag {

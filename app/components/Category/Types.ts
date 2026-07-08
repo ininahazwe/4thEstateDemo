@@ -36,5 +36,8 @@ export interface CategoryData {
     seoDescription?: string;
     tags: CategoryTag[];
     articles: CategoryArticle[];
+    /** true s'il reste des articles au-delà de ce premier lot (pilote le bouton "Load more") */
+    hasMore: boolean;
+    /** @deprecated pagination classique remplacée par "Load more", champ conservé côté data only */
     pagination: CategoryPagination;
 }

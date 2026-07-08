@@ -3,8 +3,7 @@ import Script from 'next/script';
 import type { Metadata } from 'next';
 import { getMostReadArticles } from '@/app/services/wpApi.article';
 import CategoryHeader from '@/app/components/Category/CategoryHeader';
-import CategoryRiver from '@/app/components/Category/CategoryRiver';
-import Pagination from '@/app/components/Category/Pagination';
+import CategoryRiverLoadMore from '@/app/components/Category/CategoryRiverLoadMore';
 import ArticleAside from '@/app/components/Article/ArticleAside';
 import { getCategoryPageData, getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
 import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
@@ -12,6 +11,7 @@ import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategor
 import Header from "@/app/components/Header/Header";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
+import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
 interface CategoryPageProps {
     params: Promise<{ slug: string }>;
@@ -134,14 +134,20 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
             <Header />
 
-            <SiteBanner articles={bannerArticles} categories={bannerCategories} />
+            {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
+
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
 
             <main className="site-main" id="site-main">
                 <section className="section" data-columns="2" data-section={data.slug}>
                     <div className="section-content" data-column="left">
                         <CategoryHeader title={data.title} tags={data.tags} />
-                        <CategoryRiver articles={data.articles} />
-                        <Pagination pagination={data.pagination} />
+                        <CategoryRiverLoadMore
+                            slug={slug}
+                            initialArticles={data.articles}
+                            initialHasMore={data.hasMore}
+                            batchSize={5}
+                        />
                     </div>
 
                     <ArticleAside mostRead={mostRead} />

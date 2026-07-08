@@ -145,7 +145,8 @@ html:not(.v-app) .site-modal .encadre-text .asset.asset-read-more:hover {
     font-size:80%;
     font-weight:400;
     padding-right:6px;
-    text-transform:uppercase
+    text-transform:uppercase;
+    color: var(--siteLogo);
 }
 .article .article-text .asset.asset-accroche,
 .site-modal .encadre-text .asset.asset-accroche {

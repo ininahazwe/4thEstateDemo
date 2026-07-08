@@ -19,7 +19,7 @@ export default function RelatedArticleCard({
                 )}
                 <div className="item-text">
                     <div className="heading">
-                        <p className="title">{category && <span className="strapline">{category} -</span>}
+                        <p className="title">{/*{category && <span className="strapline">{category} -</span>}*/}
                         {title}</p>
                     </div>
                 </div>

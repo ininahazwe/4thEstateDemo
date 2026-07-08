@@ -136,8 +136,8 @@ export default function Header() {
                             target="_blank"
                             data-ithal="header_abo"
                         >
-                        join us
-                        <span style={{ display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px' }}>from GHS50/month</span>
+                        Support us
+                        {/*<span style={{ display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px' }}>from GHS50/month</span>*/}
                         </a>
                         ) : session?.user?.isActive ? (
                         <div className="header-welcome">

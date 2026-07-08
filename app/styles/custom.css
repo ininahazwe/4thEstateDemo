@@ -29,6 +29,62 @@
     aspect-ratio: 1 / 1 !important;
 }
 
+/* SiteBannerV2 — variante vignette carrée + titre (banner-hot-articles)
+   Scopée via .banner-hot-articles--thumbs pour ne pas impacter le
+   SiteBanner original (item-tag, dot/ligne de temps) utilisé sur les
+   pages existantes (home, category, article, author, search, tv, podcasts). */
+.site-banner .banner-hot-articles.banner-hot-articles--thumbs .item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 14px;
+}
+
+.site-banner .banner-hot-articles.banner-hot-articles--thumbs .item:after {
+    content: none;
+}
+
+.site-banner .banner-hot-articles.banner-hot-articles--thumbs .item::before {
+    background-color: var(--sitePrimary);
+    content: "";
+    border-radius: 50%;
+    width: 7px;
+    height: 7px;
+    position: absolute;
+    top: 7px;
+    left: 0;
+}
+
+.site-banner .banner-hot-articles.banner-hot-articles--thumbs .item .item-title::after{
+    background: linear-gradient(to bottom,var(--sitePrimary),#171d25);
+    content: "";
+    width: 1px;
+    position: absolute;
+    top: 10px;
+    bottom: 0;
+    left: 3px;
+}
+
+.site-banner .banner-hot-articles.banner-hot-articles--thumbs .item .item-thumb {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.site-banner .banner-hot-articles.banner-hot-articles--thumbs .item .item-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.site-banner .banner-hot-articles.banner-hot-articles--thumbs .item .item-title {
+    padding: 0;
+    -webkit-line-clamp: 5;
+}
+
 p.wp-block-paragraph{
     margin-top: 1rem;
 }

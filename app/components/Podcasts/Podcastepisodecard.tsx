@@ -62,9 +62,9 @@ export default function PodcastEpisodeCard({ episode, index }: PodcastEpisodeCar
 
                     <div className="infos">
                         <div className="wrapper">
-              <span className="date" data-icon="calendar-days">
-                {episode.publishedAt}
-              </span>
+                          <span className="date" data-icon="calendar-days">
+                            {episode.publishedAt}
+                          </span>
                         </div>
                         <div className="placeholders">
                             <span></span>

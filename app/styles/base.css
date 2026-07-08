@@ -983,7 +983,7 @@ html:not(.v-app) [data-model^=button]:hover {
 }
 [data-model^=button][data-model="button premium"],
 [data-model^=button][data-premium] {
-    background-color:var(--siteAbo);
+    background-color:var(--siteLogo);
     color:var(--siteAboText)
 }
 [data-model^=button][data-model="button primary"] {
@@ -1189,7 +1189,7 @@ html:not(.v-app) [data-model^=article]:hover {
 [data-model^=article] .item-text .heading {
     display:-webkit-box;
     font-weight:600;
-    -webkit-line-clamp:4;
+    -webkit-line-clamp:3;
     -webkit-box-orient:vertical;
     overflow:hidden
 }
@@ -1213,7 +1213,7 @@ html:not(.v-app) [data-model^=article]:hover {
     font-size:75%;
     justify-content:space-between;
     line-height:1.3;
-    margin:10px -4px 0
+    /*margin:10px -4px 0*/
 }
 [data-model^=article] .item-text .infos .wrapper {
     display:flex;
@@ -2366,7 +2366,7 @@ html[class*=page-article-campaign][class*=preview] .site-header .header-logo:bef
 }
 .banner-sticky {
     align-items:stretch;
-    background-color:var(--siteAbo);
+    background-color:var(--siteLogo);
     bottom:0;
     color:var(--siteAboText);
     display:flex;

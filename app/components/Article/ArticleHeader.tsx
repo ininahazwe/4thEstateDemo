@@ -4,20 +4,16 @@ interface ArticleHeaderProps {
     category?: { name: string; slug: string };
 }
 
-export default function ArticleHeader({
-                                          strapline,
-                                          title,
-                                          category,
-                                      }: ArticleHeaderProps) {
+export default function ArticleHeader({title}: ArticleHeaderProps) {
     return (
         <div className="article-heading">
-            {category && (
+           {/* {category && (
                 <span className="strapline">{category.name}</span>
             )}
 
             {strapline && (
                 <span className="strapline">{strapline}</span>
-            )}
+            )}*/}
 
             <h1
                 className="article-title"

@@ -98,12 +98,12 @@ export default function ArticleIllustration({
                 </a>
 
                 {(imageCaption || imageCredit) && (
-                    <figcaption style={{ display: 'none' }}>
+                    <figcaption>
                         {imageCaption && (
-                            <span className="caption">{imageCaption} </span>
+                            <span className="wp-element-caption">{imageCaption} </span>
                         )}
                         {imageCredit && (
-                            <span className="credit">({imageCredit})</span>
+                            <span className="wp-element-caption">({imageCredit})</span>
                         )}
                     </figcaption>
                 )}

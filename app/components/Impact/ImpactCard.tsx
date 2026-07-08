@@ -17,9 +17,9 @@ export default function OurImpactCard({ article }: OurImpactCardProps) {
             <a href={article.href}>
                 <div className="item-text impact">
                     <div className="heading">
-                        {article.tagOrCategory && (
+                        {/*{article.tagOrCategory && (
                             <span className="strapline">{article.tagOrCategory} -</span>
-                        )}
+                        )}*/}
                         <p className="title">{article.title}</p>
                     </div>
                 </div>

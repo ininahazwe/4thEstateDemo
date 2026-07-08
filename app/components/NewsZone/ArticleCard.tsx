@@ -66,8 +66,8 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
 
                 <div className="item-text">
                     <div className="heading">
-                        {/* Strapline replaced by tagOrCategory from WordPress */}
-                        {article.tagOrCategory && <span className="strapline">{article.tagOrCategory} -</span>}
+                        {/* Strapline replaced by tagOrCategory from WordPress
+                        {article.tagOrCategory && <span className="strapline">{article.tagOrCategory} -</span>}*/}
                         {/*{isLive && <div className="live">Live</div>}*/}
 
                         {/* Dynamic heading level to respect CSS/SEO rules */}
@@ -78,12 +78,12 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
 
                     <div className="infos">
                         <div className="wrapper">
-                            {article.source && (
+                            {/*{article.source && (
                                 <span className="source">
                                     <Globe size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }} />
                                     <span style={{ verticalAlign: 'middle' }}>{article.source}</span>
                                 </span>
-                            )}
+                            )}*/}
                         </div>
                         <div className="placeholders">
                             <span></span>

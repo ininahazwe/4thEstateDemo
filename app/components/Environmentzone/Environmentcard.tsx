@@ -47,16 +47,16 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
 
                 <div className="item-text">
                     <div className="heading">
-                        {article.tagOrCategory && (
+                        {/*{article.tagOrCategory && (
                             <span className="strapline">{article.tagOrCategory} -</span>
-                        )}
+                        )}*/}
                         <p id={titleId} className="title">
                             {article.title}
                         </p>
                     </div>
 
                     <div className="infos">
-                        <div className="wrapper">
+                        {/*<div className="wrapper">
                             {article.source && (
                                 <span className="source">
                                     <Globe
@@ -68,7 +68,7 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                                     <span style={{ verticalAlign: 'middle' }}>{article.source}</span>
                                 </span>
                             )}
-                        </div>
+                        </div>*/}
                         <div className="placeholders">
                             <span></span>
                             <span></span>
