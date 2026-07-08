@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
         title: article.title,
         description: article.excerpt,
         keywords: [
-            ...article.tags.map((t) => t.name),
+            ...article.tags.map((t) => t.label),
             article.category?.name || "",
             article.country?.name || "",
         ].filter(Boolean),
@@ -108,7 +108,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
             modifiedTime: publishedDate.toISOString(), // Adapt with modified date if available
             authors: article.authors.map((a) => a.displayName),
             section: article.category?.name || "News",
-            tags: article.tags.map((t) => t.name),
+            tags: article.tags.map((t) => t.label),
         },
         twitter: {
             card: "summary_large_image",

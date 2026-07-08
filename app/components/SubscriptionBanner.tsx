@@ -44,7 +44,7 @@ export default function SubscriptionBanner() {
             >
                 {/* Respect strict du texte d'origine avec les espaces insécables (\u00A0) */}
                 Support our journalism now{" "}
-                <strong>50ghs/month</strong>.
+                <strong>GHS 50/month</strong>.
             </Link>
 
             <button

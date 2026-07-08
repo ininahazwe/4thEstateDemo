@@ -46,7 +46,7 @@ export default function SpecialOfferBanner() {
                     </span>
 
                     {/* Free text translated: "3,99 €/mois" -> "€3.99/month" (or £3.99 / $3.99 depending on your target currency) */}
-                    <p className="price">50ghs/month</p>
+                    <p className="price">GHS 50/month</p>
 
                     {/* Free text translated baseline */}
                     <p className="baseline">
