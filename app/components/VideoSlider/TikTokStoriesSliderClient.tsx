@@ -9,28 +9,28 @@ interface TikTokStoriesSliderClientProps {
 }
 
 /**
- * Partie interactive du slider (scroll, ouverture du modal).
- * Reçoit des items déjà enrichis avec leur thumbnail (résolue côté serveur
- * via l'oEmbed TikTok dans TikTokStoriesSlider.tsx) — ce composant ne fait
- * aucun fetch lui-même.
+ * Interactive slider component (scroll, modal opening).
+ * Receives pre-enriched items with thumbnails (resolved server-side
+ * via TikTok oEmbed in TikTokStoriesSlider.tsx) — this component
+ * does no fetching itself.
  */
 export default function TikTokStoriesSliderClient({ items }: TikTokStoriesSliderClientProps) {
     const trackRef = useRef<HTMLDivElement>(null);
     const [activeUrl, setActiveUrl] = useState<string | null>(null);
 
-    const scrollByCard = (direction: 'prev' | 'next') => {
+    const scrollByCard = (direction: "prev" | "next") => {
         const track = trackRef.current;
         if (!track) return;
-        const cardWidth = track.querySelector('.item')?.clientWidth ?? 218;
+        const cardWidth = track.querySelector(".item")?.clientWidth ?? 218;
         track.scrollBy({
-            left: direction === 'next' ? cardWidth : -cardWidth,
-            behavior: 'smooth',
+            left: direction === "next" ? cardWidth : -cardWidth,
+            behavior: "smooth",
         });
     };
 
     return (
         <section className="zone zone-type zone-insta">
-            <h3 className="section-title">L’actu en vidéos</h3>
+            <h3 className="section-title">Video Stories</h3>
 
             <div className="wrap">
                 <div id="stories">
@@ -50,7 +50,7 @@ export default function TikTokStoriesSliderClient({ items }: TikTokStoriesSlider
                                             <button
                                                 type="button"
                                                 className="player"
-                                                aria-label={item.caption ? `Lire : ${item.caption}` : 'Lire la vidéo'}
+                                                aria-label={item.caption ? `Play: ${item.caption}` : 'Play video'}
                                                 onClick={() => setActiveUrl(item.url)}
                                             >
                                                 {(item.duration || item.caption) && (
@@ -81,14 +81,14 @@ export default function TikTokStoriesSliderClient({ items }: TikTokStoriesSlider
                     <div className="navigation-buttons">
                         <button
                             type="button"
-                            aria-label="Vidéo précédente"
+                            aria-label="Previous video"
                             onClick={() => scrollByCard('prev')}
                         >
                             <span className="icon icon-prev" aria-hidden="true" />
                         </button>
                         <button
                             type="button"
-                            aria-label="Vidéo suivante"
+                            aria-label="Next video"
                             onClick={() => scrollByCard('next')}
                         >
                             <span className="icon icon-next" aria-hidden="true" />

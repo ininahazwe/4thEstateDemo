@@ -1,21 +1,21 @@
 import { type TvData, type TvVideo } from '../components/TV/Types';
 
 // ---------------------------------------------------------------------------
-// wpApi.tv.ts — fichier dédié à la page /tv, totalement indépendant de
-// wpApi.ts/wpApi.article.ts/wpApi.author.ts (aucune donnée WordPress ici,
-// uniquement la YouTube Data API v3).
+// wpApi.tv.ts — dedicated file for /tv page, completely independent of
+// wpApi.ts/wpApi.article.ts/wpApi.author.ts (no WordPress data here,
+// only YouTube Data API v3).
 //
-// Chaîne : The Fourth Estate (Media Foundation for West Africa)
-// Channel ID confirmé : UCpBu6CkAnlvCAM4CSF9ZKBg
-// Handle : @thefourthestate2372
+// Channel: The Fourth Estate (Media Foundation for West Africa)
+// Channel ID: UCpBu6CkAnlvCAM4CSF9ZKBg
+// Handle: @thefourthestate2372
 //
-// Nécessite la variable d'environnement YOUTUBE_API_KEY (clé API Google
-// Cloud avec YouTube Data API v3 activée, restreinte à cette API).
+// Requires YOUTUBE_API_KEY environment variable (Google Cloud API key
+// with YouTube Data API v3 enabled, restricted to this API).
 // ---------------------------------------------------------------------------
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const CHANNEL_ID = 'UCpBu6CkAnlvCAM4CSF9ZKBg';
-const VIDEOS_PER_PAGE = 12; // grille 3 colonnes x 4 lignes
+const VIDEOS_PER_PAGE = 12; // 3-column x 4-row grid
 
 interface YouTubeThumbnail {
     url: string;
@@ -56,10 +56,9 @@ function formatDisplayDate(isoDate: string): string {
 }
 
 /**
- * Récupère le nombre total de vidéos publiques de la chaîne, utilisé
- * uniquement pour estimer un nombre de pages indicatif côté UI (l'API
- * YouTube ne fournit pas de "totalPages" — seulement un total de résultats).
- * Mise en cache longue (vidéos publiées rarement assez pour justifier 1h).
+ * Fetch total public videos from channel, used only to estimate page count
+ * in UI (YouTube API doesn't provide "totalPages" — only total results).
+ * Long cache (videos published rarely enough to justify 1h).
  */
 async function getChannelVideoCount(apiKey: string): Promise<number> {
     const res = await fetch(
@@ -72,15 +71,13 @@ async function getChannelVideoCount(apiKey: string): Promise<number> {
 }
 
 /**
- * Récupère une page de vidéos de la chaîne, triées par date (plus récentes
- * d'abord). Navigation via pageToken (voir Pagination.tsx pour le détail de
- * cette contrainte de l'API YouTube).
+ * Fetch one page of channel videos, sorted by date (newest first).
+ * Navigation via pageToken (see Pagination.tsx for YouTube API constraint details).
  *
- * search.list coûte 100 quota units par appel (sur un quota gratuit de
- * 10 000/jour, soit 100 appels/jour) — pas de React.cache() ici car chaque
- * (page, token) est déjà une variation différente ; le vrai garde-fou contre
- * l'épuisement du quota est le `revalidate` ci-dessous (cache HTTP partagé
- * entre tous les visiteurs, pas par session).
+ * search.list costs 100 quota units per call (free quota: 10k/day = 100 calls/day).
+ * No React.cache() here since each (page, token) is already different variation.
+ * Real quota protection is `revalidate` below (shared HTTP cache across all
+ * visitors, not per-session).
  */
 export async function getTvPageData(
     page: number = 1,
@@ -88,7 +85,7 @@ export async function getTvPageData(
 ): Promise<TvData | null> {
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
-        console.error('wpApi.tv [getTvPageData]: YOUTUBE_API_KEY manquante dans les variables d\'environnement');
+        console.error('wpApi.tv [getTvPageData]: YOUTUBE_API_KEY missing from environment variables');
         return null;
     }
 

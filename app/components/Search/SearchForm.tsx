@@ -11,15 +11,14 @@ interface SearchFormProps {
 }
 
 /**
- * Formulaire de recherche du site. Client Component (a besoin de useState +
- * useRouter). Ne reçoit que des primitives sérialisables depuis la page
- * serveur (valeurs initiales) — aucun callback en prop.
+ * Site search form. Client Component (requires useState + useRouter).
+ * Receives only serializable primitives from server page (initial values) —
+ * no callbacks in props.
  *
- * À la soumission, construit /search?q=…&from=…&to=… et navigue via
- * router.push : la page serveur relit ces searchParams et refait le fetch.
- * Les champs date (from/to) sont optionnels et repliés par défaut ; on les
- * déplie automatiquement s'ils sont déjà renseignés (retour sur une recherche
- * filtrée).
+ * On submit, builds /search?q=…&from=…&to=… and navigates via router.push:
+ * server page re-reads searchParams and re-fetches. Date fields (from/to)
+ * are optional and collapsed by default; auto-expand if already set
+ * (returning to filtered search).
  */
 export default function SearchForm({
     initialQuery = '',
@@ -62,7 +61,7 @@ export default function SearchForm({
     return (
         <form className="search-form" onSubmit={handleSubmit} role="search">
             <div className="search-form-main">
-                <label htmlFor="search-query" className="sr-only">Search articles</label>
+                <label htmlFor="search-query" className="sr-only">Search all articles</label>
                 <div className="search-input-wrap">
                     <SearchIcon size={18} strokeWidth={2} aria-hidden="true" />
                     <input
@@ -70,7 +69,7 @@ export default function SearchForm({
                         type="search"
                         name="q"
                         className="search-input"
-                        placeholder="Search articles by name or keyword…"
+                        placeholder="Search articles by keyword or topic…"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         autoComplete="off"
@@ -102,7 +101,7 @@ export default function SearchForm({
                     onClick={() => setShowFilters((v) => !v)}
                     aria-expanded={showFilters}
                     aria-controls="search-filters"
-                    title="Refine by date"
+                    title="Filter by publication date"
                 >
                     <SlidersHorizontal size={16} strokeWidth={2} aria-hidden="true" />
                     <span>Filters</span>
@@ -115,8 +114,8 @@ export default function SearchForm({
                         data-model="button"
                         onClick={handleReset}
                         disabled={isPending}
-                        title="Clear search and filters"
-                        aria-label="Clear search"
+                        title="Clear all search terms and filters"
+                        aria-label="Clear search and filters"
                     >
                         <X size={16} strokeWidth={2} aria-hidden="true" />
                         <span>Clear</span>
@@ -126,7 +125,7 @@ export default function SearchForm({
 
             {showFilters && (
                 <fieldset id="search-filters" className="search-filters">
-                    <legend className="sr-only">Refine by publication date</legend>
+                    <legend className="sr-only">Filter by publication date</legend>
 
                     <div className="search-filter-field">
                         <label htmlFor="search-from">From</label>
@@ -141,7 +140,7 @@ export default function SearchForm({
                     </div>
 
                     <div className="search-filter-field">
-                        <label htmlFor="search-to">To</label>
+                        <label htmlFor="search-to">Until</label>
                         <input
                             id="search-to"
                             type="date"
@@ -158,7 +157,7 @@ export default function SearchForm({
                             className="search-filter-clear"
                             onClick={() => { setFrom(''); setTo(''); }}
                         >
-                            Clear dates
+                            Reset dates
                         </button>
                     )}
                 </fieldset>

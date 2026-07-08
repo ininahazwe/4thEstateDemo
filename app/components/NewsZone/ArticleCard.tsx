@@ -10,27 +10,27 @@ interface ArticleCardProps {
 }
 
 const handlePlayAudio = () => {
-    // 1. Récupérer le texte de l'article (via un ID ou une classe)
+    // 1. Get article text (via ID or class)
     const articleText = document.getElementById('article-content')?.innerText;
 
     if (!articleText) return;
 
-    // 2. Stopper une éventuelle lecture en cours
+    // 2. Stop any ongoing playback
     window.speechSynthesis.cancel();
 
-    // 3. Créer l'énoncé
+    // 3. Create utterance
     const utterance = new SpeechSynthesisUtterance(articleText);
-    utterance.lang = 'en-EN'; // Forcer la langue française
-    utterance.rate = 1.0;     // Vitesse de lecture (0.5 à 2)
+    utterance.lang = 'en-GB'; // English language
+    utterance.rate = 1.0;     // Reading speed (0.5 to 2)
 
-    // 4. Lancer la lecture
+    // 4. Start playback
     window.speechSynthesis.speak(utterance);
 };
 
 export default function ArticleCard({ article, headingLevel: Heading }: ArticleCardProps) {
     const isLive = article.type === 'sirius-live';
 
-    // Gestion de l'erreur d'image native propre à React (remplace l'attribut onerror du HTML)
+    // Handle image error (React-native version of HTML onerror attribute)
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.classList.add('img--error');
     };
@@ -45,7 +45,7 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
             data-item-id={article.id}
         >
             <a href={article.href}>
-                {/* Rendu conditionnel de l'image si elle existe */}
+                {/* Conditional image render if it exists */}
                 {article.image && (
                     <div className="item-image">
                         <picture>
@@ -66,11 +66,11 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
 
                 <div className="item-text">
                     <div className="heading">
-                        {/* Remplacement de strapline par tagOrCategory provenant de WordPress */}
+                        {/* Strapline replaced by tagOrCategory from WordPress */}
                         {article.tagOrCategory && <span className="strapline">{article.tagOrCategory} -</span>}
                         {/*{isLive && <div className="live">Live</div>}*/}
 
-                        {/* Niveau de titre dynamique pour respecter vos règles CSS / SEO */}
+                        {/* Dynamic heading level to respect CSS/SEO rules */}
                         <Heading id={`title-${article.id}`} className="title">
                             {article.title}
                         </Heading>
@@ -93,17 +93,17 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
                 </div>
             </a>
 
-            {/* Barre d'actions (Écouter / Favoris) */}
+            {/* Action bar (Listen / Favorites) */}
             <div className="item-buttons">
                 {!isLive && (
                     <button
                         type="button"
-                        className="tts" // Ajustez la classe selon votre CSS
-                        title="Écouter l’article"
-                        onClick={handlePlayAudio} // Fonction à lier pour le clic
+                        className="tts" // Adjust class according to your CSS
+                        title="Listen to article"
+                        onClick={handlePlayAudio} // Handler for click event
                     >
                         <Headphones size={18} strokeWidth={2} aria-hidden="true" />
-                        <span className="sr-only">Écouter l’article</span>
+                        <span className="sr-only">Listen to article</span>
                     </button>
                 )}
             </div>

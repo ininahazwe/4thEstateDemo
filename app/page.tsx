@@ -25,11 +25,11 @@ import {BANNER_CATEGORY_SLUGS} from "@/app/components/SiteBanner/bannerCategoryS
 
 
 export default async function App() {
-    // Récupération automatique et asynchrone des articles en direct de l'API de The Fourth Estate
+    // Automatic async article fetching from The Fourth Estate API
     //
-    // Avant : 8 appels séquentiels (chaque await bloque le suivant). Aucune de ces
-    // fonctions ne dépend du résultat d'une autre — les paralléliser via Promise.all
-    // ramène le temps total au temps du fetch le plus lent au lieu de leur somme.
+    // Before: 8 sequential calls (each await blocks the next). None of these
+    // functions depend on each other's results — parallelizing via Promise.all
+    // reduces total time to the slowest fetch instead of the sum.
     const [
         { zone1, zone2 },
         bannerArticles,
@@ -69,9 +69,9 @@ export default async function App() {
                 <div className="site-main-wrap">
                     <main className="site-main" id="site-main">
                         <section className="home">
-                            {/* On injecte ici les articles récupérés depuis le service API */}
+                            {/* Inject articles fetched from API service */}
 
-                            {/* 1. Zone d'actualités alimentée par l'API WordPress */}
+                            {/* Main news zone powered by WordPress API */}
                             <NewsZone
                                 zone1Articles={zone1}
                                 zone2Articles={zone2}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { navItems } from './navigationData';
@@ -8,26 +8,29 @@ import { ArrowBigRight, ArrowRight, Mail, Moon, Search, Sun } from "lucide-react
 import Image from 'next/image';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 
-// Le site membership gère l'inscription et l'abonnement payant ; le front
-// Next.js ne fait que l'authentification. « Join Us » / « Renew » y mènent.
-// ⚠️ À pointer vers la vraie page d'abonnement/inscription du membership.
+// Membership site handles registration and paid subscriptions; Next.js frontend
+// only handles authentication. "Join Us" / "Renew" buttons link there.
+// ⚠️ Must point to actual membership subscription/registration page.
 const MEMBERSHIP_JOIN_URL = 'https://membership.thefourthestategh.com';
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // status : 'loading' | 'authenticated' | 'unauthenticated'.
-    // Au premier rendu (hydratation), status vaut 'loading' → traité comme
-    // déconnecté. Un membre connecté voit l'affichage basculer une fois la
-    // session récupérée côté client (léger flash assumé, cf. SessionProvider
-    // sans session serveur pour préserver le SSG des pages article).
+    // status: 'loading' | 'authenticated' | 'unauthenticated'
+    // During first render (hydration), status is 'loading' → treated as logged out.
+    // When session is fetched client-side, display updates (minor flash expected;
+    // SessionProvider has no server session to preserve article page SSG).
     const { data: session, status } = useSession();
     const isAuthenticated = status === 'authenticated';
 
-    const [theme, setTheme] = useState(() => {
-        if (typeof window === 'undefined') return 'light'; // SSR guard
-        return document.documentElement.getAttribute('data-user-color-scheme') || 'light';
-    });
+    // Always initialize with 'light' to match server render (no window check in useState)
+    const [theme, setTheme] = useState('light');
+
+    // Sync with actual DOM theme after hydration (client-side only)
+    useEffect(() => {
+        const domTheme = document.documentElement.getAttribute('data-user-color-scheme') || 'light';
+        setTheme(domTheme);
+    }, []);
 
     const toggleTheme = () => {
         const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -42,7 +45,7 @@ export default function Header() {
 
     return (
         <header className="site-header" id="site-header">
-            {/* Input checkbox d'origine réactivé pour la compatibilité avec vos sélecteurs CSS globaux (ex: :checked ~ .site-menu) */}
+            {/* Original checkbox for CSS selector compatibility (e.g., :checked ~ .site-menu) */}
             <input
                 type="checkbox"
                 id="toggle-menu"
@@ -51,30 +54,30 @@ export default function Header() {
                 style={{ display: 'none' }}
             />
 
-            {/* Accessibilité */}
+            {/* Accessibility skip links */}
             <div className="header-a11y">
-                <a href="#site-main">Contenu</a>
-                <a href="#site-footer">Pied de page</a>
+                <a href="#site-main">Main content</a>
+                <a href="#site-footer">Footer</a>
             </div>
 
-            {/* Barre principale du header */}
+            {/* Header main bar */}
             <div className="header-wrap">
                 <button
                     type="button"
                     className="header-menu"
-                    title="Menu"
+                    title="Toggle menu"
                     onClick={toggleMenu}
                 >
                     <span className="sr-only">Menu</span>
                 </button>
 
-                {/* Outils (Recherche, Thème, Newsletter) */}
+                {/* Tools (Search, Theme, Newsletter) */}
                 <div className="header-tools">
-                    <Link href="/search" className="item" title="Search">
+                    <Link href="/search" className="item" title="Search articles">
                         <Search size={18} strokeWidth={2} aria-hidden="true" />
-                        <span className="sr-only">Recherche</span>
+                        <span className="sr-only">Search</span>
                     </Link>
-                    {/* Bouton Mode Sombre / Clair */}
+                    {/* Dark / Light mode toggle */}
                     <button
                         type="button"
                         className="item"
@@ -92,36 +95,36 @@ export default function Header() {
                         </span>
                     </button>
 
-                    {/* Lien de la Newsletter */}
+                    {/* Newsletter link */}
                     <Link
-                        href="/newsletter" // Pensez à adapter ce lien vers votre future page locale !
+                        href="/newsletter" // TODO: Adapt to your local newsletter page
                         className="item"
-                        title="Newsletters"
+                        title="Subscribe to newsletters"
                     >
                         <Mail size={18} strokeWidth={2} aria-hidden="true" />
                         <span className="sr-only">Newsletters</span>
                     </Link>
 
-                    {/* Switcher de langues (traduction IA via API Anthropic) */}
+                    {/* Language switcher (AI translation via Anthropic API) */}
                     <LanguageSwitcher />
                 </div>
 
                 {/* Logo */}
-                <Link href="/" className="header-logo" title="The Fourth Estate - Return to home">
+                <Link href="/" className="header-logo" title="The Fourth Estate - Back to home">
                     <Image
-                        src="/assets/img/logo-short-red.png"
+                        src="/assets/img/logo-red.svg"
                         alt="The Fourth Estate Logo"
-                        width={102}
+                        width={280}
                         height={52}
                         priority
                     />
                 </Link>
 
-                {/* Zone Abonnement — trois états :
-                    • non connecté          → « Join Us » (CTA abonnement)
-                    • connecté + actif       → badge + message (SSO vers le dashboard)
-                    • connecté + non actif   → « Renew your support »
-                    Les liens vers le membership s'ouvrent dans un nouvel onglet. */}
+                {/* Subscription zone — three states:
+                    • Not logged in      → "Join Us" (subscription CTA)
+                    • Logged in + active → badge + message (SSO to dashboard)
+                    • Logged in + inactive → "Renew your support"
+                    Membership links open in new tab. */}
                 <div className="header-hebdo">
                     {!isAuthenticated ? (
                         <a
@@ -133,17 +136,17 @@ export default function Header() {
                             target="_blank"
                             data-ithal="header_abo"
                         >
-                        Join Us
-                        <span style={{ display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px' }}>from 50ghs/month</span>
+                        join us
+                        <span style={{ display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px' }}>from GHS 50/month</span>
                         </a>
                         ) : session?.user?.isActive ? (
                         <div className="header-welcome">
-                    {/* SSO : mène au dashboard membership déjà connecté (nouvel onglet).
-                                <a> natif car la route serveur finit par une redirection
-                                cross-domaine — navigation plein page voulue. */}
+                    {/* SSO: Navigate to membership dashboard already logged in (new tab).
+                        Uses native <a> because server route ends with cross-domain
+                        redirect — full page navigation intended. */}
                             <a
                                 href="/api/sso/to-membership"
-                                title="My account"
+                                title="My account dashboard"
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
