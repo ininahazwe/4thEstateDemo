@@ -5,12 +5,10 @@ import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
 import Breadcrumb from "@/app/components/UI/Breadcrumb";
 import ArticleHeader from "@/app/components/Article/ArticleHeader";
 import ArticleBody from "@/app/components/Article/ArticleBody";
-import ArticleAside from "@/app/components/Article/ArticleAside";
 import type { Metadata } from "next";
 import { getArticleBySlug, getMostReadArticles, getReadMoreArticles } from "@/app/services/wpApi.article";
 import { Calendar, Clock } from "lucide-react";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
-import SiteBanner from "@/app/components/SiteBanner/SiteBanner";
 import {
     getBannerCategories,
     getLatestBannerArticles,

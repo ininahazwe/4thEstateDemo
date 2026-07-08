@@ -6,7 +6,6 @@ import CategoryHeader from '@/app/components/Category/CategoryHeader';
 import CategoryRiverLoadMore from '@/app/components/Category/CategoryRiverLoadMore';
 import ArticleAside from '@/app/components/Article/ArticleAside';
 import { getCategoryPageData, getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
-import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
 import Header from "@/app/components/Header/Header";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";

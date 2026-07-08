@@ -11,6 +11,7 @@ import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
+import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
 
@@ -127,7 +128,9 @@ export default async function PodcastPage() {
 
             <Header />
 
-            <SiteBanner articles={bannerArticles} categories={bannerCategories} />
+            {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
+
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
 
             <main className="site-main" id="site-main">
                 <section className="stories">

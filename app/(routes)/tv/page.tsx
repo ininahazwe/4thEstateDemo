@@ -5,10 +5,10 @@ import TvGrid from '@/app/components/TV/TvGrid';
 import Pagination from '@/app/components/TV/Pagination';
 import { getTvPageData } from '@/app/services/wpApi.tv';
 import { getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
-import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
 import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
+import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
 interface TvPageProps {
     searchParams: Promise<{ page?: string; pageToken?: string }>;
@@ -35,7 +35,9 @@ export default async function TvPage({ searchParams }: TvPageProps) {
         <>
             <Header />
 
-            <SiteBanner articles={bannerArticles} categories={bannerCategories} />
+            {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
+
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
 
             <main className="site-main" id="site-main">
                 <section className="stories">
