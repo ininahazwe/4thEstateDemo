@@ -17,11 +17,14 @@ import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 import EnvironmentZone from "@/app/components/Environmentzone/Environmentzone";
 import AntiCorruptionZone from "@/app/components/AntiCorruption/Corruptionzone";
 import OurImpactZone from "@/app/components/Impact/ImpactZone";
-import StoriesZone from "@/app/components/Stories/Storieszone";
+//import StoriesZone from "@/app/components/Stories/Storieszone";
 import HumanRightsZone from "@/app/components/HumanRights/HumanRightZone";
 import TikTokStoriesSlider from "@/app/components/VideoSlider/TikTokStoriesSlider";
 import {BANNER_CATEGORY_SLUGS} from "@/app/components/SiteBanner/bannerCategorySlugs";
 import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
+import NewsZoneV2 from "@/app/components/NewsZoneV2/NewsZoneV2";
+import VideoZone from "@/app/components/VideoZone/VideoZone";
+import NewsletterSignup from "@/app/components/NewsletterSignup/NewsletterSignup";
 
 
 export default async function App() {
@@ -73,6 +76,11 @@ export default async function App() {
                             {/* Inject articles fetched from API service */}
 
                             {/* Main news zone powered by WordPress API */}
+                            <NewsZoneV2
+                                zone1Articles={zone1}
+                                zone2Articles={zone2}
+                            />
+
                             <NewsZone
                                 zone1Articles={zone1}
                                 zone2Articles={zone2}
@@ -90,7 +98,11 @@ export default async function App() {
 
                             <AntiCorruptionZone articles={antiCorruptionNews} />
 
+                            <VideoZone />
+
                             <EnvironmentZone articles={environmentlNews} />
+
+                            <NewsletterSignup />
 
                         </section>
                     </main>

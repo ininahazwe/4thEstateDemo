@@ -8,6 +8,17 @@ export default function SubscriptionBanner() {
     const [isVisible, setIsVisible] = useState(false);
     const cookieName = 'banner-abo-special-offer-mobile';
 
+    useEffect(() => {
+        // Vérification du cookie au montage du composant (côté client uniquement)
+        const hasCookie = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith(`${cookieName}=`));
+
+        if (!hasCookie) {
+            setIsVisible(true);
+        }
+    }, []);
+
     const handleClose = () => {
         setIsVisible(false);
 
@@ -16,42 +27,6 @@ export default function SubscriptionBanner() {
         date.setTime(date.getTime() + 1 * 24 * 60 * 60 * 1000);
         document.cookie = `${cookieName}=true; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
     };
-
-    useEffect(() => {
-        // Vérification du cookie au montage du composant (côté client uniquement)
-        const hasCookie = document.cookie
-            .split('; ')
-            .find((row) => row.startsWith(`${cookieName}=`));
-
-        if (hasCookie) return;
-
-        // Apparition au scroll, une fois 150vh atteints
-        const threshold = window.innerHeight * 1.5;
-
-        const handleScroll = () => {
-            if (window.scrollY >= threshold) {
-                setIsVisible(true);
-                window.removeEventListener('scroll', handleScroll);
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        // Cas où la page est déjà scrollée au montage (retour arrière, ancre, etc.)
-        handleScroll();
-
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    useEffect(() => {
-        // Auto-fermeture 10s après apparition (même comportement que le clic sur X)
-        if (!isVisible) return;
-
-        const timer = setTimeout(() => {
-            handleClose();
-        }, 10000);
-
-        return () => clearTimeout(timer);
-    }, [isVisible]);
 
     if (!isVisible) return null;
 

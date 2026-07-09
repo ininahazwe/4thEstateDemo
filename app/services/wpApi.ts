@@ -364,8 +364,8 @@ export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[];
         });
 
         return {
-            zone1: mappedArticles.slice(0, 5),
-            zone2: mappedArticles.slice(5, 11),
+            zone1: mappedArticles.slice(0, 3),
+            zone2: mappedArticles.slice(3, 9),
         };
 
     } catch (error) {
@@ -839,6 +839,7 @@ export const getCategoryPageData = cache(async (
                 seoDescription: config.seoDescription,
                 tags: config.tags ?? [],
                 articles: [],
+                hasMore: false,
                 pagination: { currentPage: page, totalPages: 0, basePath: `/category/${slug}` },
             };
         }
@@ -858,6 +859,7 @@ export const getCategoryPageData = cache(async (
             seoDescription: config.seoDescription,
             tags: config.tags ?? [],
             articles: [],
+            hasMore: false,
             pagination: { currentPage: page, totalPages, basePath: `/category/${slug}` },
         };
     }

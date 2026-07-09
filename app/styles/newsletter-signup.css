@@ -1,0 +1,106 @@
+/* NewsletterSignup — bandeau d'inscription newsletter (fond crème, toujours
+   clair, indépendant du thème clair/sombre du site — même logique que
+   .zone-video qui reste toujours sombre). */
+
+.newsletter-signup {
+    /*background-color: #efe9e2;*/
+    padding: 56px var(--mainPadding);
+    text-align: center;
+}
+
+.newsletter-signup-inner {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.newsletter-signup-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 1.15;
+    color: #111;
+    margin: 0 0 16px;
+}
+
+@media screen and (min-width: 760px) {
+    .newsletter-signup-title {
+        font-size: 44px;
+    }
+}
+
+.newsletter-signup-text {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    color: #333;
+    margin: 0 0 32px;
+}
+
+.newsletter-signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+@media screen and (min-width: 600px) {
+    .newsletter-signup-form {
+        flex-direction: row;
+        max-width: none;
+    }
+}
+
+.newsletter-signup-input {
+    appearance: none;
+    border: 1px solid #111;
+    border-radius: 999px;
+    background: transparent;
+    color: #111;
+    font-family: var(--sans);
+    font-size: 15px;
+    padding: 16px 24px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.newsletter-signup-input::placeholder {
+    color: #767676;
+}
+
+.newsletter-signup-input:focus {
+    outline: 2px solid #111;
+    outline-offset: 2px;
+}
+
+.newsletter-signup-button {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    background-color: var(--siteLogo);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 16px 32px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: opacity 0.2s;
+}
+
+.newsletter-signup-button:hover {
+    opacity: 0.85;
+}
+
+.newsletter-signup-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.newsletter-signup-error {
+    margin-top: 16px;
+    color: #cf1212;
+    font-size: 14px;
+}
