@@ -38,7 +38,7 @@ export default function SubscriptionBanner() {
         >
             <Link
                 className="banner-wrap ithalc"
-                href="https://abos.courrierinternational.com#xtor-CS4-33-[bandeau-bas-abo]"
+                href="https://membership.thefourthestategh.com"
                 data-ithalc="[cta_abo]"
                 data-ithal="footer_bandeau"
             >
