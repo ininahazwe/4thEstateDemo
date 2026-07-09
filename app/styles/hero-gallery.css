@@ -1,0 +1,81 @@
+/* Hero — galerie de 3 grandes cartes verticales (image + dégradé + titre),
+   dans la largeur standard de #site-main (pas de pleine largeur ici,
+   contrairement à .zone-video). */
+
+.hero-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 80vw;
+    margin-left: calc(50% - 40vw);
+    margin-right: calc(50% - 40vw);
+}
+
+.hero-gallery-card {
+    position: relative;
+    display: block;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background-color: var(--siteBoxBackground);
+}
+
+.hero-gallery-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.75) 100%);
+    pointer-events: none;
+}
+
+.hero-gallery-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hero-gallery-title {
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 1.25;
+    color: #fff;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+.hero-gallery-date {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+html:not(.v-app) .hero-gallery-card:hover .hero-gallery-title {
+    /*text-decoration: underline;*/
+}
+
+@media screen and (max-width: 759px) {
+    .hero-gallery {
+        grid-auto-flow: column;
+        grid-auto-columns: 70%;
+        grid-template-columns: none;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: 2px;
+    }
+    .hero-gallery::-webkit-scrollbar {
+        display: none !important;
+        height: 0 !important;
+        width: 0 !important;
+    }
+    .hero-gallery-card {
+        scroll-snap-align: start;
+    }
+}

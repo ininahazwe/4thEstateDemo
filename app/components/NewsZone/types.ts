@@ -18,6 +18,8 @@ export interface ArticleData {
     model: 'article' | 'article-vertical';
     type: 'article' | 'sirius-live';
     index: number;
+    /** Date de publication brute (ISO, post.date de WP) — formatage laissé aux composants consommateurs (ex: Hero) */
+    publishedAtISO?: string;
     image?: {
         src: string;
         srcSet: string;

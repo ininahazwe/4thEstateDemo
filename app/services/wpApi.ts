@@ -356,6 +356,7 @@ export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[];
                 model:         index === 0 ? 'article-vertical' : 'article',
                 type:          index === 2 ? 'sirius-live' : 'article',
                 index:         index + 1,
+                publishedAtISO: post.date,
             };
 
             if (media) article.image = buildImage(media, index);

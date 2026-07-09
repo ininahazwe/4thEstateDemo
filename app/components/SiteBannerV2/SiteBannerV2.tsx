@@ -45,7 +45,7 @@ export default function SiteBannerV2({ categories }: SiteBannerProps) {
     return (
         <div className="site-banner">
             {/* Section des catégories (Tags) — dynamiques (WP) + Tags statiques en dur à la fin */}
-            <div className="banner-hot-tags">
+            <div className="banner-hot-tags" style={{marginBottom: "20px"}}>
                 <div className="item-list">
                     {/* 1. Vos catégories dynamiques WordPress */}
                     {categories.map((cat) => (
@@ -78,9 +78,6 @@ export default function SiteBannerV2({ categories }: SiteBannerProps) {
                 </div>
             </div>
 
-            {/* Section des articles récents — variante vignette (données statiques, 4 items) */}
-            {/* Classe modifier "banner-hot-articles--thumbs" : voir styles/custom.css,
-                ne touche pas au style du SiteBanner original (item-tag, dot/ligne, etc.) */}
             <div className="banner-hot-articles banner-hot-articles--thumbs">
                 <div className="item-list">
                     {staticThumbArticles.map((article) => (

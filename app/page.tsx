@@ -25,6 +25,7 @@ import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 import NewsZoneV2 from "@/app/components/NewsZoneV2/NewsZoneV2";
 import VideoZone from "@/app/components/VideoZone/VideoZone";
 import NewsletterSignup from "@/app/components/NewsletterSignup/NewsletterSignup";
+import Hero from "@/app/components/Hero/Hero";
 
 
 export default async function App() {
@@ -75,11 +76,13 @@ export default async function App() {
                         <section className="home">
                             {/* Inject articles fetched from API service */}
 
-                            {/* Main news zone powered by WordPress API */}
+                            {/* Main news zone powered by WordPress API
                             <NewsZoneV2
                                 zone1Articles={zone1}
                                 zone2Articles={zone2}
-                            />
+                            />*/}
+
+                            <Hero />
 
                             <NewsZone
                                 zone1Articles={zone1}

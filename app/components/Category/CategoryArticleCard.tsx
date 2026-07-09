@@ -38,26 +38,22 @@ export default function CategoryArticleCard({ article, highlight = false }: Cate
                 <div className="item-text">
                     <div className="heading">
                         {isPremium && <span className="sr-only">Subscriber-only article</span>}
-                        <span className="strapline">{source} -</span>
+                        {/*<span className="strapline">{source} -</span>*/}
                         <p id={`title-${article.id}`} className="title">
                             {title}
                         </p>
                     </div>
 
-                    <div className="infos">
+                    {/*<div className="infos">
                         <div className="wrapper">
-              <span className="source" data-icon="earth-americas">
-                {source}
-              </span>
-                            <span className="date" data-icon="calendar-days">
-                {publishedAt}
-              </span>
+                            <span className="source" data-icon="earth-americas">{source}</span>
+                            <span className="date" data-icon="calendar-days">{publishedAt}</span>
                         </div>
                         <div className="placeholders">
                             <span></span>
                             <span></span>
                         </div>
-                    </div>
+                    </div>*/}
                 </div>
             </a>
 
@@ -70,9 +66,9 @@ export default function CategoryArticleCard({ article, highlight = false }: Cate
                     data-audio-url=""
                     data-need-js=""
                 >
-          <span data-icon="headphones">
-            <span className="sr-only">Listen to the article</span>
-          </span>
+              <span data-icon="headphones">
+                <span className="sr-only">Listen to the article</span>
+              </span>
                 </button>
                 <button
                     className="favorites"
