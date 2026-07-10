@@ -6,7 +6,6 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
-    width: 80vw;
     margin-left: calc(50% - 40vw);
     margin-right: calc(50% - 40vw);
 }

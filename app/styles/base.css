@@ -84,7 +84,7 @@
     --serifGeorgia:Georgia,"Times New Roman",Times,serif;
     --agenceSans:"Noto Sans",serif;
     --agenceSerif:"Noto Serif",serif;
-    --radius:8px;
+    --radius:20px;
     --headerHeight:70px;
     --mainPadding:20px;
     --richmedia-ad-top:0px;
@@ -919,7 +919,6 @@ img {
     cursor:pointer;
     display:inline-flex;
     align-items: center;
-    font-family:var(--sans);
     font-size:14px;
     font-weight:600;
     line-height:1;
