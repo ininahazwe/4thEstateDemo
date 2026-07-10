@@ -6,11 +6,24 @@
    les autres composants du site. */
 
 .zone-video {
-    background-color: #111;
+    position: relative;
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     padding: 32px 0;
+    overflow: hidden;
+}
+
+.zone-video-bg {
+    position: absolute;
+    inset: 0;
+    background-color: var(--siteLogo);
+    z-index: 0;
+}
+
+.zone-video-inner {
+    position: relative;
+    z-index: 1;
 }
 
 .zone-video-inner {

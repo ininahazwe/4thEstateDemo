@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { videoItems } from './videoData';
 
 export default function VideoZone() {
@@ -12,10 +13,14 @@ export default function VideoZone() {
 
     return (
         <section className="zone-video">
-            {/* Casse la largeur de #site-main pour occuper tout le viewport
-                (voir .zone-video dans video-zone.css) — seul le fond est
-                pleine largeur, le contenu ci-dessous reste, lui, aligné sur
-                la largeur standard du site via .zone-video-inner. */}
+            <motion.div
+                className="zone-video-bg"
+                initial={{ opacity: 0, y: 60 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+            />
+
             <div className="zone-video-inner">
                 <div className="zone-video-label">
                     <span className="zone-video-icon" aria-hidden="true">▶</span>
