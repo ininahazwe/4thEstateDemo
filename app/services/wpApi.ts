@@ -26,6 +26,7 @@ export interface WPPost {
     tags: number[];
     date: string;
     status?: string; // présent sur requêtes authentifiées ; absent en public (déjà filtré par WP)
+    'impact-category'?: number[]; // taxonomie custom, rest_base = "impact-category"
 }
 interface WPMediaSize {
     source_url: string;
@@ -78,7 +79,6 @@ const CATEGORY_IDS = {
     environment:    131  as number,
     antiCorruption: 111  as number,
     humanRight:     121  as number,
-    ourImpact:      229  as number,
 };
 
 /**
@@ -200,6 +200,35 @@ async function fetchTagBatch(tagIds: number[], revalidate = 600): Promise<Map<nu
     const tags: WPTerm[] = await res.json();
     tags.forEach(t => map.set(t.id, t.name));
     return map;
+}
+
+/**
+ * Taxonomie custom "impact-category" (menu "Our Impact Categories" en admin).
+ * rest_base = "impact-category" — vérifié via GET /wp-json/wp/v2/impact-category.
+ */
+async function fetchImpactCategoryBatch(termIds: number[], revalidate = 600): Promise<Map<number, string>> {
+    const map = new Map<number, string>();
+    if (!termIds.length) return map;
+    const res = await fetch(
+        `${WP_BASE}/impact-category?include=${termIds.join(',')}&per_page=100`,
+        { next: { revalidate } }
+    );
+    if (!res.ok) return map;
+    const terms: WPTerm[] = await res.json();
+    terms.forEach(t => map.set(t.id, t.name));
+    return map;
+}
+
+/**
+ * Récupère tous les IDs de termes de la taxonomie "impact-category"
+ * (Accountability, Government Action, Honours, Policy Change, Public Awareness…).
+ * Dynamique : toute sous-catégorie ajoutée en admin est automatiquement incluse.
+ */
+async function getImpactCategoryIds(revalidate = 3600): Promise<number[]> {
+    const res = await fetch(`${WP_BASE}/impact-category?per_page=100`, { next: { revalidate } });
+    if (!res.ok) return [];
+    const terms: WPTerm[] = await res.json();
+    return terms.map(t => t.id);
 }
 
 function extractIds(posts: WPPost[]) {
@@ -635,22 +664,25 @@ export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
 
 export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
     try {
-        const categoryId = await resolveCategoryId(CATEGORY_IDS.ourImpact, 'our-impact');
-        const url = categoryId
-            ? `${WP_BASE}/posts?per_page=6&categories=${categoryId}&status=publish`
+        const impactCategoryIds = await getImpactCategoryIds();
+        const url = impactCategoryIds.length
+            ? `${WP_BASE}/posts?per_page=6&impact-category=${impactCategoryIds.join(',')}&status=publish`
             : `${WP_BASE}/posts?per_page=6&status=publish`;
 
         const posts = await fetchPosts(url);
         if (!posts.length) return [];
 
-        const { categoryIds } = extractIds(posts);
-        const categoryMap = await fetchCategoryBatch(categoryIds);
+        const impactTermIds = Array.from(
+            new Set(posts.flatMap(p => p['impact-category'] ?? []).filter(id => id > 0))
+        );
+        const impactCategoryMap = await fetchImpactCategoryBatch(impactTermIds);
 
         return posts.map((post, index) => {
             let tagOrCategory = 'Our Impact';
-            if (post.categories.length > 0) {
-                const cat = categoryMap.get(post.categories[0]);
-                if (cat) tagOrCategory = cat;
+            const postTermId = post['impact-category']?.[0];
+            if (postTermId) {
+                const term = impactCategoryMap.get(postTermId);
+                if (term) tagOrCategory = term;
             }
 
             return {
@@ -814,20 +846,40 @@ export const getCategoryPageData = cache(async (
     slug: string,
     page: number = 1
 ): Promise<CategoryData | null> => {
-    const category = await resolveCategory(slug);
-    if (!category) return null;
+    // "our-impact" est piloté par la taxonomie custom "impact-category"
+    // (menu "Our Impact Categories" en admin), pas par la catégorie WP standard.
+    const isOurImpact = slug === 'our-impact';
+
+    let categoryName: string;
+    let url: string;
+
+    if (isOurImpact) {
+        const impactCategoryIds = await getImpactCategoryIds();
+        if (!impactCategoryIds.length) return null;
+        categoryName = 'Our Impact';
+        url =
+            `${WP_BASE}/posts` +
+            `?impact-category=${impactCategoryIds.join(',')}` +
+            `&page=${page}` +
+            `&per_page=${CATEGORY_PER_PAGE}` +
+            `&status=publish` +
+            `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link,impact-category`;
+    } else {
+        const category = await resolveCategory(slug);
+        if (!category) return null;
+        // category.name déjà disponible ici — plus besoin d'un 2e fetch pour l'avoir.
+        categoryName = category.name;
+        url =
+            `${WP_BASE}/posts` +
+            `?categories=${category.id}` +
+            `&page=${page}` +
+            `&per_page=${CATEGORY_PER_PAGE}` +
+            `&status=publish` +
+            `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+    }
 
     const config = getCategoryConfig(slug);
-    // category.name déjà disponible ici — plus besoin d'un 2e fetch pour l'avoir.
-    const title = config.title ?? category.name;
-
-    const url =
-        `${WP_BASE}/posts` +
-        `?categories=${category.id}` +
-        `&page=${page}` +
-        `&per_page=${CATEGORY_PER_PAGE}` +
-        `&status=publish` +
-        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+    const title = config.title ?? categoryName;
 
     const res = await fetch(url, { next: { revalidate: 600 } });
 
@@ -866,16 +918,27 @@ export const getCategoryPageData = cache(async (
     }
 
     const { mediaIds, categoryIds } = extractIds(posts);
-    const [mediaMap, categoryMap] = await Promise.all([
+    const impactTermIds = isOurImpact
+        ? Array.from(new Set(posts.flatMap(p => p['impact-category'] ?? []).filter(id => id > 0)))
+        : [];
+
+    const [mediaMap, categoryMap, impactCategoryMap] = await Promise.all([
         fetchMediaBatch(mediaIds),
         fetchCategoryBatch(categoryIds),
+        isOurImpact ? fetchImpactCategoryBatch(impactTermIds) : Promise.resolve(new Map<number, string>()),
     ]);
 
     const articles: CategoryArticle[] = posts.map((post, index) => {
         const media = mediaMap.get(post.featured_media);
 
         let source = 'The Fourth Estate';
-        if (post.categories.length > 0) {
+        if (isOurImpact) {
+            const termId = post['impact-category']?.[0];
+            if (termId) {
+                const term = impactCategoryMap.get(termId);
+                if (term) source = term;
+            }
+        } else if (post.categories.length > 0) {
             const cat = categoryMap.get(post.categories[0]);
             if (cat) source = cat;
         }
@@ -929,6 +992,182 @@ export const getCategoryArticlesOffset = cache(async (
     const url =
         `${WP_BASE}/posts` +
         `?categories=${category.id}` +
+        `&offset=${offset}` +
+        `&per_page=${limit + 1}` +
+        `&status=publish` +
+        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+
+    const res = await fetch(url, { next: { revalidate: 600 } });
+    if (!res.ok) return { articles: [], hasMore: false };
+
+    const rawPosts: WPPost[] = await res.json();
+    const posts = rawPosts
+        .filter((p) => (p as WPPost & { format?: string }).format !== 'video')
+        .slice(0, limit + 1);
+
+    const hasMore = posts.length > limit;
+    const pagePosts = posts.slice(0, limit);
+    if (!pagePosts.length) return { articles: [], hasMore: false };
+
+    const { mediaIds, categoryIds } = extractIds(pagePosts);
+    const [mediaMap, categoryMap] = await Promise.all([
+        fetchMediaBatch(mediaIds),
+        fetchCategoryBatch(categoryIds),
+    ]);
+
+    const articles: CategoryArticle[] = pagePosts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+
+        let source = 'The Fourth Estate';
+        if (post.categories.length > 0) {
+            const cat = categoryMap.get(post.categories[0]);
+            if (cat) source = cat;
+        }
+
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(offset + index),
+        };
+
+        if (media) article.image = buildImage(media, offset + index);
+
+        return article;
+    });
+
+    return { articles, hasMore };
+});
+
+// ---------------------------------------------------------------------------
+// getTagPageData / getTagArticlesOffset — /tag/[slug]
+//
+// Miroir exact de getCategoryPageData/getCategoryArticlesOffset, mais sur la
+// taxonomie post_tag (?tags=id) au lieu de category (?categories=id).
+// Nécessaire pour les liens du CPT "highlight" qui référencent des tags WP
+// (ex: acf.tag = "big-push-contract-list") plutôt que des catégories.
+// ---------------------------------------------------------------------------
+
+interface WPTagResolved {
+    id: number;
+    name: string;
+    slug: string;
+}
+
+async function resolveTag(slug: string): Promise<WPTagResolved | null> {
+    const res = await fetch(`${WP_BASE}/tags?slug=${slug}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const tags: WPTagResolved[] = await res.json();
+    return tags[0] ?? null;
+}
+
+const TAG_PER_PAGE = 13;
+
+export const getTagPageData = cache(async (
+    slug: string,
+    page: number = 1
+): Promise<CategoryData | null> => {
+    const tag = await resolveTag(slug);
+    if (!tag) return null;
+
+    const title = tag.name;
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?tags=${tag.id}` +
+        `&page=${page}` +
+        `&per_page=${TAG_PER_PAGE}` +
+        `&status=publish` +
+        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+
+    const res = await fetch(url, { next: { revalidate: 600 } });
+
+    if (!res.ok) {
+        if (res.status === 400) {
+            return {
+                title,
+                slug,
+                tags: [],
+                articles: [],
+                hasMore: false,
+                pagination: { currentPage: page, totalPages: 0, basePath: `/tag/${slug}` },
+            };
+        }
+        console.error(`Erreur wpApi [getTagPageData]: ${res.status}`);
+        return null;
+    }
+
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '1');
+    const rawPosts: WPPost[] = await res.json();
+
+    const posts = rawPosts.filter((p) => (p as WPPost & { format?: string }).format !== 'video');
+    if (!posts.length) {
+        return {
+            title,
+            slug,
+            tags: [],
+            articles: [],
+            hasMore: page < totalPages,
+            pagination: { currentPage: page, totalPages, basePath: `/tag/${slug}` },
+        };
+    }
+
+    const { mediaIds, categoryIds } = extractIds(posts);
+    const [mediaMap, categoryMap] = await Promise.all([
+        fetchMediaBatch(mediaIds),
+        fetchCategoryBatch(categoryIds),
+    ]);
+
+    const articles: CategoryArticle[] = posts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+
+        let source = 'The Fourth Estate';
+        if (post.categories.length > 0) {
+            const cat = categoryMap.get(post.categories[0]);
+            if (cat) source = cat;
+        }
+
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(index),
+        };
+
+        if (media) article.image = buildImage(media, index);
+
+        return article;
+    });
+
+    return {
+        title,
+        slug,
+        tags: [],
+        articles,
+        hasMore: page < totalPages,
+        pagination: {
+            currentPage: page,
+            totalPages,
+            basePath: `/tag/${slug}`,
+        },
+    };
+});
+
+export const getTagArticlesOffset = cache(async (
+    slug: string,
+    offset: number,
+    limit: number = 5
+): Promise<{ articles: CategoryArticle[]; hasMore: boolean }> => {
+    const tag = await resolveTag(slug);
+    if (!tag) return { articles: [], hasMore: false };
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?tags=${tag.id}` +
         `&offset=${offset}` +
         `&per_page=${limit + 1}` +
         `&status=publish` +

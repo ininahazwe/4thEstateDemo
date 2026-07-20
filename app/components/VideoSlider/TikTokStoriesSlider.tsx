@@ -1,27 +1,41 @@
 import TikTokStoriesSliderClient from './TikTokStoriesSliderClient';
 import { getTikTokOEmbedBatch } from './tiktokOEmbed';
-import {tiktokDemoItems} from "@/app/components/VideoSlider/Tiktokdemodata";
-
+import { getYouTubeThumbnail } from './Tiktokdemodata';
+import { getVideoStories } from '@/app/services/wpApi.videoStory';
 
 /**
- * Server Component : résout les thumbnails manquantes via l'oEmbed TikTok
- * (appel qui doit rester côté serveur, TikTok ne fournit pas de CORS pour
- * un fetch direct depuis le navigateur), puis délègue l'affichage et les
- * interactions (scroll, modal) à TikTokStoriesSliderClient.
+ * Server Component : fetch les items depuis le CPT "video-story" (WordPress/ACF),
+ * puis résout les thumbnails/captions manquantes selon la plateforme :
+ * - TikTok  : oEmbed (appel qui doit rester côté serveur, TikTok ne fournit
+ *             pas de CORS pour un fetch direct depuis le navigateur).
+ * - YouTube : thumbnail prévisible (img.youtube.com), pas d'appel réseau.
+ * Délègue ensuite l'affichage et les interactions (scroll, modal) à
+ * TikTokStoriesSliderClient.
  *
  * Le squelette HTML reproduit la structure du widget "Storylines" (Sitestream)
  * utilisé par Courrier International, en classes génériques sans dépendance
  * propriétaire (pas de data-slot-path, data-exchange, etc.).
  */
 export default async function TikTokStoriesSlider() {
-    const urls = tiktokDemoItems.map((item) => item.url);
-    const oembedMap = await getTikTokOEmbedBatch(urls);
+    const videoStories = await getVideoStories();
 
-    const items = tiktokDemoItems.map((item) => {
-        // Si une thumbnail/caption a déjà été fournie manuellement, on la garde ;
-        // sinon on utilise celle résolue via l'oEmbed (title = caption TikTok).
-        const thumbnail = item.thumbnail ?? oembedMap.get(item.url)?.thumbnailUrl;
-        const caption = item.caption ?? oembedMap.get(item.url)?.title;
+    const tiktokUrls = videoStories
+        .filter((item) => item.platform === 'tiktok')
+        .map((item) => item.url);
+    const oembedMap = await getTikTokOEmbedBatch(tiktokUrls);
+
+    const items = videoStories.map((item) => {
+        // Si une thumbnail/caption a déjà été renseignée dans ACF, on la garde.
+        let thumbnail = item.thumbnail;
+        let caption = item.caption;
+
+        if (item.platform === 'tiktok') {
+            thumbnail = thumbnail ?? oembedMap.get(item.url)?.thumbnailUrl;
+            caption = caption ?? oembedMap.get(item.url)?.title;
+        } else if (item.platform === 'youtube') {
+            thumbnail = thumbnail ?? getYouTubeThumbnail(item.url);
+        }
+
         return { ...item, thumbnail, caption };
     });
 

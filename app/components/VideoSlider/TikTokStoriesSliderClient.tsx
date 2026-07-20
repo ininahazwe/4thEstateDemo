@@ -2,10 +2,10 @@
 
 import { useRef, useState } from 'react';
 import TikTokVideoModal from "@/app/components/VideoSlider/Tiktokvideomodal";
-import {TikTokDemoItem} from "@/app/components/VideoSlider/Tiktokdemodata";
+import {VideoStoryItem} from "@/app/components/VideoSlider/Tiktokdemodata";
 
 interface TikTokStoriesSliderClientProps {
-    items: TikTokDemoItem[];
+    items: VideoStoryItem[];
 }
 
 /**
@@ -16,7 +16,7 @@ interface TikTokStoriesSliderClientProps {
  */
 export default function TikTokStoriesSliderClient({ items }: TikTokStoriesSliderClientProps) {
     const trackRef = useRef<HTMLDivElement>(null);
-    const [activeUrl, setActiveUrl] = useState<string | null>(null);
+    const [activeItem, setActiveItem] = useState<VideoStoryItem | null>(null);
 
     const scrollByCard = (direction: "prev" | "next") => {
         const track = trackRef.current;
@@ -51,7 +51,7 @@ export default function TikTokStoriesSliderClient({ items }: TikTokStoriesSlider
                                                 type="button"
                                                 className="player"
                                                 aria-label={item.caption ? `Play: ${item.caption}` : 'Play video'}
-                                                onClick={() => setActiveUrl(item.url)}
+                                                onClick={() => setActiveItem(item)}
                                             >
                                                 {(item.duration || item.caption) && (
                                                     <div className="controls">
@@ -97,7 +97,7 @@ export default function TikTokStoriesSliderClient({ items }: TikTokStoriesSlider
                 </div>
             </div>
 
-            <TikTokVideoModal url={activeUrl} onClose={() => setActiveUrl(null)} />
+            <TikTokVideoModal item={activeItem} onClose={() => setActiveItem(null)} />
         </section>
     );
 }

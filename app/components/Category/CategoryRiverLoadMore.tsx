@@ -9,6 +9,8 @@ interface CategoryRiverLoadMoreProps {
     initialArticles: CategoryArticle[];
     initialHasMore: boolean;
     batchSize?: number;
+    /** Préfixe de l'API "load more" — /api/category par défaut, /api/tag pour la page tag. */
+    apiBasePath?: string;
 }
 
 export default function CategoryRiverLoadMore({
@@ -16,6 +18,7 @@ export default function CategoryRiverLoadMore({
                                                    initialArticles,
                                                    initialHasMore,
                                                    batchSize = 5,
+                                                   apiBasePath = '/api/category',
                                                }: CategoryRiverLoadMoreProps) {
     const [articles, setArticles] = useState(initialArticles);
     const [hasMore, setHasMore] = useState(initialHasMore);
@@ -29,7 +32,7 @@ export default function CategoryRiverLoadMore({
 
         try {
             const res = await fetch(
-                `/api/category/${slug}/more?offset=${articles.length}&limit=${batchSize}`
+                `${apiBasePath}/${slug}/more?offset=${articles.length}&limit=${batchSize}`
             );
             if (!res.ok) throw new Error('load_more_failed');
 

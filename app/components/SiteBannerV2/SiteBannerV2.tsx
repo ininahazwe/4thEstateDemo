@@ -1,47 +1,23 @@
 import { type ArticleDataBanner } from './types';
 import { type BannerCategory } from '@/app/services/wpApi';
 import { bannerStaticTags } from "@/app/components/SiteBannerV2/bannerData";
+import { getHighlights } from '@/app/services/wpApi.highlight';
 import Image from 'next/image';
+import { HeadphonesIcon, PlayCircleIcon } from 'lucide-react';
 
 interface SiteBannerProps {
     articles: ArticleDataBanner[];
     categories: BannerCategory[];
 }
 
-// Données statiques temporaires — 4 items, le temps de valider la maquette
-// avec vignette carrée. À remplacer par les vraies données (WP) une fois validé.
-const staticThumbArticles = [
-    {
-        id: 'static-1',
-        href: '#',
-        title: 'Inside the big push contracts',
-        description: 'All all our investigations and articles on the Gov\'t flagship road projects',
-        image: '/assets/thumbnails/1.png',
-    },
-    {
-        id: 'static-2',
-        href: '#',
-        title: 'Podcast',
-        description: 'Listen to our latest podcast story or episode',
-        image: '/assets/thumbnails/podcast.jpg',
-    },
-    {
-        id: 'static-3',
-        href: '#',
-        title: 'Upcoming stories & exclusives',
-        description: 'Le gouvernement annonce une réforme majeure des retraites',
-        image: '/assets/thumbnails/news.png',
-    },
-    {
-        id: 'static-4',
-        href: '#',
-        title: 'Upcoming stories & exclusives',
-        description: 'Le gouvernement annonce une réforme majeure des retraites',
-        image: '/assets/thumbnails/journalists.jpeg',
-    },
-];
+/** Icône par défaut quand pas de thumbnail (type podcast/video uniquement — serie/upcoming ont une vraie image). */
+function HighlightFallbackIcon({ type }: { type: 'podcast' | 'video' }) {
+    const Icon = type === 'podcast' ? HeadphonesIcon : PlayCircleIcon;
+    return <Icon size={20} aria-hidden="true" />;
+}
 
-export default function SiteBannerV2({ categories }: SiteBannerProps) {
+export default async function SiteBannerV2({ categories }: SiteBannerProps) {
+    const highlights = await getHighlights(4);
     return (
         <div className="site-banner">
             {/* Section des catégories (Tags) — dynamiques (WP) + Tags statiques en dur à la fin */}
@@ -80,26 +56,31 @@ export default function SiteBannerV2({ categories }: SiteBannerProps) {
 
             <div className="banner-hot-articles banner-hot-articles--thumbs">
                 <div className="item-list">
-                    {staticThumbArticles.map((article) => (
-                        <div className="item" key={article.id}>
-                            {/* item-tag masqué le temps de valider la maquette vignette */}
-                            {/* <div className="item-tag">
-                                <span className="time">{article.source}</span>
-                            </div> */}
+                    {highlights.map((item) => (
+                        <div className="item" key={item.id}>
                             <div className="item-thumb">
-                                <Image
-                                    src={article.image}
-                                    alt=""
-                                    width={44}
-                                    height={44}
-                                />
+                                {item.thumbnail ? (
+                                    <Image
+                                        src={item.thumbnail}
+                                        alt=""
+                                        width={44}
+                                        height={44}
+                                    />
+                                ) : (item.type === 'podcast' || item.type === 'video') ? (
+                                    <Image
+                                        src="/assets/img/podcast.jpg"
+                                        alt=""
+                                        width={44}
+                                        height={44}
+                                    />
+                                ) : null}
                             </div>
 
-                            <a href={article.href} className="item-title">
+                            <a href={item.href} className="item-title">
                                 <div className="item-tag">
-                                    <span className="time">{article.title}</span>
+                                    <span className="time">{item.badge}</span>
                                 </div>
-                                {article.description}
+                                {item.title}
                             </a>
                         </div>
                     ))}
