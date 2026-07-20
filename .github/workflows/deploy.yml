@@ -1,0 +1,113 @@
+name: 🚀 Deploy 4estate-front to cPanel (demo)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NEXT_PUBLIC_WP_API_URL: ${{ secrets.NEXT_PUBLIC_WP_API_URL }}
+
+      - name: Create Passenger entry point (app.js)
+        run: |
+          cat > app.js <<'EOF'
+          const { createServer } = require("http");
+          const next = require("next");
+
+          const app = next({ dev: false, dir: __dirname });
+          const handle = app.getRequestHandler();
+
+          app.prepare().then(() => {
+            createServer((req, res) => handle(req, res)).listen(
+              process.env.PORT || 3000,
+              () => console.log("4estate-front ready")
+            );
+          });
+          EOF
+
+      - name: Package build artifacts
+        run: |
+          tar czf deploy.tar.gz \
+            .next \
+            public \
+            app.js \
+            package.json \
+            package-lock.json \
+            $(ls next.config.* 2>/dev/null || true)
+
+      - name: Upload to cPanel
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: deploy.tar.gz
+          target: /home/dxtrmfwa/deploy-tmp/
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          timeout: 300s
+          command_timeout: 300s
+          script: |
+            set -e
+            echo "=== Deploiement 4estate-front (demo) ==="
+
+            # Doit correspondre au Path de l'app dans Application Manager
+            APP_PATH="/home/dxtrmfwa/TFEDemo"
+            TMP="/home/dxtrmfwa/deploy-tmp"
+
+            mkdir -p "$APP_PATH"
+            cd "$APP_PATH"
+
+            echo "Extraction des artefacts de build..."
+            rm -rf .deploy-new
+            mkdir .deploy-new
+            tar xzf "$TMP/deploy.tar.gz" -C .deploy-new
+            rm -f "$TMP/deploy.tar.gz"
+
+            # Swap du build
+            rm -rf .next
+            mv .deploy-new/.next .next
+            rm -rf public && mv .deploy-new/public public 2>/dev/null || true
+            mv -f .deploy-new/app.js .deploy-new/package.json .deploy-new/package-lock.json .
+            mv -f .deploy-new/next.config.* . 2>/dev/null || true
+            rm -rf .deploy-new
+
+            echo "Installation des dependances de production..."
+            npm ci --omit=dev --no-audit --no-fund
+
+            echo "Redemarrage Passenger..."
+            mkdir -p tmp
+            touch tmp/restart.txt
+
+            echo "=== Deploiement termine ==="
+
+      - name: Resultat
+        if: success()
+        run: |
+          echo "DEPLOIEMENT REUSSI - commit: ${{ github.sha }}"

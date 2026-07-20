@@ -839,6 +839,7 @@ export const getCategoryPageData = cache(async (
                 seoDescription: config.seoDescription,
                 tags: config.tags ?? [],
                 articles: [],
+                hasMore: false,
                 pagination: { currentPage: page, totalPages: 0, basePath: `/category/${slug}` },
             };
         }
@@ -858,6 +859,7 @@ export const getCategoryPageData = cache(async (
             seoDescription: config.seoDescription,
             tags: config.tags ?? [],
             articles: [],
+            hasMore: page < totalPages,
             pagination: { currentPage: page, totalPages, basePath: `/category/${slug}` },
         };
     }
