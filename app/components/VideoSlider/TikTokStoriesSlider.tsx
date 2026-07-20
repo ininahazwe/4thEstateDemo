@@ -18,10 +18,11 @@ export default async function TikTokStoriesSlider() {
     const oembedMap = await getTikTokOEmbedBatch(urls);
 
     const items = tiktokDemoItems.map((item) => {
-        // Si une thumbnail a déjà été fournie manuellement, on la garde ;
-        // sinon on utilise celle résolue via l'oEmbed.
+        // Si une thumbnail/caption a déjà été fournie manuellement, on la garde ;
+        // sinon on utilise celle résolue via l'oEmbed (title = caption TikTok).
         const thumbnail = item.thumbnail ?? oembedMap.get(item.url)?.thumbnailUrl;
-        return { ...item, thumbnail };
+        const caption = item.caption ?? oembedMap.get(item.url)?.title;
+        return { ...item, thumbnail, caption };
     });
 
     return <TikTokStoriesSliderClient items={items} />;

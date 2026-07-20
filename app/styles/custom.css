@@ -162,3 +162,70 @@ p.wp-block-paragraph{
     font-size: small;
     margin-left: 6px;
 }
+
+/* NewsZoneV2 — zone-1 en 2 colonnes (2/3 + 1/3) au lieu de 3.
+   Scopée via .zone-actu-v2 (et non .zone-actu) pour ne jamais toucher au
+   NewsZone original — voir la grille 3 colonnes dans home-critical.css. */
+@media screen and (max-width: 759px) {
+    .zone-actu-v2 .zone-1 .area:not(:first-child) {
+        margin-top: 20px;
+    }
+}
+
+@media screen and (min-width: 760px) {
+    .zone-actu-v2 .zone-1 {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 20px;
+    }
+
+    /* Colonne 1 : fusion des ex-colonnes 1 + 2, occupe les 2/3 — reprend
+       le style "hero" de l'ancienne area:first-child (image agrandie,
+       titre en plus gros). */
+    .zone-actu-v2 .zone-1 .area:first-child {
+        display: flex;
+        flex-direction: column;
+        flex: 2 1 0;
+    }
+    .zone-actu-v2 .zone-1 .area:first-child .item {
+        flex-grow: 1;
+    }
+    .zone-actu-v2 .zone-1 .area:first-child .item .item-image {
+        flex-grow: 2;
+    }
+    .zone-actu-v2 .zone-1 .area:first-child .item .item-text .heading {
+        font-size: 150%;
+    }
+
+    /* Colonne 2 : ex-3e colonne, conservée à l'identique — occupe le 1/3
+       restant. Reprend le style desktop de l'ancienne area:nth-child(3). */
+    .zone-actu-v2 .zone-1 .area:nth-child(2) {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0;
+    }
+    .zone-actu-v2 .zone-1 .area:nth-child(2) .item:first-child {
+        flex-grow: 1;
+    }
+    .zone-actu-v2 .zone-1 .area:nth-child(2) .item:first-child a {
+        flex-direction: column;
+        height: 100%;
+    }
+    .zone-actu-v2 .zone-1 .area:nth-child(2) .item:first-child .item-image {
+        min-height: auto;
+        min-width: auto;
+        width: 100%;
+        flex-grow: 2;
+    }
+    .zone-actu-v2 .zone-1 .area:nth-child(2) .item:first-child .item-text {
+        box-shadow: 0 0 40px -20px #000;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: space-between;
+    }
+    .zone-actu-v2 .zone-1 .area:nth-child(2) .item:nth-child(2) .item-image {
+        display: none;
+    }
+}

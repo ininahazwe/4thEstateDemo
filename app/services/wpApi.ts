@@ -356,6 +356,7 @@ export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[];
                 model:         index === 0 ? 'article-vertical' : 'article',
                 type:          index === 2 ? 'sirius-live' : 'article',
                 index:         index + 1,
+                publishedAtISO: post.date,
             };
 
             if (media) article.image = buildImage(media, index);
@@ -364,8 +365,8 @@ export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[];
         });
 
         return {
-            zone1: mappedArticles.slice(0, 5),
-            zone2: mappedArticles.slice(5, 11),
+            zone1: mappedArticles.slice(0, 3),
+            zone2: mappedArticles.slice(3, 9),
         };
 
     } catch (error) {

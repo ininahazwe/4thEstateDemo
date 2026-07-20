@@ -7,7 +7,7 @@ interface NewsZoneProps {
     zone2Articles: ArticleData[];
 }
 
-export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps) {
+export default function NewsZoneV2({ zone1Articles, zone2Articles }: NewsZoneProps) {
 
     // Fonction utilitaire pour découper un tableau d'articles en sous-groupes d'affichage (areas)
     const chunkArticles = (arr: ArticleData[], sizes: number[]): ArticleData[][] => {
@@ -19,17 +19,22 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
         }).filter(chunk => chunk.length > 0);
     };
 
-    // Groupement arbitraire selon votre maquette d'origine :
-    // Zone 1 : Premier groupe = 1 article vertical, Second groupe = 2 articles, Troisième groupe = 2 articles
-    const zone1Areas = chunkArticles(zone1Articles, [1, 2, 2]);
+    // Zone 1 — variante 2 colonnes (au lieu de 3) :
+    // Premier groupe = 1 article vertical (occupe désormais les 2/3, fusion
+    // des ex-colonnes 1+2). Second groupe = 2 articles, reprise à l'identique
+    // de l'ex-3e colonne (dernier tiers). Total : 3 articles au lieu de 5.
+    // Styles dédiés : voir custom.css, sélecteur .zone-actu-v2
+    const zone1Areas = chunkArticles(zone1Articles, [1, 2]);
 
-    // Zone 2 : 1er groupe = 2 articles (cartes pleine largeur, avec image),
+    // Zone 2 : inchangée — 1er groupe = 2 articles (cartes pleine largeur, avec image),
     // 2e groupe = 4 articles (grille 2 colonnes, sans image)
     const zone2Areas = chunkArticles(zone2Articles, [2, 4]);
 
     return (
-        <section className="zone zone-actu" data-columns="2">
-            {/* COLONNE PRINCIPALE (zone-1)
+        // Classe "zone-actu-v2" (et non "zone-actu") : isole complètement les
+        // nouveaux styles de zone-1 de ceux du NewsZone original.
+        <section className="zone zone-actu-v2" data-columns="2">
+            {/* COLONNE PRINCIPALE (zone-1) */}
             <div className="zone-1" data-column="full">
                 {zone1Areas.map((area, areaIdx) => (
                     <div className="area" key={`z1-area-${areaIdx}`}>
@@ -43,9 +48,9 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                         ))}
                     </div>
                 ))}
-            </div>*/}
+            </div>
 
-            {/* COLONNE LATÉRALE (zone-2)*/}
+            {/* COLONNE LATÉRALE (zone-2)
             <div className="zone-2" data-column="left">
                 {zone2Areas.map((area, areaIdx) => (
                     <div className="area" key={`z2-area-${areaIdx}`}>
@@ -59,7 +64,7 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                     </div>
                 ))}
                 <SpecialOfferBanner />
-            </div>
+            </div>*/}
         </section>
     );
 }

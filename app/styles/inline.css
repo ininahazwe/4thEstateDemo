@@ -3,7 +3,7 @@
     position:relative;
     margin:40px auto 20px;
     border-radius:var(--radius);
-    background-color:var(--sitePrimary);
+    background-color:var(--siteLogo);
     overflow:hidden;
 }
 #ci-banner-offre-spe .bg {
@@ -53,23 +53,23 @@
     font-size:12px;
 }
 #ci-banner-offre-spe .price {
-    font-family:var(--sans);
     font-size:36px;
     font-weight:bold;
     line-height:1;
-    color:var(--siteBannerTag);
+    color:#FFFFFF;
     margin:0;
 }
 #ci-banner-offre-spe .baseline {
     font-size:14px;
     line-height:1.2;
-    color:#111;
+    color:#FFFFFF;
     margin:0;
     max-width:220px;
 }
 #ci-banner-offre-spe [data-model^="button"] {
-    background-color:var(--siteBannerTag);
-    color:#4a4a4a;
+    background-color:#FFFFFF;
+    color:var(--siteLogo);
+    margin-top: 14px;
 }
 #ci-banner-offre-spe .picto-abo {
     flex-shrink:0;
@@ -88,17 +88,17 @@
 }
 @media screen and (min-width:600px) {
     #ci-banner-offre-spe .wrap {
-        padding:20px 0 0 24px;
+        padding:20px 0 0 36px;
     }
     #ci-banner-offre-spe .content {
         padding-bottom:20px;
     }
     #ci-banner-offre-spe .price {
-        font-size:48px;
+        font-size:40px;
     }
     #ci-banner-offre-spe .baseline {
-        font-size:20px;
-        max-width:340px;
+        font-size:1rem;
+        max-width:94%;
     }
     #ci-banner-offre-spe .picto-abo {
         width:170px;
