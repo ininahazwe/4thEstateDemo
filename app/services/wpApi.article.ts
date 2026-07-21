@@ -47,7 +47,7 @@ export interface WpArticleCard {
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const WP_API =
-    process.env.NEXT_PUBLIC_WP_API_URL ?? "https://thefourthestategh.com/wp-json/wp/v2";
+    process.env.NEXT_PUBLIC_WP_API_URL || "https://thefourthestategh.com/wp-json/wp/v2";
 
 // ─── Helpers privés ───────────────────────────────────────────────────────────
 
@@ -117,12 +117,12 @@ function buildArticleCard(post: Record<string, unknown>): WpArticleCard {
     return {
         id: post.id as number,
         slug: post.slug as string,
-        title: (post.title as { rendered: string }).rendered,
+        title: decode((post.title as { rendered: string }).rendered),
         href: buildHref(post as unknown as WPPost),
         image: pickWpImageUrl(media, CARD_SIZE_PRIORITY),
         strapline: (acf.strapline as string) ?? undefined,
         isPremium: (acf.is_premium as boolean) ?? false,
-        category: (terms[0]?.name as string) ?? undefined,
+        category: terms[0]?.name ? decode(terms[0].name as string) : undefined,
     };
 }
 
@@ -169,7 +169,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
         return {
             id: post.id as number,
             slug: post.slug as string,
-            title: (post.title as { rendered: string }).rendered,
+            title: decode((post.title as { rendered: string }).rendered),
             excerpt: stripHtml((post.excerpt as { rendered: string }).rendered),
             content: (post.content as { rendered: string }).rendered,
             strapline: (acf.strapline as string) ?? undefined,
@@ -191,7 +191,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
             imageCredit: (acf.image_credit as string) ?? undefined,
             category: categoryTerms[0]
                 ? {
-                    name: categoryTerms[0].name as string,
+                    name: decode(categoryTerms[0].name as string),
                     slug: categoryTerms[0].slug as string,
                 }
                 : undefined,
@@ -203,7 +203,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
                     }
                     : undefined,
             tags: tagTerms.map((t) => ({
-                label: t.name as string,
+                label: decode(t.name as string),
                 href: `/sujet/${t.slug as string}`,
             })),
             // IDs bruts pour les requêtes getReadMoreArticles

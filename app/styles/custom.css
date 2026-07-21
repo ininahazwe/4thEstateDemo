@@ -85,8 +85,25 @@
     -webkit-line-clamp: 5;
 }
 
-p.wp-block-paragraph{
+p.wp-block-paragraph, .wp-block-heading{
     margin-top: 1rem;
+}
+
+h2.wp-block-heading{
+    font-size: 30px;
+}
+
+h3.wp-block-heading{
+    font-size: 24px;
+}
+
+ul.wp-block-list{
+    list-style: circle inside;
+}
+
+li.wp-block-list{
+    position: relative;
+    margin-bottom: .5rem;
 }
 
 .wp-block-embed__wrapper{

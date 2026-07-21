@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { decode } from 'html-entities';
 import { type SearchData, type SearchArticle } from '../components/Search/Types';
 
 // ---------------------------------------------------------------------------
@@ -19,7 +20,7 @@ import { type SearchData, type SearchArticle } from '../components/Search/Types'
 // ---------------------------------------------------------------------------
 
 const WP_BASE =
-    process.env.NEXT_PUBLIC_WP_API_URL ?? 'https://thefourthestategh.com/wp-json/wp/v2';
+    process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
 
 const SEARCH_PER_PAGE = 13; // même convention que catégorie/auteur (2 highlight + 11 standard)
 
@@ -72,14 +73,7 @@ function formatWpDate(dateString: string): string {
 }
 
 function cleanHtmlTitle(title: string): string {
-    return title
-        .replace(/&#8217;/g, "'")
-        .replace(/&#8220;/g, '“')
-        .replace(/&#8221;/g, '”')
-        .replace(/&amp;/g, '&')
-        .replace(/&#038;/g, '&')
-        .replace(/<[^>]*>/g, '')
-        .trim();
+    return decode(title).replace(/<[^>]*>/g, '').trim();
 }
 
 function imagePriority(index: number): 'high' | 'auto' | 'low' {
@@ -131,7 +125,7 @@ async function fetchCategoryBatch(categoryIds: number[]): Promise<Map<number, st
     );
     if (!res.ok) return map;
     const cats: WPCategoryMinimal[] = await res.json();
-    cats.forEach((c) => map.set(c.id, c.name));
+    cats.forEach((c) => map.set(c.id, decode(c.name)));
     return map;
 }
 

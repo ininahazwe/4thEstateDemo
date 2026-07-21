@@ -95,7 +95,7 @@ export default function Header() {
                         </span>
                     </button>
 
-                    {/* Newsletter link */}
+                    {/* Newsletter link
                     <Link
                         href="/newsletter" // TODO: Adapt to your local newsletter page
                         className="item"
@@ -103,7 +103,7 @@ export default function Header() {
                     >
                         <Mail size={18} strokeWidth={2} aria-hidden="true" />
                         <span className="sr-only">Newsletters</span>
-                    </Link>
+                    </Link>*/}
 
                     {/* Language switcher (AI translation via Anthropic API) */}
                     <LanguageSwitcher />
@@ -112,7 +112,7 @@ export default function Header() {
                 {/* Logo */}
                 <Link href="/" className="header-logo" title="The Fourth Estate - Back to home">
                     <Image
-                        src="/assets/img/logo-red.svg"
+                        src={theme === 'dark' ? '/assets/img/logo-white.svg' : '/assets/img/logo-red.svg'}
                         alt="The Fourth Estate Logo"
                         width={280}
                         height={52}
@@ -208,28 +208,6 @@ export default function Header() {
                     <a href="https://4thestatedemo.vercel.app/" className="item" data-icon="envelope">Newsletters</a>
                 </div>
             </section>
-
-            {/* À la une du Hebdo */}
-            {/*<section className="hebdo-section">
-                            <a href="https://www.courrierinternational.com/magazine/2026/1859-magazine">
-                                <div className="item-image">
-                                    <figure>
-                                        <picture>
-                                            <img
-                                                loading="lazy"
-                                                src="https://focus.courrierinternational.com/80x0/2026/06/17/a105bb3_upload-1-zjlpdgo0nnuz-couv1859bd.jpg"
-                                                srcSet="https://focus.courrierinternational.com/160x0/2026/06/17/a105bb3_upload-1-zjlpdgo0nnuz-couv1859bd.jpg 2x"
-                                                width={70}
-                                                height={84}
-                                                alt="N°1859 : Brexit : un jour sans fin"
-                                                className="loading"
-                                            />
-                                        </picture>
-                                    </figure>
-                                </div>
-                                <div className="item-text">Brexit : un jour sans fin</div>
-                            </a>
-                        </section>*/}
 
             {/* Bouton Offres Menu
                         <a className="menu-abo ithalc" href="https://fourthestate.free.nf" rel="nofollow" data-ithal="menu_navigation_hebdo">

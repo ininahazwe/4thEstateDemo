@@ -26,17 +26,6 @@ export interface FooterSection {
     links: FooterLink[];
 }
 
-export interface MagazineData {
-    className: string;
-    href: string;
-    ithal: string;
-    imgSrc: string;
-    imgSrcSet: string;
-    width: number;
-    height: number;
-    alt: string;
-}
-
 // -----------------------------------------------------------------------
 // Réseaux sociaux
 // -----------------------------------------------------------------------
@@ -59,7 +48,6 @@ export const sectionsGroup: FooterSection[] = [
         boxClass: 'links-box links-services',
         title: 'Highlights',
         links: [
-            { label: 'Investigations', href: '/investigations', ithal: 'investigations' },
             { label: 'Newsletter',     href: '/newsletter',     ithal: 'newsletter' },
             { label: 'Podcasts',       href: '/podcasts',       ithal: 'podcasts' },
         ],
@@ -68,7 +56,7 @@ export const sectionsGroup: FooterSection[] = [
         boxClass: 'links-box links-groupe',
         title: 'Our sites',
         links: [
-            { label: 'The Fourth Estate', href: 'https://thefourthestategh.com', target: '_blank', rel: 'noopener', ithal: 'site-main' },
+            { label: 'MFWA', href: 'https://mfwa.org', target: '_blank', rel: 'noopener', ithal: 'site-main' },
         ],
     },
 ];
@@ -82,7 +70,7 @@ export const sectionsLegals: FooterSection = {
     title: 'Help & legal',
     links: [
         { label: 'Contact us',        href: '/contact' },
-        { label: 'About us',          href: '/about' },
+        { label: 'About us',          href: '/about-us' },
         { label: 'Terms of use',      href: '/terms' },
         { label: 'Privacy policy',    href: '/privacy' },
         { label: 'Cookie settings',   href: '/cookies', className: 'item cookies' },

@@ -17,6 +17,8 @@
 // Limite éditoriale : 4 entrées, pas une limite technique côté API.
 // ---------------------------------------------------------------------------
 
+import { decode } from 'html-entities';
+
 export type HighlightType = 'serie' | 'podcast' | 'video' | 'upcoming';
 
 export interface HighlightItem {
@@ -31,7 +33,7 @@ export interface HighlightItem {
     thumbnail?: string;
 }
 
-const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL ?? 'https://thefourthestategh.com/wp-json/wp/v2';
+const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
 
 interface WPHighlightPost {
     id: number;
@@ -71,7 +73,7 @@ async function fetchTagsBySlug(slugs: string[]): Promise<Map<string, WPTagTerm>>
     );
     if (!res.ok) return map;
     const terms: WPTagTerm[] = await res.json();
-    terms.forEach((t) => map.set(t.slug, t));
+    terms.forEach((t) => map.set(t.slug, { ...t, name: decode(t.name) }));
     return map;
 }
 

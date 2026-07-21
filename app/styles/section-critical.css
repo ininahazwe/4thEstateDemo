@@ -95,25 +95,6 @@
     vertical-align:middle;
     width:40px
 }
-.section-header .page-title.weekend {
-    font-family:var(--serif)
-}
-@media screen and (max-width:759px) {
-    .section-header .page-title.weekend {
-        font-size:30px
-    }
-}
-.section-header .page-title.weekend:before {
-    background-image:url(https://focus.courrierinternational.com/2025/04/09/c8b1519_sirius-fs-upload-1-dmnjws3mck6g-1744193841617-weekend-icon-180x180.png);
-    background-size:cover;
-    border-radius:4px;
-    content:"";
-    display:inline-block;
-    height:34px;
-    margin:-6px 8px 0 0;
-    vertical-align:middle;
-    width:34px
-}
 .section-tags {
     margin-bottom:20px
 }
@@ -580,17 +561,6 @@ html:not(.v-app) .author-infos a:hover {
         text-align:center
     }
 }
-/*.stories .stories-header .page-title:before {
-    background-image:url(https://focus.courrierinternational.com/2025/04/09/9ad65b7_sirius-fs-upload-1-pdkuxl4x4gxz-1744193841725-stories-icon-180x180.png);
-    background-size:cover;
-    border-radius:4px;
-    content:"";
-    display:inline-block;
-    height:34px;
-    margin:-6px 8px 0 0;
-    vertical-align:middle;
-    width:34px
-}*/
 .stories .stories-river {
     display:flex;
     flex-wrap:wrap;

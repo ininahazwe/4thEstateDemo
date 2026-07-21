@@ -26,6 +26,7 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_WP_API_URL: ${{ secrets.NEXT_PUBLIC_WP_API_URL }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
 
       - name: Create Passenger entry point (app.js)
         run: |

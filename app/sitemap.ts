@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
-const WP_API = process.env.NEXT_PUBLIC_WP_API_URL ?? "https://thefourthestategh.com/wp-json/wp/v2";
+const WP_API = process.env.NEXT_PUBLIC_WP_API_URL || "https://thefourthestategh.com/wp-json/wp/v2";
 
 interface WPPost {
   id: number;

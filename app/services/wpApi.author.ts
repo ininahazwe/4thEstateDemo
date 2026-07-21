@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { decode } from 'html-entities';
 import { type AuthorData, type AuthorArticle } from '../components/Author/Types';
 
 // ---------------------------------------------------------------------------
@@ -24,7 +25,7 @@ import { type AuthorData, type AuthorArticle } from '../components/Author/Types'
 // ---------------------------------------------------------------------------
 
 const WP_BASE =
-    process.env.NEXT_PUBLIC_WP_API_URL ?? 'https://thefourthestategh.com/wp-json/wp/v2';
+    process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
 
 const AUTHOR_PER_PAGE = 13; // même convention que la page catégorie (2 highlight + 11 standard)
 
@@ -68,11 +69,12 @@ async function resolveAuthor(slug: string): Promise<WPAuthorTerm | null> {
     );
     if (!res.ok) return null;
     const terms: WPAuthorTerm[] = await res.json();
-    return terms[0] ?? null;
+    const term = terms[0];
+    return term ? { ...term, name: decode(term.name) } : null;
 }
 
 function stripHtml(html: string): string {
-    return html.replace(/<[^>]+>/g, '').trim();
+    return decode(html).replace(/<[^>]+>/g, '').trim();
 }
 
 function formatDisplayDate(isoDate: string): string {
@@ -100,7 +102,7 @@ async function fetchCategoryBatch(ids: number[]): Promise<Map<number, string>> {
     });
     if (!res.ok) return new Map();
     const cats: WPCategoryMinimal[] = await res.json();
-    return new Map(cats.map((c) => [c.id, c.name]));
+    return new Map(cats.map((c) => [c.id, decode(c.name)]));
 }
 
 function buildImage(media: WPMediaMinimal, index: number): AuthorArticle['image'] {

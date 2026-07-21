@@ -19,7 +19,7 @@ import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
 
 const WP_API =
-    process.env.NEXT_PUBLIC_WP_API_URL ?? "https://thefourthestategh.com/wp-json/wp/v2";
+    process.env.NEXT_PUBLIC_WP_API_URL || "https://thefourthestategh.com/wp-json/wp/v2";
 
 interface ArticlePageProps {
     params: Promise<{ year: string; month: string; slug: string }>;

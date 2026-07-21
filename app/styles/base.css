@@ -1125,17 +1125,6 @@ html:not(.v-app) [data-model^=article]:hover {
 .subscriber [data-model^=article][data-premium] .item-text .heading:before {
     content:""
 }
-[data-model^=article][data-type*=stories] .item-text .heading:before {
-    background-image:url(https://focus.courrierinternational.com/2025/04/09/5654f26_sirius-fs-upload-1-dc0zvcajfh1i-1744193558275-stories-icon-64x64.png);
-    background-size:contain;
-    content:"";
-    display:inline-block;
-    height:18px;
-    margin-bottom:4px;
-    margin-right:6px;
-    vertical-align:middle;
-    width:18px
-}
 [data-model^=article][data-type=explainer] .item-text .explainer:before {
     background:var(--explainer,crimson);
     border-radius:15px 15px 15px 0;
@@ -1775,26 +1764,6 @@ aside.abo-forecast .close:hover {
 .xdebug-var-dump {
     white-space:break-spaces;
     word-break:break-all
-}
-[data-icon=reveil]:not([data-icon-position]):before,
-[data-icon=stories]:not([data-icon-position]):before,
-[data-icon=weekend]:not([data-icon-position]):before {
-    background-size:cover;
-    content:"";
-    display:inline-block;
-    height:20px;
-    margin:-4px 4px -2px 0;
-    vertical-align:middle;
-    width:20px
-}
-[data-icon=stories]:not([data-icon-position]):before {
-    background-image:url(https://focus.courrierinternational.com/2025/04/09/5654f26_sirius-fs-upload-1-dc0zvcajfh1i-1744193558275-stories-icon-64x64.png)
-}
-[data-icon=reveil]:not([data-icon-position]):before {
-    background-image:url(https://focus.courrierinternational.com/2025/04/09/f34ee1f_sirius-fs-upload-1-gzcbfz4xtww6-1744193558274-reveil-icon-64x64.png)
-}
-[data-icon=weekend]:not([data-icon-position]):before {
-    background-image:url(https://focus.courrierinternational.com/2025/04/09/fbd4641_sirius-fs-upload-1-v7ejupupklz9-1744193558270-weekend-icon-64x64.png)
 }
 [data-env=app] {
     display:none

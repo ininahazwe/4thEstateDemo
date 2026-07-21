@@ -1,10 +1,8 @@
 import { VideoItem } from './types';
 
-// Liste saisie manuellement en attendant le branchement sur l'API YouTube
-// (playlistItems.list) d'une playlist dédiée. Le shape (youtubeId/title/
-// duration) est volontairement calqué sur ce que renverra l'API, pour
-// limiter les changements le jour du branchement — remplacer ce tableau
-// par le mapping de la réponse API suffira.
+// DEPRECATED — plus utilisé. VideoZone.tsx fetch désormais la playlist
+// YouTube dédiée via wpApi.videoZone.ts (getVideoZoneItems). Fichier
+// conservé pour référence, non importé nulle part.
 //
 // IDs de démonstration (vidéos libres de droit, Blender Foundation / CC) —
 // à remplacer par les vraies vidéos The Fourth Estate.

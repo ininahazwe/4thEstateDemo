@@ -124,16 +124,7 @@ function formatWpDate(dateString: string): string {
 }
 
 function cleanHtmlTitle(title: string): string {
-    if (typeof window === 'undefined') {
-        return title
-            .replace(/&#8217;/g, "'")
-            .replace(/&#8220;/g, '\u201C')
-            .replace(/&#8221;/g, '\u201D')
-            .replace(/&amp;/g,   '&')
-            .replace(/&#038;/g,  '&');
-    }
-    const decoded = decode(title);
-    return decoded.replace(/<[^>]*>/g, '').trim();
+    return decode(title).replace(/<[^>]*>/g, '').trim();
 }
 
 /**
@@ -185,7 +176,7 @@ async function fetchCategoryBatch(categoryIds: number[], revalidate = 600): Prom
     );
     if (!res.ok) return map;
     const cats: WPTerm[] = await res.json();
-    cats.forEach(c => map.set(c.id, c.name));
+    cats.forEach(c => map.set(c.id, decode(c.name)));
     return map;
 }
 
@@ -198,7 +189,7 @@ async function fetchTagBatch(tagIds: number[], revalidate = 600): Promise<Map<nu
     );
     if (!res.ok) return map;
     const tags: WPTerm[] = await res.json();
-    tags.forEach(t => map.set(t.id, t.name));
+    tags.forEach(t => map.set(t.id, decode(t.name)));
     return map;
 }
 
@@ -215,7 +206,7 @@ async function fetchImpactCategoryBatch(termIds: number[], revalidate = 600): Pr
     );
     if (!res.ok) return map;
     const terms: WPTerm[] = await res.json();
-    terms.forEach(t => map.set(t.id, t.name));
+    terms.forEach(t => map.set(t.id, decode(t.name)));
     return map;
 }
 
@@ -778,20 +769,25 @@ export async function getStoriesArticles(perPage: number = 6): Promise<StoriesAr
  */
 export async function getTopCategories(limit = 10): Promise<FooterCategory[]> {
     try {
+        // +1 : compense le filtre "uncategorized" ci-dessous pour garder
+        // exactement `limit` catégories affichables, pas limit-1.
         const res = await fetch(
-            `${WP_BASE}/categories?orderby=count&order=desc&hide_empty=true&per_page=${limit}`,
+            `${WP_BASE}/categories?orderby=count&order=desc&hide_empty=true&per_page=${limit + 1}`,
             { next: { revalidate: 3600 } }
         );
         if (!res.ok) return [];
 
         const cats: WPCategoryWithCount[] = await res.json();
 
-        return cats.map(cat => ({
-            id:    cat.id,
-            label: cat.name,
-            href:  `/category/${cat.slug}`,
-            ithal: cat.slug,
-        }));
+        return cats
+            .filter(cat => cat.slug !== 'uncategorized')
+            .slice(0, limit)
+            .map(cat => ({
+                id:    cat.id,
+                label: decode(cat.name),
+                href:  `/category/${cat.slug}`,
+                ithal: cat.slug,
+            }));
 
     } catch (error) {
         console.error('Erreur wpApi [getTopCategories]:', error);
@@ -837,7 +833,8 @@ async function resolveCategory(slug: string): Promise<WPCategoryResolved | null>
     const res = await fetch(`${WP_BASE}/categories?slug=${slug}`, { next: { revalidate: 3600 } });
     if (!res.ok) return null;
     const cats: WPCategoryResolved[] = await res.json();
-    return cats[0] ?? null;
+    const cat = cats[0];
+    return cat ? { ...cat, name: decode(cat.name) } : null;
 }
 
 const CATEGORY_PER_PAGE = 13;
@@ -1060,7 +1057,8 @@ async function resolveTag(slug: string): Promise<WPTagResolved | null> {
     const res = await fetch(`${WP_BASE}/tags?slug=${slug}`, { next: { revalidate: 3600 } });
     if (!res.ok) return null;
     const tags: WPTagResolved[] = await res.json();
-    return tags[0] ?? null;
+    const tag = tags[0];
+    return tag ? { ...tag, name: decode(tag.name) } : null;
 }
 
 const TAG_PER_PAGE = 13;
@@ -1257,7 +1255,7 @@ export async function getBannerCategories(slugs: string[]): Promise<BannerCatego
                 const cat = bySlug.get(slug);
                 if (!cat) return null;
                 return {
-                    label: cat.name,
+                    label: decode(cat.name),
                     href: `/category/${cat.slug}`,
                     slug: cat.slug,
                 };

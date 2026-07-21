@@ -12,9 +12,8 @@ import { getVideoStories } from '@/app/services/wpApi.videoStory';
  * Délègue ensuite l'affichage et les interactions (scroll, modal) à
  * TikTokStoriesSliderClient.
  *
- * Le squelette HTML reproduit la structure du widget "Storylines" (Sitestream)
- * utilisé par Courrier International, en classes génériques sans dépendance
- * propriétaire (pas de data-slot-path, data-exchange, etc.).
+ * Le squelette HTML reproduit une structure de widget "stories" horizontal
+ * générique (classes maison, pas de data-slot-path, data-exchange, etc.).
  */
 export default async function TikTokStoriesSlider() {
     const videoStories = await getVideoStories();

@@ -12,7 +12,7 @@ import { type VideoStoryItem, detectPlatform } from '../components/VideoSlider/T
 //   acf.duration   — optionnel, purement visuel ("1:42")
 // ---------------------------------------------------------------------------
 
-const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL ?? 'https://thefourthestategh.com/wp-json/wp/v2';
+const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
 
 interface WPVideoStoryPost {
     id: number;

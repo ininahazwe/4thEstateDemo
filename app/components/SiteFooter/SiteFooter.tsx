@@ -2,7 +2,6 @@ import {
     socialLinks,
     sectionsGroup,
     sectionsLegals,
-    type MagazineData
 } from './footerData';
 import { getTopCategories } from '../../services/wpApi';
 import Link from "next/link";
@@ -18,10 +17,6 @@ import {
 } from "react-icons/fa6";
 import { IoLogoRss } from "react-icons/io5";
 
-interface SiteFooterProps {
-    magazines?: MagazineData[];
-}
-
 // 2. Dictionnaire de correspondance (Key -> Composant Icône)
 const iconMapping: Record<string, React.ComponentType<{ className?: string }>> = {
     facebook: FaFacebookF,
@@ -32,30 +27,7 @@ const iconMapping: Record<string, React.ComponentType<{ className?: string }>> =
     rss: IoLogoRss
 };
 
-const defaultMagazines: MagazineData[] = [
-    {
-        className: 'hebdo',
-        href: "https://www.courrierinternational.com/magazine/2026/1859-magazine",
-        ithal: "hebdo",
-        imgSrc: "https://focus.courrierinternational.com/160x0/2026/06/17/a105bb3_upload-1-zjlpdgo0nnuz-couv1859bd.jpg",
-        imgSrcSet: "https://focus.courrierinternational.com/320x0/2026/06/17/a105bb3_upload-1-zjlpdgo0nnuz-couv1859bd.jpg 2x",
-        width: 320,
-        height: 382,
-        alt: "N°1859 : Brexit : un jour sans fin"
-    },
-    {
-        className: 'hs',
-        href: "https://www.courrierinternational.com/magazine/2026/113-hors-serie",
-        ithal: "hs",
-        imgSrc: "https://focus.courrierinternational.com/160x0/2026/05/06/741aece_upload-1-8hlc6cnse8qp-dereglement-climatique-une-sortie-e-20-mai-2026.jpg",
-        imgSrcSet: "https://focus.courrierinternational.com/320x0/2026/05/06/741aece_upload-1-8hlc6cnse8qp-dereglement-climatique-une-sortie-e-20-mai-2026.jpg 2x",
-        width: 320,
-        height: 412,
-        alt: "N°113 : Climat : vivre autrement"
-    }
-];
-
-export default async function SiteFooter({ magazines = defaultMagazines }: SiteFooterProps) {
+export default async function SiteFooter() {
 
     const topCategories = await getTopCategories(10);
 
