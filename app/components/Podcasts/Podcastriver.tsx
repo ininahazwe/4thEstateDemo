@@ -1,3 +1,7 @@
+// DEPRECATED — plus utilisé. /podcasts affiche désormais PodcastFilterRiver
+// (recherche + tri + filtre année + load more). Fichier conservé pour
+// référence, non importé nulle part.
+
 import { PodcastEpisode } from './Types';
 import PodcastEpisodeCard from "@/app/components/Podcasts/Podcastepisodecard";
 

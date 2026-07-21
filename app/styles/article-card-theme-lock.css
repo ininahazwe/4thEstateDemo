@@ -25,6 +25,11 @@
     color: #111 !important;
 }
 
+:root[data-user-color-scheme="dark"] .item-text .heading{
+    background: linear-gradient(#0000 0, #fff 40px);
+    text-shadow: none;
+}
+
 :root[data-user-color-scheme="dark"] .item-text .strapline {
     color: #ff5252 !important; /* Keep the orange/red brand color */
 }

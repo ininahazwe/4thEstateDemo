@@ -43,10 +43,6 @@ interface YouTubeSearchResponse {
     pageInfo: { totalResults: number; resultsPerPage: number };
 }
 
-interface YouTubeChannelStatsResponse {
-    items: Array<{ statistics: { videoCount: string } }>;
-}
-
 function formatDisplayDate(isoDate: string): string {
     return new Date(isoDate).toLocaleDateString('en-GB', {
         day: 'numeric',
@@ -56,32 +52,39 @@ function formatDisplayDate(isoDate: string): string {
 }
 
 /**
- * Fetch total public videos from channel, used only to estimate page count
- * in UI (YouTube API doesn't provide "totalPages" — only total results).
- * Long cache (videos published rarely enough to justify 1h).
+ * Filtres natifs YouTube search.list — pas de filtrage client possible ici
+ * (contrairement à /podcasts) : search.list coûte 100 unités de quota par
+ * appel (10k/jour = 100 appels max), et la pagination est par curseur
+ * opaque (pageToken), pas par offset. Charger tout le catalogue en mémoire
+ * pour filtrer côté client exploserait le quota pour rien alors que YouTube
+ * supporte déjà nativement recherche/tri/plage de dates côté serveur.
  */
-async function getChannelVideoCount(apiKey: string): Promise<number> {
-    const res = await fetch(
-        `${YOUTUBE_API_BASE}/channels?part=statistics&id=${CHANNEL_ID}&key=${apiKey}`,
-        { next: { revalidate: 3600 } }
-    );
-    if (!res.ok) return 0;
-    const data: YouTubeChannelStatsResponse = await res.json();
-    return Number(data.items[0]?.statistics.videoCount ?? 0);
+export interface TvFilters {
+    query?: string;
+    /** YouTube ne supporte pas de tri chronologique ascendant natif — seulement 'date' (récent d'abord). */
+    order?: 'date' | 'viewCount' | 'title';
+    publishedAfter?: string;  // RFC 3339, ex: 2026-01-01T00:00:00Z
+    publishedBefore?: string; // RFC 3339
 }
 
 /**
- * Fetch one page of channel videos, sorted by date (newest first).
- * Navigation via pageToken (see Pagination.tsx for YouTube API constraint details).
+ * Fetch une page de vidéos de la chaîne, filtrée/triée selon `filters`.
+ * Navigation via pageToken (voir Pagination.tsx pour la contrainte API).
  *
- * search.list costs 100 quota units per call (free quota: 10k/day = 100 calls/day).
- * No React.cache() here since each (page, token) is already different variation.
- * Real quota protection is `revalidate` below (shared HTTP cache across all
- * visitors, not per-session).
+ * search.list coûte 100 unités de quota par appel (free quota: 10k/jour =
+ * 100 appels/jour). Pas de React.cache() ici puisque chaque combinaison
+ * (page, token, filtres) est déjà une variation distincte — la vraie
+ * protection quota est `revalidate` ci-dessous (cache HTTP partagé entre
+ * tous les visiteurs, pas par session).
+ *
+ * pageInfo.totalResults (retourné par CET appel, déjà filtré) remplace
+ * l'ancien appel séparé à channels.list?part=statistics : plus précis
+ * quand un filtre est actif, et une requête réseau en moins.
  */
 export async function getTvPageData(
     page: number = 1,
-    pageToken?: string
+    pageToken?: string,
+    filters: TvFilters = {}
 ): Promise<TvData | null> {
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
@@ -89,29 +92,31 @@ export async function getTvPageData(
         return null;
     }
 
+    const { query, order = 'date', publishedAfter, publishedBefore } = filters;
+
     const url =
         `${YOUTUBE_API_BASE}/search` +
         `?part=snippet` +
         `&channelId=${CHANNEL_ID}` +
-        `&order=date` +
+        `&order=${order}` +
         `&type=video` +
         `&maxResults=${VIDEOS_PER_PAGE}` +
+        (query ? `&q=${encodeURIComponent(query)}` : '') +
+        (publishedAfter ? `&publishedAfter=${publishedAfter}` : '') +
+        (publishedBefore ? `&publishedBefore=${publishedBefore}` : '') +
         (pageToken ? `&pageToken=${pageToken}` : '') +
         `&key=${apiKey}`;
 
-    const [searchRes, videoCount] = await Promise.all([
-        // revalidate 1h : les nouvelles vidéos n'ont pas besoin d'apparaître
-        // à la seconde près, et ça réduit fortement la consommation de quota.
-        fetch(url, { next: { revalidate: 3600 } }),
-        getChannelVideoCount(apiKey),
-    ]);
+    // revalidate 1h : les nouvelles vidéos n'ont pas besoin d'apparaître à la
+    // seconde près, et ça réduit fortement la consommation de quota.
+    const res = await fetch(url, { next: { revalidate: 3600 } });
 
-    if (!searchRes.ok) {
-        console.error(`Erreur wpApi.tv [getTvPageData]: ${searchRes.status}`);
+    if (!res.ok) {
+        console.error(`Erreur wpApi.tv [getTvPageData]: ${res.status}`);
         return null;
     }
 
-    const data: YouTubeSearchResponse = await searchRes.json();
+    const data: YouTubeSearchResponse = await res.json();
 
     const videos: TvVideo[] = data.items.map((item) => {
         const thumb =
@@ -128,7 +133,8 @@ export async function getTvPageData(
         };
     });
 
-    const totalPages = videoCount > 0 ? Math.ceil(videoCount / VIDEOS_PER_PAGE) : 0;
+    const totalResults = data.pageInfo?.totalResults ?? 0;
+    const totalPages = totalResults > 0 ? Math.ceil(totalResults / VIDEOS_PER_PAGE) : 0;
 
     return {
         videos,

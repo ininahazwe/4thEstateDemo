@@ -246,3 +246,14 @@ li.wp-block-list{
         display: none;
     }
 }
+
+.podcast-filter-select{
+    padding: 10px;
+    border: none;
+}
+
+.podcast-filters{
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}

@@ -1,13 +1,8 @@
 // ---------------------------------------------------------------------------
-// getLatestPodcastEpisode — À ajouter dans le même fichier que
-// getSpotifyShowEpisodes (app/services/getSpotifyShowEpisodes.ts) pour
-// réutiliser le même client/token Spotify déjà en place, plutôt que de
-// dupliquer l'authentification dans un fichier séparé.
-//
-// Hypothèse à vérifier : getSpotifyShowEpisodes() retourne déjà les épisodes
-// triés du plus récent au plus ancien (comportement standard de l'API
-// Spotify Shows /episodes). Si ce n'est pas le cas chez toi, trie par
-// release_date avant de prendre le premier élément.
+// DEPRECATED — plus utilisé. getLatestPodcastEpisode a bien été fusionnée
+// dans app/services/getSpotifyShowEpisodes.ts comme prévu ci-dessous ;
+// ArticleAside.tsx importe désormais cette version canonique. Fichier
+// conservé pour référence, non importé nulle part.
 // ---------------------------------------------------------------------------
 
 import { type PodcastEpisode } from '@/app/components/Podcasts/Types';
@@ -37,6 +32,7 @@ function mapToPodcastEpisode(episode: SpotifyEpisode): PodcastEpisode {
         description: episode.description,
         cover: episode.images?.[0]?.url ?? '',
         publishedAt: formatDisplayDate(episode.release_date),
+        publishedAtISO: episode.release_date,
         spotifyUrl: episode.external_urls.spotify,
     };
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {WpArticleCard} from "@/app/services/wpApi.article";
 import LatestPodcastWidget from "@/app/components/Article/Latestpodcastwidget";
-import {getLatestPodcastEpisode} from "@/app/components/Article/Getlatestpodcastepisode.snippet";
+import {getLatestPodcastEpisode} from "@/app/services/getSpotifyShowEpisodes";
 
 interface ArticleAsideProps {
     mostRead: WpArticleCard[];

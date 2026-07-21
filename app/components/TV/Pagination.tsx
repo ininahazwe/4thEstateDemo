@@ -4,6 +4,11 @@ interface PaginationProps {
     pagination: TvPagination;
     nextPageToken: string | null;
     prevPageToken: string | null;
+    /** Filtres actifs à reporter dans les liens Prev/Next pour ne pas les perdre en changeant de page. */
+    query?: string;
+    order?: string;
+    from?: string;
+    to?: string;
 }
 
 /**
@@ -14,10 +19,27 @@ interface PaginationProps {
  * affiché est indicatif (basé sur une estimation du nombre total de vidéos),
  * mais seuls Précédent/Suivant sont de vrais liens fonctionnels.
  */
-export default function Pagination({ pagination, nextPageToken, prevPageToken }: PaginationProps) {
+export default function Pagination({
+                                        pagination,
+                                        nextPageToken,
+                                        prevPageToken,
+                                        query,
+                                        order,
+                                        from,
+                                        to,
+                                    }: PaginationProps) {
     const { currentPage, totalPages, basePath } = pagination;
 
     if (totalPages <= 1 && !nextPageToken && !prevPageToken) return null;
+
+    const buildParams = (pageToken: string, page: number) => {
+        const params = new URLSearchParams({ pageToken, page: String(page) });
+        if (query) params.set('q', query);
+        if (order && order !== 'date') params.set('order', order);
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+        return params.toString();
+    };
 
     return (
         <section className="site-pagination">
@@ -30,7 +52,7 @@ export default function Pagination({ pagination, nextPageToken, prevPageToken }:
                     className="item"
                     data-model="button"
                     data-icon="angle-left"
-                    href={`${basePath}?pageToken=${prevPageToken}&page=${currentPage - 1}`}
+                    href={`${basePath}?${buildParams(prevPageToken, currentPage - 1)}`}
                 >
                     Previous
                 </a>
@@ -42,7 +64,7 @@ export default function Pagination({ pagination, nextPageToken, prevPageToken }:
                     data-model="button"
                     data-icon="angle-right"
                     data-icon-position="after"
-                    href={`${basePath}?pageToken=${nextPageToken}&page=${currentPage + 1}`}
+                    href={`${basePath}?${buildParams(nextPageToken, currentPage + 1)}`}
                 >
                     Next
                 </a>

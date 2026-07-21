@@ -3,26 +3,15 @@ import Script from 'next/script';
 import Header from '@/app/components/Header/Header';
 import SiteFooter from '@/app/components/SiteFooter/SiteFooter';
 
-import { getSpotifyShowEpisodes } from '@/app/services/getSpotifyShowEpisodes';
-import { PodcastEpisode } from '@/app/components/Podcasts/Types';
-import Podcastriver from '@/app/components/Podcasts/Podcastriver';
+import { getAllPodcastEpisodes } from '@/app/services/getSpotifyShowEpisodes';
+import PodcastFilterRiver from '@/app/components/Podcasts/PodcastFilterRiver';
 import PodcastHeader from '@/app/components/Podcasts/PodcastHeader';
-import SiteBanner from '@/app/components/SiteBanner/SiteBanner';
 import { getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
-
-interface SpotifyEpisode {
-    id: string;
-    name: string;
-    description: string;
-    release_date: string;
-    images: { url: string }[];
-    external_urls: { spotify: string };
-}
 
 export const metadata: Metadata = {
     title: 'Podcasts - The Fourth Estate',
@@ -52,40 +41,18 @@ export const metadata: Metadata = {
     },
 };
 
-function formatDisplayDate(isoDate: string): string {
-    return new Date(isoDate).toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-}
-
-function mapToPodcastEpisode(episode: SpotifyEpisode): PodcastEpisode {
-    return {
-        id: episode.id,
-        title: episode.name,
-        description: episode.description,
-        cover: episode.images?.[0]?.url ?? '',
-        publishedAt: formatDisplayDate(episode.release_date),
-        spotifyUrl: episode.external_urls.spotify,
-    };
-}
-
 export default async function PodcastPage() {
-    let episodes: PodcastEpisode[] = [];
     let hasError = false;
 
-    const [data, bannerArticles, bannerCategories] = await Promise.all([
-        getSpotifyShowEpisodes().catch((error) => {
+    const [episodes, bannerArticles, bannerCategories] = await Promise.all([
+        getAllPodcastEpisodes().catch((error) => {
             console.error('Erreur lors de la récupération des épisodes:', error);
             hasError = true;
-            return null;
+            return [];
         }),
         getLatestBannerArticles(),
         getBannerCategories(BANNER_CATEGORY_SLUGS),
     ]);
-
-    episodes = (data?.items ?? []).map(mapToPodcastEpisode);
 
     if (hasError) {
         return <div className="text-red-500 p-6">Impossible de charger les épisodes pour le moment.</div>;
@@ -136,7 +103,7 @@ export default async function PodcastPage() {
                 <section className="stories">
                     <PodcastHeader />
                     <div className="stories-content">
-                        <Podcastriver episodes={episodes} />
+                        <PodcastFilterRiver episodes={episodes} />
                     </div>
                 </section>
             </main>
