@@ -7,6 +7,7 @@ import { Bookmark } from "lucide-react";
 import {
     saveArticle,
     unsaveArticle,
+    checkIsSaved,
     setPendingBookmark,
     consumePendingBookmark,
     type SaveArticlePayload,
@@ -21,10 +22,9 @@ interface BookmarkButtonProps {
     imageUrl?: string;
     category?: string;
     /**
-     * État initial. Pas de vérification serveur à l'affichage (pas de
-     * round-trip supplémentaire côté page article/cartes) : le bouton
-     * reflète uniquement les actions faites pendant la session en cours
-     * (+ l'auto-save au retour de /connexion, voir useEffect ci-dessous).
+     * État initial optimiste, en attendant la vérification serveur (évite
+     * un état "vide" garanti pendant le check ci-dessous). Laisser à false
+     * si l'appelant ne sait pas déjà — le useEffect corrige au besoin.
      */
     initialSaved?: boolean;
     showLabel?: boolean;
@@ -49,24 +49,35 @@ export default function BookmarkButton({
     const [pending, setPending] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
 
-    // Garde anti-double-exécution (effet + éventuel re-render) : on ne
-    // consomme l'intention en attente qu'une fois par montage.
-    const consumedRef = useRef(false);
+    // Garde anti-double-exécution (StrictMode / re-render) : le montage
+    // ne doit résoudre l'état qu'une seule fois.
+    const resolvedRef = useRef(false);
 
-    // ── Retour de /connexion : si ce bouton correspond à l'article visé
-    //    par une intention de bookmark en attente, on la finalise seul. ──
+    // ── Résolution de l'état réel au montage, dans l'ordre suivant :
+    //    1. Intention de bookmark en attente (retour de /connexion) pour
+    //       CET article → on la finalise (save) et on s'arrête là, le
+    //       check is-saved serait redondant et risquerait de course
+    //       contre le save en cours.
+    //    2. Sinon, si connecté, on demande à WP l'état réel — corrige
+    //       l'optimisme de initialSaved (ou le false par défaut).
+    // ------------------------------------------------------------------
     useEffect(() => {
-        if (status !== "authenticated" || consumedRef.current) return;
+        if (status === "loading" || resolvedRef.current) return;
+        resolvedRef.current = true;
 
-        const payload = consumePendingBookmark(articleId);
-        if (!payload) return;
+        if (status !== "authenticated") return;
 
-        consumedRef.current = true;
-        setPending(true);
-        saveArticle(payload).then((result) => {
-            setPending(false);
-            if (result === "ok") setSaved(true);
-        });
+        const pendingPayload = consumePendingBookmark(articleId);
+        if (pendingPayload) {
+            setPending(true);
+            saveArticle(pendingPayload).then((result) => {
+                setPending(false);
+                if (result === "ok") setSaved(true);
+            });
+            return;
+        }
+
+        checkIsSaved(articleId).then(setSaved);
     }, [status, articleId]);
 
     function buildPayload(): SaveArticlePayload {

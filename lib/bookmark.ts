@@ -51,6 +51,23 @@ export async function unsaveArticle(articleId: number | string): Promise<Bookmar
     }
 }
 
+/**
+ * Vérifie si l'article est déjà sauvegardé par le membre connecté.
+ * Retourne false pour un visiteur anonyme ou en cas d'erreur — jamais
+ * bloquant pour l'affichage de la carte/article (best-effort, comme le
+ * reste de ce module).
+ */
+export async function checkIsSaved(articleId: number | string): Promise<boolean> {
+    try {
+        const res = await fetch(`/api/is-saved?articleId=${encodeURIComponent(String(articleId))}`);
+        if (!res.ok) return false;
+        const data = (await res.json()) as { saved?: boolean };
+        return !!data.saved;
+    } catch {
+        return false;
+    }
+}
+
 /* ====================================================================
  * Intention de bookmark en attente d'authentification.
  *
