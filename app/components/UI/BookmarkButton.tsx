@@ -48,6 +48,7 @@ export default function BookmarkButton({
     const [saved, setSaved] = useState(initialSaved);
     const [pending, setPending] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const [showError, setShowError] = useState(false);
 
     // Garde anti-double-exécution (StrictMode / re-render) : le montage
     // ne doit résoudre l'état qu'une seule fois.
@@ -94,6 +95,7 @@ export default function BookmarkButton({
             return;
         }
 
+        setShowError(false);
         setPending(true);
         const result = saved ? await unsaveArticle(articleId) : await saveArticle(buildPayload());
         setPending(false);
@@ -103,9 +105,15 @@ export default function BookmarkButton({
         } else if (result === "unauthenticated") {
             // Session expirée entre le chargement de la page et le clic.
             setShowAuthModal(true);
+        } else {
+            // "error" : échec réseau/upstream (mauvaise TFE_MEMBERSHIP_API_URL/KEY,
+            // WP injoignable, etc.). Pas bloquant pour la lecture, mais visible
+            // — sinon impossible à distinguer d'un simple clic ignoré.
+            console.error(
+                `[bookmark] ${saved ? "unsave" : "save"} failed for article ${articleId} — check TFE_MEMBERSHIP_API_URL/TFE_MEMBERSHIP_API_KEY and the WP response.`
+            );
+            setShowError(true);
         }
-        // "error" : échec réseau/upstream, on laisse l'état inchangé —
-        // pas de blocage de la lecture (cohérent avec trackRead, best-effort).
     }
 
     function handleLoginClick() {
@@ -125,12 +133,18 @@ export default function BookmarkButton({
                 data-in-favorites={saved}
                 aria-pressed={saved}
                 disabled={pending}
-                title={label}
+                title={showError ? "Something went wrong. Please try again." : label}
                 onClick={handleClick}
             >
                 <Bookmark size={18} strokeWidth={2} aria-hidden="true" fill={saved ? "currentColor" : "none"} />
                 <span className={showLabel ? "action" : "action sr-only"}>{label}</span>
             </button>
+
+            {showError && (
+                <span role="status" style={{ fontSize: 11, color: "#c0392b", marginLeft: 4 }}>
+                    Couldn&apos;t save. Try again.
+                </span>
+            )}
 
             <AuthRequiredModal
                 open={showAuthModal}
