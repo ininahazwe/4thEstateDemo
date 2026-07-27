@@ -14,6 +14,12 @@ import type { NextAuthConfig } from "next-auth";
  * automatiquement, en Edge comme en Node — une seule source de vérité.
  */
 export const authConfig: NextAuthConfig = {
+    // Nécessaire pour un domaine custom (demo.thefourthestategh.com) sur
+    // Vercel : sans ça, Auth.js ne fait pas confiance au header Host reçu
+    // et retombe sur son URL par défaut codée en dur (http://localhost:3000)
+    // pour construire les redirections/callbacks — d'où le
+    // "?error=Configuration" + redirection vers localhost observés.
+    trustHost: true,
     session: {
         strategy: "jwt",
     },
