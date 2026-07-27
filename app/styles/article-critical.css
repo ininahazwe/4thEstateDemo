@@ -661,7 +661,7 @@ aside[class$=-aside]>[data-flex-grow][data-flex-grow="5"] {
     background-color: var(--siteBoxBackground);
     border-radius: var(--radius);
     /*box-shadow: 0 4px 4px -4px var(--siteBoxShadow);*/
-    color: var(--siteText);
+    color: var(--siteLogo);
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
