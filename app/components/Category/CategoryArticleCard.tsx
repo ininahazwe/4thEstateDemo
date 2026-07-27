@@ -1,5 +1,7 @@
 import Image from 'next/image';
 import { CategoryArticle } from './Types';
+import TTSButton from '@/app/components/UI/TTSButton';
+import BookmarkButton from '@/app/components/UI/BookmarkButton';
 
 interface CategoryArticleCardProps {
     article: CategoryArticle;
@@ -8,6 +10,8 @@ interface CategoryArticleCardProps {
 
 export default function CategoryArticleCard({ article, highlight = false }: CategoryArticleCardProps) {
     const { href, title, source, publishedAt, image, isPremium, imagePriority = 'auto' } = article;
+    const titleId = `title-${article.id}`;
+    const slug = href.split('/').filter(Boolean).pop() ?? String(article.id);
 
     return (
         <article
@@ -39,7 +43,7 @@ export default function CategoryArticleCard({ article, highlight = false }: Cate
                     <div className="heading">
                         {isPremium && <span className="sr-only">Subscriber-only article</span>}
                         {/*<span className="strapline">{source} -</span>*/}
-                        <p id={`title-${article.id}`} className="title">
+                        <p id={titleId} className="title">
                             {title}
                         </p>
                     </div>
@@ -58,31 +62,19 @@ export default function CategoryArticleCard({ article, highlight = false }: Cate
             </a>
 
             <div className="item-buttons">
-                <button
-                    className="tts"
-                    title="Listen to the article"
-                    aria-describedby={`title-${article.id}`}
-                    data-modal-open="tts-reserved"
-                    data-audio-url=""
-                    data-need-js=""
-                >
-              <span data-icon="headphones">
-                <span className="sr-only">Listen to the article</span>
-              </span>
-                </button>
-                <button
-                    className="favorites"
-                    data-article-favorite=""
-                    data-in-favorites="false"
-                    data-article-id={article.id}
-                    data-modal-open="favorites-reserved"
-                    title="Add to favorites"
-                    aria-describedby={`title-${article.id}`}
-                    data-icon="bookmark-off"
-                    data-need-js=""
-                >
-                    <span className="action sr-only">Add to favorites</span>
-                </button>
+                <TTSButton
+                    titleId={titleId}
+                    showLabel={false}
+                    showStopButton={false}
+                />
+                <BookmarkButton
+                    articleId={article.id}
+                    slug={slug}
+                    title={title}
+                    link={href}
+                    imageUrl={image?.src}
+                    category={source}
+                />
             </div>
         </article>
     );

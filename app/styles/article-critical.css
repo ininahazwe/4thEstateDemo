@@ -655,3 +655,22 @@ aside[class$=-aside]>[data-flex-grow][data-flex-grow="5"] {
         position:relative
     }
 }
+
+.bookmark{
+    appearance: none;
+    background-color: var(--siteBoxBackground);
+    border-radius: var(--radius);
+    /*box-shadow: 0 4px 4px -4px var(--siteBoxShadow);*/
+    color: var(--siteText);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    border: 0;
+    align-items: center;
+    margin: 0;
+    padding: 14px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    display: inline-flex;
+}

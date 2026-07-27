@@ -4,6 +4,7 @@ import { WpArticleCard } from "@/app/services/wpApi.article";
 import ArticleIllustration from "@/app/components/Article/Articleillustration";
 import ArticleShareButton from "@/app/components/UI/ArticleShareButton";
 import TTSButton from "@/app/components/UI/TTSButton";
+import BookmarkButton from "@/app/components/UI/BookmarkButton";
 
 interface Author {
     displayName: string;
@@ -12,6 +13,9 @@ interface Author {
 
 interface ArticleBodyProps {
     id: number;
+    slug: string;
+    link: string;
+    category?: string;
     title: string;
     content: string;
     featuredImage?: string;
@@ -24,6 +28,10 @@ interface ArticleBodyProps {
 }
 
 export default function ArticleBody({
+                                        id,
+                                        slug,
+                                        link,
+                                        category,
                                         content,
                                         featuredImage,
                                         imageCaption,
@@ -49,6 +57,14 @@ export default function ArticleBody({
                 <div className="tools-list">
                     <ArticleShareButton title={title} />
                     <TTSButton containerSelector=".article-text" />
+                    <BookmarkButton
+                        articleId={id}
+                        slug={slug}
+                        title={title}
+                        link={link}
+                        imageUrl={featuredImage}
+                        category={category}
+                    />
                 </div>
             </aside>
             <div className="article-text">

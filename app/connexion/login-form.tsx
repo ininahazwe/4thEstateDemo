@@ -4,12 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Header from "@/app/components/Header/Header";
-
-// ⚠️ À CONFIRMER — routes WordPress membership pour création de compte et
-// réinitialisation du mot de passe. Remplace par les vraies URL du site
-// membership.thefourthestategh.com (cf. ton plugin tfe-membership).
-const WP_REGISTER_URL = "https://membership.thefourthestategh.com";
-const WP_RESET_URL = "https://membership.thefourthestategh.com/mot-de-passe-oublie";
+import { WP_REGISTER_URL, WP_RESET_URL } from "@/lib/site-links";
 
 export default function LoginForm() {
     const router = useRouter();

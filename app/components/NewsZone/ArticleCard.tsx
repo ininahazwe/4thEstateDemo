@@ -1,34 +1,18 @@
 'use client';
 
 import { type ArticleData } from './types';
-import {Globe, Headphones} from "lucide-react";
 import Image from "next/image";
+import TTSButton from "@/app/components/UI/TTSButton";
+import BookmarkButton from "@/app/components/UI/BookmarkButton";
 
 interface ArticleCardProps {
     article: ArticleData;
     headingLevel: 'h1' | 'h2' | 'h3';
 }
 
-const handlePlayAudio = () => {
-    // 1. Get article text (via ID or class)
-    const articleText = document.getElementById('article-content')?.innerText;
-
-    if (!articleText) return;
-
-    // 2. Stop any ongoing playback
-    window.speechSynthesis.cancel();
-
-    // 3. Create utterance
-    const utterance = new SpeechSynthesisUtterance(articleText);
-    utterance.lang = 'en-GB'; // English language
-    utterance.rate = 1.0;     // Reading speed (0.5 to 2)
-
-    // 4. Start playback
-    window.speechSynthesis.speak(utterance);
-};
-
 export default function ArticleCard({ article, headingLevel: Heading }: ArticleCardProps) {
     const isLive = article.type === 'sirius-live';
+    const slug = article.href.split("/").filter(Boolean).pop() ?? String(article.id);
 
     // Handle image error (React-native version of HTML onerror attribute)
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
@@ -95,17 +79,20 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
 
             {/* Action bar (Listen / Favorites) */}
             <div className="item-buttons">
-                {!isLive && (
-                    <button
-                        type="button"
-                        className="tts" // Adjust class according to your CSS
-                        title="Listen to article"
-                        onClick={handlePlayAudio} // Handler for click event
-                    >
-                        <Headphones size={18} strokeWidth={2} aria-hidden="true" />
-                        <span className="sr-only">Listen to article</span>
-                    </button>
-                )}
+                <TTSButton
+                    titleId={`title-${article.id}`}
+                    showLabel={false}
+                    showStopButton={false}
+                />
+                <span className="sr-only">Listen</span>
+                <BookmarkButton
+                    articleId={article.id}
+                    slug={slug}
+                    title={article.title}
+                    link={article.href}
+                    imageUrl={article.image?.src}
+                    category={article.tagOrCategory}
+                />
             </div>
         </article>
     );

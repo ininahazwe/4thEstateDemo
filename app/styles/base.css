@@ -232,7 +232,7 @@
     touch-action:manipulation
 }
 :focus-visible {
-    outline:2px auto var(--focus,#005fcc)!important;
+    /*outline:2px auto var(--focus,#005fcc)!important;*/
     outline-offset:-1px!important
 }
 a,
@@ -914,7 +914,7 @@ img {
     background-color:var(--siteBoxBackground);
     border:0;
     border-radius:var(--radius);
-    box-shadow:0 4px 4px -4px var(--siteBoxShadow);
+    /*box-shadow:0 4px 4px -4px var(--siteBoxShadow);*/
     color:var(--siteText);
     cursor:pointer;
     display:inline-flex;
@@ -923,7 +923,7 @@ img {
     font-weight:600;
     line-height:1;
     margin:0;
-    padding:14px;
+    padding:10px;
     -webkit-user-select:none;
     user-select:none
 }

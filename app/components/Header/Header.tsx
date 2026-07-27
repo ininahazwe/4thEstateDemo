@@ -205,7 +205,7 @@ export default function Header() {
                     <button type="button" className="item" data-icon="circle-half-stroke" onClick={toggleTheme} aria-pressed={theme === 'dark'}>
                         Mode {theme === 'light' ? 'dark' : 'light'}
                     </button>
-                    <a href="https://4thestatedemo.vercel.app/" className="item" data-icon="envelope">Newsletters</a>
+                    <a href="https://demo.thefourthestategh.com" className="item" data-icon="envelope">Newsletters</a>
                 </div>
             </section>
 

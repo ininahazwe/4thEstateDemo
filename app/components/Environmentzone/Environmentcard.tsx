@@ -1,9 +1,9 @@
 'use client';
 
 import { type EnvironmentArticle } from './Types';
-import { Globe } from 'lucide-react';
 import Image from "next/image";
 import TTSButton from "@/app/components/UI/TTSButton";
+import BookmarkButton from "@/app/components/UI/BookmarkButton";
 
 interface EnvironmentCardProps {
     article: EnvironmentArticle;
@@ -12,6 +12,7 @@ interface EnvironmentCardProps {
 
 export default function EnvironmentCard({ article, index }: EnvironmentCardProps) {
     const titleId = `title-${article.id}-${index}`;
+    const slug = article.href.split("/").filter(Boolean).pop() ?? String(article.id);
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.classList.add('img--error');
@@ -84,6 +85,14 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                     showStopButton={false}
                 />
                 <span className="sr-only">Listen</span>
+                <BookmarkButton
+                    articleId={article.id}
+                    slug={slug}
+                    title={article.title}
+                    link={article.href}
+                    imageUrl={article.image?.src}
+                    category={article.tagOrCategory}
+                />
             </div>
         </article>
     );

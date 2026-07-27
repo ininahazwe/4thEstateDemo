@@ -4,6 +4,7 @@ import { type GeneralNewsArticle } from './types';
 import { Globe } from 'lucide-react';
 import Image from "next/image";
 import TTSButton from "@/app/components/UI/TTSButton";
+import BookmarkButton from "@/app/components/UI/BookmarkButton";
 
 interface GeneralNewsCardProps {
     article: GeneralNewsArticle;
@@ -12,6 +13,7 @@ interface GeneralNewsCardProps {
 
 export default function GeneralNewsCard({ article, index }: GeneralNewsCardProps) {
     const titleId = `title-${article.id}-${index}`;
+    const slug = article.href.split("/").filter(Boolean).pop() ?? String(article.id);
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.classList.add('img--error');
@@ -80,6 +82,14 @@ export default function GeneralNewsCard({ article, index }: GeneralNewsCardProps
                     titleId={titleId}
                     showLabel={false}
                     showStopButton={false}
+                />
+                <BookmarkButton
+                    articleId={article.id}
+                    slug={slug}
+                    title={article.title}
+                    link={article.href}
+                    imageUrl={article.image?.src}
+                    category={article.tagOrCategory}
                 />
             </div>
         </article>

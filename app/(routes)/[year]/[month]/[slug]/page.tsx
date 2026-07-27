@@ -151,6 +151,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         redirect(`/article/${canonicalYear}/${canonicalMonth}/${slug}`);
     }
 
+    // Lien canonique de l'article, transmis au bouton Bookmark (stocké tel
+    // quel côté membership pour affichage dans "Saved articles").
+    const canonicalUrl = `${baseUrl}/${canonicalYear}/${canonicalMonth}/${slug}`;
+
     // Seuls bannerArticles et bannerCategories sont utilisés sur la page
     // article (alimenter SiteBanner). Les autres zones (general news,
     // environment, anti-corruption, our-impact, stories, human-right) sont
@@ -317,6 +321,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
                             <ArticleBody
                                 id={article.id}
+                                slug={slug}
+                                link={canonicalUrl}
+                                category={article.category?.name}
                                 title={article.title}
                                 content={article.content}
                                 featuredImage={article.featuredImage}

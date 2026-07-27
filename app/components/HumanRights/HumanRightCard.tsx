@@ -4,6 +4,7 @@ import { type HumanRightsArticle } from './Types';
 import { Globe, Headphones, Bookmark } from 'lucide-react';
 import Image from "next/image";
 import TTSButton from "@/app/components/UI/TTSButton";
+import BookmarkButton from "@/app/components/UI/BookmarkButton";
 
 interface HumanRightsCardProps {
     article: HumanRightsArticle;
@@ -11,6 +12,7 @@ interface HumanRightsCardProps {
 
 export default function HumanRightsCard({ article }: HumanRightsCardProps) {
     const titleId = `title-${article.id}-${article.index}`;
+    const slug = article.href.split("/").filter(Boolean).pop() ?? String(article.id);
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.classList.add('img--error');
@@ -81,6 +83,14 @@ export default function HumanRightsCard({ article }: HumanRightsCardProps) {
                     titleId={titleId}
                     showLabel={false}
                     showStopButton={false}
+                />
+                <BookmarkButton
+                    articleId={article.id}
+                    slug={slug}
+                    title={article.title}
+                    link={article.href}
+                    imageUrl={article.image?.src}
+                    category={article.tagOrCategory}
                 />
             </div>
         </article>
