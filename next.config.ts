@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Le compte cPanel a plusieurs package-lock.json à côté de ce projet
+  // (Mediascape/, .trash/) : sans ce paramètre, Next.js remonte
+  // l'arborescence, trouve plusieurs lockfiles, et choisit le dossier
+  // home comme "root" au lieu de TFEDemo/ — ce qui peut désynchroniser
+  // la résolution des variables d'environnement au runtime.
+  outputFileTracingRoot: __dirname,
   images: {
     remotePatterns: [
       {
