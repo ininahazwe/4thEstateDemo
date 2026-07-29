@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {X} from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function SubscriptionBanner() {
+    const { status } = useSession();
     const [isVisible, setIsVisible] = useState(false);
     const cookieName = 'banner-abo-special-offer-mobile';
 
@@ -28,6 +30,9 @@ export default function SubscriptionBanner() {
         document.cookie = `${cookieName}=true; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
     };
 
+    // Masqué pendant la résolution de la session (évite un flash) et pour
+    // tout user authentifié — banniere d'abonnement réservée aux visiteurs.
+    if (status !== "unauthenticated") return null;
     if (!isVisible) return null;
 
     return (

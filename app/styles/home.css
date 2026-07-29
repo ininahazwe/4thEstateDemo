@@ -164,7 +164,8 @@
 }
 .home .zone-puzzle .item .button {
     background-color:#000;
-    color:#fff
+    color:#fff;
+    padding: 10px;
 }
 .home .zone-insta [class*=headline-] [class*=text-] {
     --line-clamp:3;

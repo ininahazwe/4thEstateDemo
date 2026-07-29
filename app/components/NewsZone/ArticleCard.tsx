@@ -84,7 +84,6 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
                     showLabel={false}
                     showStopButton={false}
                 />
-                <span className="sr-only">Listen</span>
                 <BookmarkButton
                     articleId={article.id}
                     slug={slug}

@@ -1,5 +1,5 @@
 .zone-archives .wrap {
-    gap: 16px;
+    gap: 0px;
 }
 
 .zone-archives .wrap article.item {
@@ -27,6 +27,16 @@
 
 .item-image.podcast{
     aspect-ratio: 1 / 1 !important;
+}
+
+.item-buttons {
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+
+.item-buttons:hover,
+.item-buttons:focus-within {
+    opacity: 1;
 }
 
 /* SiteBannerV2 — variante vignette carrée + titre (banner-hot-articles)

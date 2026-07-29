@@ -1,6 +1,9 @@
+'use client';
+
 import { type EnvironmentArticle } from './Types';
 import EnvironmentCard from './Environmentcard';
 import {ArrowBigLeft, ArrowBigRight} from "lucide-react";
+import { useSlider } from '@/app/hooks/useSlider';
 
 interface EnvironmentZoneProps {
     articles: EnvironmentArticle[];
@@ -11,6 +14,8 @@ export default function EnvironmentZone({
                                             articles,
                                             title = 'Environment',
                                         }: EnvironmentZoneProps) {
+    const { wrapRef, canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useSlider();
+
     if (!articles.length) return null;
 
     return (
@@ -21,8 +26,8 @@ export default function EnvironmentZone({
                 {title}
             </a>
 
-            {/* Wrap slider : data-slider-wrap déclenche votre JS existant */}
-            <div className="wrap" data-slider-wrap="">
+            {/* Wrap slider : ref branchée sur useSlider pour le scroll horizontal */}
+            <div className="wrap" data-slider-wrap="" ref={wrapRef}>
                 {articles.map((article, idx) => (
                     <EnvironmentCard
                         key={article.id}
@@ -32,19 +37,23 @@ export default function EnvironmentZone({
                 ))}
             </div>
 
-            {/* Contrôles slider — repris à l'identique du HTML de référence */}
+            {/* Contrôles slider — data-fade recalculé dynamiquement au scroll */}
             <div data-slider-controls="">
                 <button
+                    type="button"
                     data-slider-left=""
                     aria-label="Précédent"
-                    data-fade="true"
+                    data-fade={!canScrollLeft}
+                    onClick={scrollLeft}
                 >
                     <ArrowBigLeft size={18} strokeWidth={2} aria-hidden="true" />
                 </button>
                 <button
+                    type="button"
                     data-slider-right=""
                     aria-label="Suivant"
-                    data-fade="false"
+                    data-fade={!canScrollRight}
+                    onClick={scrollRight}
                 >
                     <ArrowBigRight size={18} strokeWidth={2} aria-hidden="true" />
                 </button>

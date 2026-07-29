@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
+import { useSession } from "next-auth/react";
 
 // Variants : chaque élément apparaît en fondu + léger décalage vertical.
 // viewport={{ once: false }} => l'animation se rejoue à chaque entrée/sortie du viewport.
@@ -34,6 +35,12 @@ const bgFade: Variants = {
 };
 
 export default function SpecialOfferBanner() {
+    const { status } = useSession();
+
+    // Masqué pendant la résolution de la session (évite un flash) et pour
+    // tout user authentifié — offre réservée aux visiteurs non-membres.
+    if (status !== "unauthenticated") return null;
+
     return (
         <aside id="ci-banner-offre-spe" data-cookie-container="">
             {/* Responsive optimized background */}

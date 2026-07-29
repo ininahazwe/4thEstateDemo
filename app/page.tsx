@@ -47,8 +47,8 @@ export default async function App() {
     ] = await Promise.all([
         getFourthEstateArticles(),
         getLatestBannerArticles(),
-        getGeneralNewsArticles(3),
-        getEnvironmentArticles(3),
+        getGeneralNewsArticles(6),
+        getEnvironmentArticles(6),
         getAntiCorruptionArticles(),
         getOurImpactArticles(),
         getStoriesArticles(),

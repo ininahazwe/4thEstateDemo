@@ -157,30 +157,41 @@ export default function TTSButton({
 
     const label = isPlaying && !isPaused ? "Pause" : isPaused ? "Resume" : "Listen";
 
+    const button = (
+        <button
+            ref={buttonRef}
+            type="button"
+            className="tts"
+            data-model="button"
+            title={label}
+            aria-describedby={titleId}
+            data-modal-open="tts-reserved"
+            data-audio-url=""
+            data-need-js=""
+            onClick={handleToggleAudio}
+        >
+            {isPlaying && !isPaused ? (
+                <Pause size={18} strokeWidth={2} aria-hidden="true" style={showLabel ? { paddingRight: "4px" } : undefined} />
+            ) : (
+                <Headphones size={18} strokeWidth={2} aria-hidden="true" style={showLabel ? { paddingRight: "4px" } : undefined} />
+            )}
+            {showLabel && label}
+            {!showLabel && <span className="sr-only">{label}</span>}
+        </button>
+    );
+
+    // Le wrapper flex n'a de raison d'être que pour aligner le bouton stop
+    // à côté du bouton principal. Sans showStopButton, un seul enfant
+    // existera toujours : pas de wrapper, on rend le bouton nu.
+    if (!showStopButton) {
+        return className ? <span className={className}>{button}</span> : button;
+    }
+
     return (
         <div className={`tts-container ${className}`.trim()} style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
-            <button
-                ref={buttonRef}
-                type="button"
-                className="tts"
-                data-model="button"
-                title={label}
-                aria-describedby={titleId}
-                data-modal-open="tts-reserved"
-                data-audio-url=""
-                data-need-js=""
-                onClick={handleToggleAudio}
-            >
-                {isPlaying && !isPaused ? (
-                    <Pause size={18} strokeWidth={2} aria-hidden="true" style={showLabel ? { paddingRight: "4px" } : undefined} />
-                ) : (
-                    <Headphones size={18} strokeWidth={2} aria-hidden="true" style={showLabel ? { paddingRight: "4px" } : undefined} />
-                )}
-                {showLabel && label}
-                {!showLabel && <span className="sr-only">{label}</span>}
-            </button>
+            {button}
 
-            {showStopButton && (isPlaying || isPaused) && (
+            {(isPlaying || isPaused) && (
                 <button
                     type="button"
                     className="tts tts-stop"

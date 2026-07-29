@@ -84,7 +84,6 @@ export default function AntiCorruptionCard({ article }: AntiCorruptionCardProps)
                     showLabel={false}
                     showStopButton={false}
                 />
-                <span className="sr-only">Listen</span>
                 <BookmarkButton
                     articleId={article.id}
                     slug={slug}

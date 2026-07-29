@@ -1,5 +1,9 @@
+'use client';
+
 import GeneralNewsCard from './GeneralNewsCard';
 import { type GeneralNewsArticle } from './types';
+import { useSlider } from '@/app/hooks/useSlider';
+import { ArrowBigLeft, ArrowBigRight } from 'lucide-react';
 
 interface GeneralNewsZoneProps {
     articles: GeneralNewsArticle[];
@@ -10,34 +14,47 @@ export default function GeneralNewsZone({
                                             articles,
                                             title = 'General News'
                                         }: GeneralNewsZoneProps) {
+    const { wrapRef, canScrollLeft, canScrollRight, scrollLeft, scrollRight } = useSlider();
 
-    // Découpe les articles en groupes de 3, comme dans le template HTML d'archives
-    const chunkArticles = (arr: GeneralNewsArticle[], size: number): GeneralNewsArticle[][] => {
-        const chunks: GeneralNewsArticle[][] = [];
-        for (let i = 0; i < arr.length; i += size) {
-            const chunk = arr.slice(i, i + size);
-            if (chunk.length > 0) chunks.push(chunk);
-        }
-        return chunks;
-    };
-
-    const articleGroups = chunkArticles(articles, 3);
+    if (!articles.length) return null;
 
     return (
-        <section className="zone zone-type zone-archives">
+        <section className="zone zone-type zone-archives" data-slider="">
             <h3 className="section-title">{title}</h3>
 
-            {articleGroups.map((group, groupIdx) => (
-                <div className="wrap" key={`general-news-group-${groupIdx}`}>
-                    {group.map((article, articleIdx) => (
-                        <GeneralNewsCard
-                            key={article.id}
-                            article={article}
-                            index={groupIdx * 3 + articleIdx}
-                        />
-                    ))}
-                </div>
-            ))}
+            {/* Flux continu (plus de chunking par 3) : un groupe de 3 remplit
+                exactement une rangée et ne déborde jamais, ce qui rendait le
+                slider par groupe inopérant. Un seul wrap, comme EnvironmentZone. */}
+            <div className="wrap" data-slider-wrap="" ref={wrapRef}>
+                {articles.map((article, idx) => (
+                    <GeneralNewsCard
+                        key={article.id}
+                        article={article}
+                        index={idx}
+                    />
+                ))}
+            </div>
+
+            <div data-slider-controls="">
+                <button
+                    type="button"
+                    data-slider-left=""
+                    aria-label="Précédent"
+                    data-fade={!canScrollLeft}
+                    onClick={scrollLeft}
+                >
+                    <ArrowBigLeft size={18} strokeWidth={2} aria-hidden="true" />
+                </button>
+                <button
+                    type="button"
+                    data-slider-right=""
+                    aria-label="Suivant"
+                    data-fade={!canScrollRight}
+                    onClick={scrollRight}
+                >
+                    <ArrowBigRight size={18} strokeWidth={2} aria-hidden="true" />
+                </button>
+            </div>
         </section>
     );
 }

@@ -84,7 +84,6 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                     showLabel={false}
                     showStopButton={false}
                 />
-                <span className="sr-only">Listen</span>
                 <BookmarkButton
                     articleId={article.id}
                     slug={slug}
