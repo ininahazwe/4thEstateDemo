@@ -1,11 +1,17 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import Script from 'next/script';
 import type { Metadata } from 'next';
-import { getMostReadArticles } from '@/app/services/wpApi.article';
 import CategoryHeader from '@/app/components/Category/CategoryHeader';
 import CategoryRiverLoadMore from '@/app/components/Category/CategoryRiverLoadMore';
-import ArticleAside from '@/app/components/Article/ArticleAside';
-import { getCategoryPageData, getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
+import ArticleAsideStream from '@/app/components/Article/ArticleAsideStream';
+import ArticleAsideSkeleton from '@/app/components/Article/ArticleAsideSkeleton';
+import {
+    getCategoryPageData,
+    getBannerCategories,
+    getLatestBannerArticles,
+    getAllCategorySlugs,
+} from '@/app/services/wpApi';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
 import Header from "@/app/components/Header/Header";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
@@ -14,30 +20,40 @@ import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
 interface CategoryPageProps {
     params: Promise<{ slug: string }>;
-    searchParams: Promise<{ page?: string }>;
 }
 
-function resolvePage(pageParam?: string): number {
-    return Number(pageParam) > 0 ? Number(pageParam) : 1;
+// ISR : la page catégorie est revalidée toutes les 10 min (comme les fetchs).
+export const revalidate = 600;
+
+// Prébuild des pages catégorie au build, à partir des slugs WP. Aucune lecture
+// de searchParams (la pagination se fait via "Load more" -> /api/category/.../more,
+// pas via ?page=), donc la page est réellement STATIQUE (parité avec la home) :
+// la chaîne resolve->posts->médias tourne au build/revalidation, plus jamais sur
+// le chemin critique d'une requête utilisateur. dynamicParams (défaut true)
+// laisse un slug non prébuild se rendre à la demande.
+export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
+    try {
+        const slugs = await getAllCategorySlugs();
+        return slugs.map((slug) => ({ slug }));
+    } catch {
+        return [];
+    }
 }
 
-export async function generateMetadata({ params, searchParams }: CategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
     const { slug } = await params;
-    const { page: pageParam } = await searchParams;
-    const page = resolvePage(pageParam);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
-    const pageUrl = page > 1 ? `${baseUrl}/category/${slug}?page=${page}` : `${baseUrl}/category/${slug}`;
 
-    const data = await getCategoryPageData(slug, page);
+    const data = await getCategoryPageData(slug);
     if (!data) return {};
 
     return {
-        title: page > 1 ? `${data.title} — Page ${page}` : data.title,
+        title: data.title,
         description: data.seoDescription || `All news from the ${data.title} category`,
         keywords: [data.title, "news", "articles"],
         openGraph: {
             type: "website",
-            url: pageUrl,
+            url: `${baseUrl}/category/${slug}`,
             title: data.title,
             description: data.seoDescription || `${data.title} news`,
             locale: "en_GH",
@@ -46,21 +62,21 @@ export async function generateMetadata({ params, searchParams }: CategoryPagePro
             canonical: `${baseUrl}/category/${slug}`,
         },
         robots: {
-            index: page === 1, // Index first page only
+            index: true,
             follow: true,
         },
     };
 }
 
-export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
+export default async function CategoryPage({ params }: CategoryPageProps) {
     const { slug } = await params;
-    const { page: pageParam } = await searchParams;
-    const page = resolvePage(pageParam);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
 
-    const [data, mostRead, bannerArticles, bannerCategories] = await Promise.all([
-        getCategoryPageData(slug, page),
-        getMostReadArticles(),
+    // getMostReadArticles sorti du Promise.all : il est désormais fetché à
+    // l'intérieur de <ArticleAsideStream> et streamé via <Suspense>, pour ne
+    // pas bloquer le rendu du contenu principal.
+    const [data, bannerArticles, bannerCategories] = await Promise.all([
+        getCategoryPageData(slug),
         getLatestBannerArticles(),
         getBannerCategories(BANNER_CATEGORY_SLUGS),
     ]);
@@ -84,16 +100,6 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                 name: data.title,
                 item: `${baseUrl}/category/${slug}`,
             },
-            ...(page > 1
-                ? [
-                    {
-                        "@type": "ListItem",
-                        position: 3,
-                        name: `Page ${page}`,
-                        item: `${baseUrl}/category/${slug}?page=${page}`,
-                    },
-                ]
-                : []),
         ],
     };
 
@@ -149,7 +155,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                         />
                     </div>
 
-                    <ArticleAside mostRead={mostRead} />
+                    <Suspense fallback={<ArticleAsideSkeleton />}>
+                        <ArticleAsideStream />
+                    </Suspense>
                 </section>
             </main>
 

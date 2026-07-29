@@ -837,6 +837,36 @@ async function resolveCategory(slug: string): Promise<WPCategoryResolved | null>
     return cat ? { ...cat, name: decode(cat.name) } : null;
 }
 
+/**
+ * Map slug -> {id, name} de TOUTES les catégories, en UNE seule requête mise
+ * en cache 24h et partagée par toutes les pages catégorie (React cache() +
+ * data cache Next). Remplace resolveCategory (1 fetch PAR slug, cache 1h) :
+ * une seule entrée de cache réchauffée au build par generateStaticParams,
+ * réutilisée pour toutes les catégories → l'étape "slug → id" sort du chemin
+ * critique côté utilisateur (elle tourne au build/revalidation, pas à chaque
+ * requête). resolveCategory reste en fallback pour un slug absent du map
+ * (catégorie créée entre deux revalidations).
+ */
+export const getCategorySlugMap = cache(async (): Promise<Map<string, { id: number; name: string }>> => {
+    const map = new Map<string, { id: number; name: string }>();
+    const res = await fetch(
+        `${WP_BASE}/categories?per_page=100&hide_empty=true&_fields=id,slug,name`,
+        { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return map;
+    const cats: Array<{ id: number; slug: string; name: string }> = await res.json();
+    cats.forEach((c) => map.set(c.slug, { id: c.id, name: decode(c.name) }));
+    return map;
+});
+
+/**
+ * Liste des slugs de catégories pour generateStaticParams (prébuild ISR).
+ */
+export async function getAllCategorySlugs(): Promise<string[]> {
+    const map = await getCategorySlugMap();
+    return Array.from(map.keys());
+}
+
 const CATEGORY_PER_PAGE = 13;
 
 export const getCategoryPageData = cache(async (
@@ -862,13 +892,24 @@ export const getCategoryPageData = cache(async (
             `&status=publish` +
             `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link,impact-category`;
     } else {
-        const category = await resolveCategory(slug);
-        if (!category) return null;
-        // category.name déjà disponible ici — plus besoin d'un 2e fetch pour l'avoir.
-        categoryName = category.name;
+        // Slug -> id via le map catégories caché 24h (1 requête partagée) plutôt
+        // qu'un resolveCategory par slug. Fallback resolveCategory si le slug
+        // n'est pas encore dans le map (catégorie récente).
+        const slugMap = await getCategorySlugMap();
+        let categoryId: number;
+        const mapped = slugMap.get(slug);
+        if (mapped) {
+            categoryId = mapped.id;
+            categoryName = mapped.name;
+        } else {
+            const category = await resolveCategory(slug);
+            if (!category) return null;
+            categoryId = category.id;
+            categoryName = category.name;
+        }
         url =
             `${WP_BASE}/posts` +
-            `?categories=${category.id}` +
+            `?categories=${categoryId}` +
             `&page=${page}` +
             `&per_page=${CATEGORY_PER_PAGE}` +
             `&status=publish` +

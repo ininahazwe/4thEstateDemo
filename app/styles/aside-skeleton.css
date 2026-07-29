@@ -1,0 +1,41 @@
+/* Skeleton de l'aside "Most Read" pendant le streaming (fallback Suspense). */
+
+.aside-skeleton-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 0;
+}
+
+.aside-skeleton-line {
+    height: 12px;
+    width: 100%;
+    border-radius: 4px;
+    background: linear-gradient(
+        90deg,
+        rgba(var(--siteTextRGB, 17, 17, 17), 0.06) 25%,
+        rgba(var(--siteTextRGB, 17, 17, 17), 0.12) 37%,
+        rgba(var(--siteTextRGB, 17, 17, 17), 0.06) 63%
+    );
+    background-size: 400% 100%;
+    animation: aside-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.aside-skeleton-line.short {
+    width: 65%;
+}
+
+@keyframes aside-skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
+[data-user-color-scheme='dark'] .aside-skeleton-line {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.06) 25%,
+        rgba(255, 255, 255, 0.12) 37%,
+        rgba(255, 255, 255, 0.06) 63%
+    );
+    background-size: 400% 100%;
+}
