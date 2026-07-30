@@ -6,73 +6,68 @@ import CategoryHeader from '@/app/components/Category/CategoryHeader';
 import CategoryRiverLoadMore from '@/app/components/Category/CategoryRiverLoadMore';
 import ArticleAsideStream from '@/app/components/Article/ArticleAsideStream';
 import ArticleAsideSkeleton from '@/app/components/Article/ArticleAsideSkeleton';
-import { getTagPageData, getTopTagSlugs, getBannerCategories, getLatestBannerArticles } from '@/app/services/wpApi';
+import {
+    getImpactCategoryPageData,
+    getAllImpactCategorySlugs,
+    getBannerCategories,
+    getLatestBannerArticles,
+} from '@/app/services/wpApi';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
-import Header from "@/app/components/Header/Header";
-import SubscriptionBanner from "@/app/components/SubscriptionBanner";
-import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
-import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
+import Header from '@/app/components/Header/Header';
+import SubscriptionBanner from '@/app/components/SubscriptionBanner';
+import SiteFooter from '@/app/components/SiteFooter/SiteFooter';
+import SiteBannerV2 from '@/app/components/SiteBannerV2/SiteBannerV2';
 
-// Miroir de /category/[slug]/page.tsx (mêmes optimisations : statique + ISR,
-// aside streamé, pas de section-tags), sur la taxonomie post_tag au lieu de
-// category. La pagination passe par "Load more" (/api/tag/[slug]/more), donc
-// aucune lecture de searchParams -> page STATIQUE.
+// Route dédiée aux termes de la taxonomie custom "impact-category" (Honours,
+// Accountability, …), calquée sur /category/[slug] mais sur ?impact-category=<id>.
+// URL alignée sur WordPress : /impact-category/<slug>.
 
-interface TagPageProps {
+interface ImpactCategoryPageProps {
     params: Promise<{ slug: string }>;
 }
 
 export const revalidate = 600;
 
-// Prébuild ISR des tags les PLUS UTILISÉS uniquement (top 100 par nombre
-// d'articles). Les tags rares se rendent à la demande (dynamicParams défaut
-// true). Contrairement aux catégories (~13, toutes prébuilies), les tags se
-// comptent en centaines -> prébuild borné.
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
     try {
-        const slugs = await getTopTagSlugs(100);
+        const slugs = await getAllImpactCategorySlugs();
         return slugs.map((slug) => ({ slug }));
     } catch {
         return [];
     }
 }
 
-export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ImpactCategoryPageProps): Promise<Metadata> {
     const { slug } = await params;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://thefourthestategh.com';
 
-    const data = await getTagPageData(slug);
+    const data = await getImpactCategoryPageData(slug);
     if (!data) return {};
 
     return {
         title: data.title,
-        description: `All articles tagged "${data.title}"`,
-        keywords: [data.title, "news", "articles"],
+        description: `Articles under ${data.title} — The Fourth Estate impact`,
+        keywords: [data.title, 'impact', 'news', 'articles'],
         openGraph: {
-            type: "website",
-            url: `${baseUrl}/tag/${slug}`,
+            type: 'website',
+            url: `${baseUrl}/impact-category/${slug}`,
             title: data.title,
-            description: `Articles tagged "${data.title}"`,
-            locale: "en_GH",
+            description: `Articles under ${data.title}`,
+            locale: 'en_GH',
         },
         alternates: {
-            canonical: `${baseUrl}/tag/${slug}`,
+            canonical: `${baseUrl}/impact-category/${slug}`,
         },
-        robots: {
-            index: true,
-            follow: true,
-        },
+        robots: { index: true, follow: true },
     };
 }
 
-export default async function TagPage({ params }: TagPageProps) {
+export default async function ImpactCategoryPage({ params }: ImpactCategoryPageProps) {
     const { slug } = await params;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://thefourthestategh.com';
 
-    // getMostReadArticles sorti du Promise.all -> fetché dans <ArticleAsideStream>
-    // et streamé via <Suspense>, comme la page catégorie.
     const [data, bannerArticles, bannerCategories] = await Promise.all([
-        getTagPageData(slug),
+        getImpactCategoryPageData(slug),
         getLatestBannerArticles(),
         getBannerCategories(BANNER_CATEGORY_SLUGS),
     ]);
@@ -80,24 +75,25 @@ export default async function TagPage({ params }: TagPageProps) {
     if (!data) return notFound();
 
     const breadcrumbSchema = {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
         itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: baseUrl },
-            { "@type": "ListItem", position: 2, name: data.title, item: `${baseUrl}/tag/${slug}` },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
+            { '@type': 'ListItem', position: 2, name: 'Our Impact', item: `${baseUrl}/category/our-impact` },
+            { '@type': 'ListItem', position: 3, name: data.title, item: `${baseUrl}/impact-category/${slug}` },
         ],
     };
 
     const collectionSchema = {
-        "@context": "https://schema.org",
-        "@type": "CollectionPage",
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
         name: data.title,
-        description: `Articles tagged "${data.title}"`,
-        url: `${baseUrl}/tag/${slug}`,
+        description: `Articles under ${data.title}`,
+        url: `${baseUrl}/impact-category/${slug}`,
         mainEntity: {
-            "@type": "ItemList",
+            '@type': 'ItemList',
             itemListElement: data.articles.slice(0, 10).map((article, idx) => ({
-                "@type": "ListItem",
+                '@type': 'ListItem',
                 position: idx + 1,
                 name: article.title,
                 url: article.href,
@@ -108,13 +104,13 @@ export default async function TagPage({ params }: TagPageProps) {
     return (
         <>
             <Script
-                id={`tag-breadcrumb-${slug}`}
+                id={`impact-breadcrumb-${slug}`}
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
                 strategy="afterInteractive"
             />
             <Script
-                id={`tag-collection-${slug}`}
+                id={`impact-collection-${slug}`}
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
                 strategy="afterInteractive"
@@ -125,16 +121,15 @@ export default async function TagPage({ params }: TagPageProps) {
             <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
 
             <main className="site-main" id="site-main">
-                <section className="section" data-columns="2" data-section={`tag-${data.slug}`}>
+                <section className="section" data-columns="2" data-section={data.slug}>
                     <div className="section-content" data-column="left">
-                        {/* tags={data.tags} est toujours [] côté tag -> pas de section-tags. */}
                         <CategoryHeader title={data.title} tags={data.tags} />
                         <CategoryRiverLoadMore
                             slug={slug}
                             initialArticles={data.articles}
                             initialHasMore={data.hasMore}
                             batchSize={5}
-                            apiBasePath="/api/tag"
+                            apiBasePath="/api/impact-category"
                         />
                     </div>
 

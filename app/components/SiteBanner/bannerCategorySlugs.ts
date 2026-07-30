@@ -12,5 +12,8 @@ export const BANNER_CATEGORY_SLUGS: string[] = [
     'human-rights',
     'our-impact',
     'opinions',
-    'honours',
+    // 'honours' retiré : c'est un terme de la taxonomie impact-category, pas une
+    // catégorie WP — getBannerCategories (qui interroge /categories) ne pouvait
+    // pas le résoudre et l'omettait silencieusement. Sa page vit sous
+    // /impact-category/honours.
 ];

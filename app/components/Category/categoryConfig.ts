@@ -22,11 +22,10 @@ export const CATEGORY_CONFIG: Record<string, CategoryConfigEntry> = {
         title: 'Anti-Corruption',
         seoDescription:
             'Investigations and reporting on corruption, accountability, and governance in Ghana.',
-        tags: [
-            { label: 'Politics', href: '/category/politics' },
-            { label: 'Governance', href: '/category/governance' },
-            { label: 'Ghana', href: '/category/ghana' },
-        ],
+        // Pas de `tags` ici : la section-tags est alimentée par les vrais tags WP
+        // les plus fréquents de la catégorie (getCategoryTags), pour afficher
+        // >= 15 tags au clic sur "See more". Ajouter `tags: [...]` ici seulement
+        // pour forcer une liste manuelle (override).
     },
 
     // 'human-right': {

@@ -7,7 +7,7 @@ import { type AntiCorruptionArticle } from '../components/AntiCorruption/Types';
 import { type OurImpactArticle }      from '../components/Impact/Types';
 import {type StoriesArticle} from "../components/Stories/types";
 import {type HumanRightsArticle} from "../components/HumanRights/Types";
-import {CategoryArticle, CategoryData} from "@/app/components/Category/Types";
+import {CategoryArticle, CategoryData, CategoryTag} from "@/app/components/Category/Types";
 import {getCategoryConfig} from "@/app/components/Category/categoryConfig";
 import { decode } from 'html-entities';
 
@@ -869,6 +869,48 @@ export async function getAllCategorySlugs(): Promise<string[]> {
 
 const CATEGORY_PER_PAGE = 13;
 
+/**
+ * Tags "section-tags" d'une catégorie = vrais tags WP les plus fréquents parmi
+ * ses posts récents, ordonnés par fréquence décroissante. Deux requêtes cachées
+ * 1h : (1) tags des 50 derniers posts de la catégorie, (2) résolution id ->
+ * {slug,name}. Chaque tag pointe vers /tag/<slug>. `limit` >= 15 pour couvrir
+ * l'attente "au moins les 15 premiers tags" au clic sur See more.
+ */
+async function getCategoryTags(categoryId: number, limit = 20): Promise<CategoryTag[]> {
+    const res = await fetch(
+        `${WP_BASE}/posts?categories=${categoryId}&per_page=50&status=publish&_fields=tags`,
+        { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return [];
+
+    const posts: Array<{ tags?: number[] }> = await res.json();
+    const counts = new Map<number, number>();
+    for (const p of posts) {
+        for (const t of p.tags ?? []) counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    if (!counts.size) return [];
+
+    const topIds = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([id]) => id);
+
+    const tagRes = await fetch(
+        `${WP_BASE}/tags?include=${topIds.join(',')}&per_page=${topIds.length}&_fields=id,slug,name`,
+        { next: { revalidate: 3600 } }
+    );
+    if (!tagRes.ok) return [];
+
+    const terms: Array<{ id: number; slug: string; name: string }> = await tagRes.json();
+    const byId = new Map(terms.map((t) => [t.id, t]));
+
+    // Remappe dans l'ordre de fréquence (WP renvoie ?include= trié par id).
+    return topIds
+        .map((id) => byId.get(id))
+        .filter((t): t is { id: number; slug: string; name: string } => !!t)
+        .map((t) => ({ label: decode(t.name), href: `/tag/${t.slug}` }));
+}
+
 export const getCategoryPageData = cache(async (
     slug: string,
     page: number = 1
@@ -879,6 +921,7 @@ export const getCategoryPageData = cache(async (
 
     let categoryName: string;
     let url: string;
+    let categoryId: number | null = null;
 
     if (isOurImpact) {
         const impactCategoryIds = await getImpactCategoryIds();
@@ -896,7 +939,6 @@ export const getCategoryPageData = cache(async (
         // qu'un resolveCategory par slug. Fallback resolveCategory si le slug
         // n'est pas encore dans le map (catégorie récente).
         const slugMap = await getCategorySlugMap();
-        let categoryId: number;
         const mapped = slugMap.get(slug);
         if (mapped) {
             categoryId = mapped.id;
@@ -919,7 +961,17 @@ export const getCategoryPageData = cache(async (
     const config = getCategoryConfig(slug);
     const title = config.title ?? categoryName;
 
-    const res = await fetch(url, { next: { revalidate: 600 } });
+    // Tags de la section-tags : config.tags si fourni (override manuel), sinon
+    // les vrais tags WP les plus fréquents de la catégorie (>=15 visés). Fetch
+    // en parallèle des posts pour ne pas rallonger le chemin critique.
+    const [res, sectionTags] = await Promise.all([
+        fetch(url, { next: { revalidate: 600 } }),
+        config.tags
+            ? Promise.resolve<CategoryTag[]>(config.tags)
+            : (!isOurImpact && categoryId != null
+                ? getCategoryTags(categoryId)
+                : Promise.resolve<CategoryTag[]>([])),
+    ]);
 
     if (!res.ok) {
         if (res.status === 400) {
@@ -928,7 +980,7 @@ export const getCategoryPageData = cache(async (
                 title,
                 slug,
                 seoDescription: config.seoDescription,
-                tags: config.tags ?? [],
+                tags: sectionTags,
                 articles: [],
                 hasMore: false,
                 pagination: { currentPage: page, totalPages: 0, basePath: `/category/${slug}` },
@@ -948,7 +1000,7 @@ export const getCategoryPageData = cache(async (
             title,
             slug,
             seoDescription: config.seoDescription,
-            tags: config.tags ?? [],
+            tags: sectionTags,
             articles: [],
             hasMore: page < totalPages,
             pagination: { currentPage: page, totalPages, basePath: `/category/${slug}` },
@@ -999,7 +1051,7 @@ export const getCategoryPageData = cache(async (
         title,
         slug,
         seoDescription: config.seoDescription,
-        tags: config.tags ?? [],
+        tags: sectionTags,
         articles,
         hasMore: page < totalPages,
         pagination: {
@@ -1080,6 +1132,162 @@ export const getCategoryArticlesOffset = cache(async (
 });
 
 // ---------------------------------------------------------------------------
+// impact-category — /impact-category/[slug]
+//
+// Taxonomie custom "impact-category" (termes de "Our Impact" : Honours,
+// Accountability, Government Action, …). Miroir de getCategoryPageData /
+// getCategoryArticlesOffset mais sur ?impact-category=<id> au lieu de
+// ?categories=<id>. Route dédiée /impact-category/[slug] calquée sur la
+// structure d'URL WordPress (/impact-category/honours/). Réutilise le type
+// CategoryData et le composant CategoryRiverLoadMore (apiBasePath dédié).
+// ---------------------------------------------------------------------------
+
+interface WPImpactCategoryResolved {
+    id: number;
+    name: string;
+    slug: string;
+}
+
+/**
+ * Map slug -> {id, name} de tous les termes impact-category, en 1 requête
+ * cachée 24h (même stratégie anti-waterfall que getCategorySlugMap).
+ */
+export const getImpactCategorySlugMap = cache(async (): Promise<Map<string, { id: number; name: string }>> => {
+    const map = new Map<string, { id: number; name: string }>();
+    const res = await fetch(
+        `${WP_BASE}/impact-category?per_page=100&_fields=id,slug,name`,
+        { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return map;
+    const terms: Array<{ id: number; slug: string; name: string }> = await res.json();
+    terms.forEach((t) => map.set(t.slug, { id: t.id, name: decode(t.name) }));
+    return map;
+});
+
+export async function getAllImpactCategorySlugs(): Promise<string[]> {
+    const map = await getImpactCategorySlugMap();
+    return Array.from(map.keys());
+}
+
+async function resolveImpactCategory(slug: string): Promise<WPImpactCategoryResolved | null> {
+    const map = await getImpactCategorySlugMap();
+    const m = map.get(slug);
+    if (m) return { id: m.id, name: m.name, slug };
+    // Fallback : terme récent absent du map caché.
+    const res = await fetch(`${WP_BASE}/impact-category?slug=${slug}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const terms: WPImpactCategoryResolved[] = await res.json();
+    const t = terms[0];
+    return t ? { ...t, name: decode(t.name) } : null;
+}
+
+export const getImpactCategoryPageData = cache(async (slug: string): Promise<CategoryData | null> => {
+    const term = await resolveImpactCategory(slug);
+    if (!term) return null;
+
+    const basePath = `/impact-category/${slug}`;
+    const emptyBase = { title: term.name, slug, tags: [] as CategoryTag[], articles: [] as CategoryArticle[] };
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?impact-category=${term.id}` +
+        `&page=1` +
+        `&per_page=${CATEGORY_PER_PAGE}` +
+        `&status=publish` +
+        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+
+    const res = await fetch(url, { next: { revalidate: 600 } });
+
+    if (!res.ok) {
+        if (res.status === 400) {
+            return { ...emptyBase, hasMore: false, pagination: { currentPage: 1, totalPages: 0, basePath } };
+        }
+        console.error(`Erreur wpApi [getImpactCategoryPageData]: ${res.status}`);
+        return null;
+    }
+
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '1');
+    const rawPosts: WPPost[] = await res.json();
+    const posts = rawPosts.filter((p) => (p as WPPost & { format?: string }).format !== 'video');
+
+    if (!posts.length) {
+        return { ...emptyBase, hasMore: false, pagination: { currentPage: 1, totalPages, basePath } };
+    }
+
+    const { mediaIds } = extractIds(posts);
+    const mediaMap = await fetchMediaBatch(mediaIds);
+
+    const articles: CategoryArticle[] = posts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source: term.name,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(index),
+        };
+        if (media) article.image = buildImage(media, index);
+        return article;
+    });
+
+    return {
+        ...emptyBase,
+        articles,
+        hasMore: 1 < totalPages,
+        pagination: { currentPage: 1, totalPages, basePath },
+    };
+});
+
+export const getImpactCategoryArticlesOffset = cache(async (
+    slug: string,
+    offset: number,
+    limit: number = 5
+): Promise<{ articles: CategoryArticle[]; hasMore: boolean }> => {
+    const term = await resolveImpactCategory(slug);
+    if (!term) return { articles: [], hasMore: false };
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?impact-category=${term.id}` +
+        `&offset=${offset}` +
+        `&per_page=${limit + 1}` +
+        `&status=publish` +
+        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+
+    const res = await fetch(url, { next: { revalidate: 600 } });
+    if (!res.ok) return { articles: [], hasMore: false };
+
+    const rawPosts: WPPost[] = await res.json();
+    const posts = rawPosts
+        .filter((p) => (p as WPPost & { format?: string }).format !== 'video')
+        .slice(0, limit + 1);
+
+    const hasMore = posts.length > limit;
+    const pagePosts = posts.slice(0, limit);
+    if (!pagePosts.length) return { articles: [], hasMore: false };
+
+    const { mediaIds } = extractIds(pagePosts);
+    const mediaMap = await fetchMediaBatch(mediaIds);
+
+    const articles: CategoryArticle[] = pagePosts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source: term.name,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(offset + index),
+        };
+        if (media) article.image = buildImage(media, offset + index);
+        return article;
+    });
+
+    return { articles, hasMore };
+});
+
+// ---------------------------------------------------------------------------
 // getTagPageData / getTagArticlesOffset — /tag/[slug]
 //
 // Miroir exact de getCategoryPageData/getCategoryArticlesOffset, mais sur la
@@ -1100,6 +1308,23 @@ async function resolveTag(slug: string): Promise<WPTagResolved | null> {
     const tags: WPTagResolved[] = await res.json();
     const tag = tags[0];
     return tag ? { ...tag, name: decode(tag.name) } : null;
+}
+
+/**
+ * Slugs des tags les plus utilisés, pour generateStaticParams (prébuild ISR de
+ * la page /tag/[slug]). Contrairement aux catégories (~13, map complet caché),
+ * les tags se comptent en centaines/milliers : on ne prébuild que le top `limit`
+ * par nombre d'articles ; les tags rares restent rendus à la demande
+ * (dynamicParams). `hide_empty=true` exclut les tags sans article publié.
+ */
+export async function getTopTagSlugs(limit = 100): Promise<string[]> {
+    const res = await fetch(
+        `${WP_BASE}/tags?orderby=count&order=desc&hide_empty=true&per_page=${limit}&_fields=slug`,
+        { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return [];
+    const tags: Array<{ slug: string }> = await res.json();
+    return tags.map((t) => t.slug);
 }
 
 const TAG_PER_PAGE = 13;

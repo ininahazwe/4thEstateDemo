@@ -872,9 +872,13 @@ html:not(.v-app) .site-modal .encadre-text>ul a:hover {
 .article-secondary .article-tags .tags-list .item:not(:last-child) {
     margin-right:4px
 }
+
+a.tags-list{
+    padding: 10px 5px !important;
+}
+
 .article-secondary .article-tags .tags-list .toggle-tags {
     appearance:none;
-    background:none;
     background-color:var(--siteBackground);
     border:0;
     bottom:4px;
@@ -889,7 +893,6 @@ html:not(.v-app) .site-modal .encadre-text>ul a:hover {
 .article-secondary .article-tags .tags-list .toggle-tags span {
     background:rgba(var(--siteTextRGB),.5);
     background-clip:text;
-    font-family:var(--sans);
     font-size:14px;
     font-weight:600;
     -webkit-text-fill-color:#0000

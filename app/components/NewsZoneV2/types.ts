@@ -1,12 +1,3 @@
-export interface ArticleImage {
-    src: string;
-    srcSet?: string;
-    width: number;
-    height: number;
-    blurDataURL?: string;
-    fetchPriority?: "high" | "low" | "auto";
-}
-
 export interface ArticleData {
     id: string;
     href: string;

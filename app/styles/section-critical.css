@@ -147,7 +147,7 @@
     white-space:normal
 }
 .section-tags .tags-list.expanded .toggle-tags:before {
-    content:"Voir moins"
+    content:"See less"
 }
 .section-illustration {
     border-radius:var(--radius);

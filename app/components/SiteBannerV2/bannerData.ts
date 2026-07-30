@@ -10,13 +10,6 @@ export interface BannerTag {
     icon?: any; // Ajustement ici (voir note ci-dessous)
 }
 
-export interface HotArticle {
-    id: string | number;
-    time: string;
-    title: string;
-    href: string;
-}
-
 /**
  * "The Fourth Estate TV" et "Podcasts" ne sont pas des catégories WordPress — entrées fixes,
  * affichées après les tags dynamiques (résolus via getBannerCategories).

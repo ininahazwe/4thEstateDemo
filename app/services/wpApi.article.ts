@@ -295,27 +295,3 @@ export async function getMostReadArticles(count = 4): Promise<WpArticleCard[]> {
         return [];
     }
 }
-
-/**
- * Récupère des articles liés (alias de getReadMoreArticles, conservé pour compatibilité).
- */
-export async function getRelatedArticles(
-    currentSlug: string,
-    count = 3
-): Promise<WpArticleCard[]> {
-    try {
-        const res = await fetch(
-            `${WP_API}/posts?per_page=${count + 1}&_embed=1`,
-            { next: { revalidate: 300 } }
-        );
-        if (!res.ok) return [];
-
-        const posts = (await res.json()) as Array<Record<string, unknown>>;
-        return posts
-            .filter((p) => p.slug !== currentSlug)
-            .slice(0, count)
-            .map(buildArticleCard);
-    } catch {
-        return [];
-    }
-}

@@ -1,4 +1,5 @@
 import { CategoryTag } from './Types';
+import CategoryTags from './CategoryTags';
 
 interface CategoryHeaderProps {
     title: string;
@@ -12,18 +13,10 @@ export default function CategoryHeader({ title, tags }: CategoryHeaderProps) {
                 <h1 className="page-title">{title}</h1>
             </div>
 
-            {tags.length > 0 && (
-                <div className="section-tags">
-                    <div className="tags-list expandable">
-                        {tags.map((tag) => (
-                            <a key={tag.href} className="item" data-model="button" data-icon="tag" href={tag.href}>
-                                {tag.label}
-                            </a>
-                        ))}
-                        <button className="toggle-tags" title="Show more" />
-                    </div>
-                </div>
-            )}
+            {/* section-tags rendu par CategoryTags (client) : le bouton See more/less
+                y bascule la classe .expanded. Ne rend rien si tags est vide (ex:
+                page /tag/[slug] qui passe toujours tags=[]). */}
+            <CategoryTags tags={tags} />
         </>
     );
 }
