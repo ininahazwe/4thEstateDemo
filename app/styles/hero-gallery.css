@@ -61,7 +61,7 @@ html:not(.v-app) .hero-gallery-card:hover .hero-gallery-title {
 @media screen and (max-width: 759px) {
     .hero-gallery {
         grid-auto-flow: column;
-        grid-auto-columns: 70%;
+        grid-auto-columns: 100%;
         grid-template-columns: none;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
