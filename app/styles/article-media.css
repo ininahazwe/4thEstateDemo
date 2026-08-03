@@ -39,7 +39,7 @@
     --am-measure: 720px;        /* largeur de lecture confortable */
     --am-gap: 28px;
     width: 100%;
-    color: var(--siteText);
+    /*color: var(--siteText);*/
     background: var(--siteBackground);
     padding-bottom: 80px;
 }
@@ -83,13 +83,12 @@
 .article-media .am-hero-media img {
     display: block;
     width: 100%;
-    height: auto;
+    min-height: 80vh;
     aspect-ratio: 4 / 3;
     object-fit: cover;
 }
 
 .article-media .am-meta {
-    font-family: var(--sans);
     font-size: 13px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -98,11 +97,9 @@
 }
 
 .article-media .am-title {
-    font-family: var(--fontSans);
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.01em;
-    color: var(--siteBanner);
     font-size: clamp(2.2rem, 4.4vw, 3.8rem);
     margin: 0 0 28px;
 }
@@ -123,7 +120,6 @@
 }
 
 .article-media .am-byline-text {
-    font-family: var(--sans);
     line-height: 1.3;
 }
 
@@ -152,7 +148,6 @@
 }
 
 .article-media .am-figcaption {
-    font-family: var(--sans);
     font-size: 13px;
     color: rgba(var(--siteTextRGB), 0.6);
     max-width: var(--am-measure);
@@ -180,16 +175,13 @@
 
 /* ---- Blocs de texte ---- */
 .article-media .am-heading {
-    font-family: var(--fontSans);
     font-weight: 800;
     line-height: 1.1;
-    color: var(--siteBanner);
     font-size: clamp(1.5rem, 3vw, 2rem);
     margin: 8px 0 20px;
 }
 
 .article-media .am-body p {
-    font-family: var(--serif);
     font-size: 1.075rem;
     line-height: 1.7;
     margin: 0 0 1.15em;
@@ -202,15 +194,15 @@
 }
 
 .article-media .am-list {
-    font-family: var(--serif);
     font-size: 1.075rem;
     line-height: 1.7;
     margin: 0 0 1.15em;
     padding-left: 1.2em;
+    list-style: disc;
 }
 
 .article-media .am-list li {
-    margin-bottom: 0.5em;
+    margin-bottom: 0.3em;
 }
 
 /* ---- Rail de partage ---- */
@@ -223,7 +215,6 @@
 }
 
 .article-media .am-share-label {
-    font-family: var(--sans);
     font-size: 12px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -266,7 +257,6 @@
     height: 84px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.92);
-    color: var(--siteBanner);
     border: 0;
     cursor: pointer;
     display: grid;
@@ -278,7 +268,146 @@
     margin-left: 4px;
 }
 
+/* ---- Section podcast (embed Spotify, click-to-load) ----
+   Bande pleine largeur qui tranche avec le fil de lecture, contenu recentré
+   à l'intérieur. L'iframe n'est montée qu'au clic (cf. ArticleMediaPodcast). */
+.article-media .am-podcast {
+    width: 100%;
+    margin: 56px 0;
+    padding: 48px 20px;
+    background: var(--siteLogo);
+    color: #fff;
+}
+
+.article-media .am-podcast-inner {
+    max-width: 900px;
+    margin-inline: auto;
+}
+
+.article-media .am-podcast-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: 20px;
+}
+
+.article-media .am-podcast-card {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 28px;
+    align-items: center;
+}
+
+.article-media .am-podcast-cover {
+    position: relative;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: 8px;
+    overflow: hidden;
+    line-height: 0;
+}
+
+.article-media .am-podcast-cover img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+.article-media .am-podcast-play {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--siteBanner);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+    transition: transform 0.15s ease;
+}
+
+.article-media .am-podcast-cover:hover .am-podcast-play {
+    transform: scale(1.06);
+}
+
+.article-media .am-podcast-show {
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 8px;
+}
+
+.article-media .am-podcast-title {
+    font-weight: 800;
+    line-height: 1.15;
+    font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+    margin: 0 0 12px;
+}
+
+.article-media .am-podcast-desc {
+    line-height: 1.6;
+    opacity: 0.85;
+    margin: 0 0 14px;
+}
+
+.article-media .am-podcast-duration {
+    font-size: 13px;
+    opacity: 0.7;
+    margin-bottom: 18px;
+}
+
+.article-media .am-podcast-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 0;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--siteBanner);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.article-media .am-podcast-cta:hover {
+    background: rgba(255, 255, 255, 0.88);
+}
+
+/* Embed Spotify une fois chargé. */
+.article-media .am-podcast-embed {
+    width: 100%;
+    height: 232px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.article-media .am-podcast-embed iframe {
+    display: block;
+    border: 0;
+}
+
 /* ---- Responsive ---- */
+@media (max-width: 900px) {
+    .article-media .am-podcast-card {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        justify-items: start;
+    }
+    .article-media .am-podcast-cover {
+        width: 180px;
+    }
+}
+
 @media (max-width: 900px) {
     /* Hero empilé : image pleine largeur au-dessus, texte en dessous
        (plus de chevauchement, illisible en étroit). */

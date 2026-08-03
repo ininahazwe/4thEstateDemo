@@ -39,13 +39,19 @@
 
 .hero-gallery-title {
     font-weight: 700;
-    font-size: 19px;
-    line-height: 1.25;
+    font-size: 28px;
+    line-height: 1.05;
     color: #fff;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 5;
     overflow: hidden;
+    transition: 0.3s ease-in-out;
+}
+
+.hero-gallery-title:hover {
+    -webkit-line-clamp: 7;
+    transform:translateY(1px)
 }
 
 .hero-gallery-date {

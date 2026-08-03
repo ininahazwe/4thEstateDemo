@@ -1,5 +1,6 @@
 import { FaXTwitter, FaFacebookF, FaLink } from 'react-icons/fa6';
 import { Play } from 'lucide-react';
+import ArticleMediaPodcast from './ArticleMediaPodcast';
 
 // ---------------------------------------------------------------------------
 // ArticleMediaLayout — 2e type de page article (orienté audio-visuel).
@@ -15,7 +16,16 @@ export type MediaBlock =
     | { type: 'list'; items: string[] }
     | { type: 'image'; src: string; alt: string; caption?: string }
     | { type: 'gallery'; images: { src: string; alt: string }[] }
-    | { type: 'player'; poster: string; alt: string };
+    | { type: 'player'; poster: string; alt: string }
+    | {
+          type: 'podcast';
+          episodeId: string;   // ID Spotify (open.spotify.com/episode/<id>)
+          title: string;
+          show: string;
+          description: string;
+          cover: string;
+          duration?: string;
+      };
 
 export interface ArticleMediaData {
     category: string;
@@ -80,6 +90,17 @@ function Block({ block }: { block: MediaBlock }) {
                     ))}
                 </div>
             );
+        case 'podcast':
+            return (
+                <ArticleMediaPodcast
+                    episodeId={block.episodeId}
+                    title={block.title}
+                    show={block.show}
+                    description={block.description}
+                    cover={block.cover}
+                    duration={block.duration}
+                />
+            );
         case 'player':
             return (
                 <div className="am-player">
@@ -103,7 +124,7 @@ export default function ArticleMediaLayout({ article }: { article: ArticleMediaD
             <header className="am-hero">
                 <div className="am-hero-text">
                     <div className="am-meta">
-                        {article.category} · {article.date}
+                        {/*{article.category} · {article.date}*/}
                     </div>
                     <h1 className="am-title">{article.title}</h1>
                     <div className="am-byline">

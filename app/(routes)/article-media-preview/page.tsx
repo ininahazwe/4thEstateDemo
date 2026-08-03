@@ -44,12 +44,12 @@ const DEMO: ArticleMediaData = {
             poster: img('doc-poster', 1800, 1013),
             alt: 'Documentary trailer poster',
         },
-        {
+        /*{
             type: 'image',
             src: img('field-team', 1800, 1000),
             alt: 'Three members of the field team standing in a green valley',
             caption: 'The field team during the second reporting trip. Names withheld at their request.',
-        },
+        },*/
         {
             type: 'heading',
             text: 'Neighbours & Consequences',
@@ -93,6 +93,18 @@ const DEMO: ArticleMediaData = {
                 'For this piece, the team followed a single lease from signature to the water’s edge. Every claim on screen is anchored to a document you can read, or a person who agreed to be named.',
                 'What follows is a selection of frames from the final cut — the moments that survived the edit because they carried the story forward on their own.',
             ],
+        },
+        {
+            type: 'podcast',
+            // ⚠️ Remplacer par un vrai ID d'épisode Spotify pour voir l'embed
+            // réel (segment final de open.spotify.com/episode/<id>).
+            episodeId: '4rOoJ6Egrf8K2IrywzwOMk',
+            show: 'The Fourth Estate Podcast',
+            title: 'Episode 12 — What the Lagoon Remembers',
+            description:
+                'The reporting team unpacks how a leaked lease turned into a two-year visual investigation, and what it cost the communities who spoke on the record.',
+            cover: img('podcast-cover', 600, 600),
+            duration: '38 min',
         },
         {
             type: 'gallery',
