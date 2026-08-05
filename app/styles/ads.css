@@ -1,0 +1,28 @@
+/* -------------------------------------------------------------------------
+ * ads.css — emplacements pub (démo Google Ad). Fichier override autonome.
+ * L'outline + fond + label "Publicité" viennent déjà du thème
+ * (base.css: .dfpcontainer #pave_haut:not(:empty)) — ce fichier ne gère
+ * que le rectangle de démo lui-même, taille standard skyscraper 300x600.
+ * ---------------------------------------------------------------------------
+ */
+
+.google-ad-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 300px;
+    height: 600px;
+    max-width: 100%;
+    margin: 0 auto;
+    background: #e2e2e2;
+    color: #6b6b6b;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+[data-user-color-scheme='dark'] .google-ad-slot {
+    background: #2a2a2a;
+    color: #9a9a9a;
+}

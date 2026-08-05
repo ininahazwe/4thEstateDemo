@@ -312,7 +312,8 @@ html:not(.v-app) .home .zone a.section-title:hover {
     }
 }
 .home .zone-actu .zone-aside {
-    margin-top:20px
+    margin-top:20px;
+    background: #00000014;
 }
 .home .zone-live .item>a {
     display:block;

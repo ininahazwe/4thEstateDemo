@@ -1,6 +1,7 @@
 import ArticleCard from './ArticleCard';
 import { type ArticleData } from './types';
 import SpecialOfferBanner from "@/app/components/GeneralNews/SpecialOfferBanner";
+import GoogleAdSlot from "@/app/components/Ads/GoogleAdSlot";
 
 interface NewsZoneProps {
     zone1Articles: ArticleData[];
@@ -60,6 +61,9 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                 ))}
                 <SpecialOfferBanner />
             </div>
+
+            {/* Colonne pub (data-column="right", 300px @≥1000px — cf. base.css [data-columns="2"]) */}
+            <GoogleAdSlot />
         </section>
     );
 }
