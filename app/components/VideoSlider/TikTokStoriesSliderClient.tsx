@@ -30,7 +30,7 @@ export default function TikTokStoriesSliderClient({ items }: TikTokStoriesSlider
 
     return (
         <section className="zone zone-type zone-insta">
-            <h3 className="section-title">Video Stories</h3>
+            <h3 className="section-title">Reels</h3>
 
             <div className="wrap">
                 <div id="stories">

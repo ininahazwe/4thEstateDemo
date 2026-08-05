@@ -28,7 +28,7 @@ export default function VideoZoneClient({ items }: VideoZoneClientProps) {
             <div className="zone-video-inner">
                 <div className="zone-video-label">
                     <span className="zone-video-icon" aria-hidden="true">▶</span>
-                    Vidéo
+                    Videos
                 </div>
 
                 <div className="zone-video-player">
