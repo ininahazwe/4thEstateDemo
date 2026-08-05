@@ -48,7 +48,6 @@ export const sectionsGroup: FooterSection[] = [
         boxClass: 'links-box links-services',
         title: 'Highlights',
         links: [
-            { label: 'Newsletter',     href: '/newsletter',     ithal: 'newsletter' },
             { label: 'Podcasts',       href: '/podcasts',       ithal: 'podcasts' },
         ],
     },
@@ -57,6 +56,7 @@ export const sectionsGroup: FooterSection[] = [
         title: 'Our sites',
         links: [
             { label: 'MFWA', href: 'https://mfwa.org', target: '_blank', rel: 'noopener', ithal: 'site-main' },
+            { label: 'Archives', href: '/archives', rel: 'noopener', ithal: 'site-main' },
         ],
     },
 ];

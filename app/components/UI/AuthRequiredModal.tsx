@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { WP_REGISTER_URL } from "@/lib/site-links";
 
 interface AuthRequiredModalProps {
@@ -45,7 +46,12 @@ export default function AuthRequiredModal({
 
     if (!open) return null;
 
-    return (
+    // Portal vers document.body : le bouton bookmark vit souvent dans une
+    // carte dont le survol pose transform:translateY (base.css), ce qui crée
+    // un contexte d'empilement local et coince une modal position:fixed
+    // dedans (elle apparaît alors à moitié sous d'autres cartes). Le portal
+    // échappe à tout ancêtre, quel que soit le composant appelant.
+    return createPortal(
         <div
             className="tfe-auth-modal-overlay"
             role="presentation"
@@ -83,6 +89,7 @@ export default function AuthRequiredModal({
                     justify-content: center;
                     z-index: 9999;
                     padding: 16px;
+                    animation: tfe-auth-fade-in 0.15s ease;
                 }
                 .tfe-auth-modal {
                     position: relative;
@@ -93,6 +100,27 @@ export default function AuthRequiredModal({
                     border-radius: 0;
                     padding: 32px 28px 28px;
                     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+                    animation: tfe-auth-modal-in 0.18s ease;
+                }
+                @keyframes tfe-auth-fade-in {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes tfe-auth-modal-in {
+                    from {
+                        opacity: 0;
+                        transform: translateY(8px) scale(0.98);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .tfe-auth-modal-overlay,
+                    .tfe-auth-modal {
+                        animation: none;
+                    }
                 }
                 .tfe-auth-modal__close {
                     position: absolute;
@@ -159,6 +187,7 @@ export default function AuthRequiredModal({
                     background: #f7eaea;
                 }
             `}</style>
-        </div>
+        </div>,
+        document.body
     );
 }

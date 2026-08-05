@@ -1534,7 +1534,8 @@ html:not(.v-app) [data-model^=story]:hover {
 }
 html {
     font-family:var(--sans);
-    font-size:16px
+    font-size:16px;
+    scrollbar-gutter:stable
 }
 html:not(.dev) [data-dev] {
     display:none
