@@ -1882,8 +1882,11 @@ label.item-action input:not(:checked)~span[data-icon=toggle-large-off] {
 @media screen and (max-width:759px) {
     .site-header .header-hebdo {
         /*pointer-events:none*/
-        flex-grow: 1;
+        flex-grow: initial;
         text-align: right;
+    }
+    .header-welcome p{
+        display: none;
     }
     .site-header .header-logo {
         width: 180px;
