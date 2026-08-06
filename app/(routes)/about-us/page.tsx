@@ -45,7 +45,7 @@ export default async function AboutUsPage() {
         <>
             <Header />
 
-            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} showHighlights={false} />
 
             <main className="site-main" id="site-main">
                 <section className="section" data-columns="1" data-section="about-us">

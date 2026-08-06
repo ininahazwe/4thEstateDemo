@@ -570,6 +570,9 @@ html:not(.v-app) .author-infos a:hover {
     .stories .stories-river {
         justify-content:center
     }
+    .stories .stories-river article.item {
+        min-width:340px !important;
+    }
 }
 .stories .stories-river article.item {
     display:inline-block;

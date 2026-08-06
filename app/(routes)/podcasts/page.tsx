@@ -97,7 +97,7 @@ export default async function PodcastPage() {
 
             {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
 
-            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} showHighlights={false} />
 
             <main className="site-main" id="site-main">
                 <section className="stories">

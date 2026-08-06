@@ -122,7 +122,7 @@ export default async function TagPage({ params }: TagPageProps) {
 
             <Header />
 
-            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} showHighlights={false} />
 
             <main className="site-main" id="site-main">
                 <section className="section" data-columns="2" data-section={`tag-${data.slug}`}>
