@@ -129,10 +129,11 @@ export default function BookmarkButton({
         <>
             <button
                 type="button"
-                className={`bookmark${className ? ` ${className}` : ""}`}
+                className={`favorites${className ? ` ${className}` : ""}`}
                 data-in-favorites={saved}
                 aria-pressed={saved}
                 disabled={pending}
+                data-model="button"
                 title={showError ? "Something went wrong. Please try again." : label}
                 onClick={handleClick}
             >
