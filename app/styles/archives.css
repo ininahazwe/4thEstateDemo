@@ -354,3 +354,9 @@ button.archives-month-item.is-loading {
     );
     background-size: 400% 100%;
 }
+
+@media screen and (max-width:759px) {
+    .archives-list-sep {
+        display: none;
+    }
+}

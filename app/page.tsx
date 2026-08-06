@@ -84,12 +84,12 @@ export default async function App() {
 
                             <Hero />
 
+                            <OurImpactZone articles={impactNews} />
+
                             <NewsZone
                                 zone1Articles={zone1}
                                 zone2Articles={zone2}
                             />
-
-                            <OurImpactZone articles={impactNews} />
 
                             <GeneralNewsZone articles={generalNews} />
 

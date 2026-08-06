@@ -30,11 +30,21 @@ interface ArticlePageProps {
 // dans wpApi.ts — garde les deux logiques alignées (même calcul, dupliqué
 // volontairement ici car generateStaticParams n'a pas accès aux helpers
 // internes non-exportés de wpApi.ts).
+//
+// per_page volontairement bas (20, pas 100) : chaque article pré-construit
+// coûte 2 requêtes WP séquentielles et non-partageables entre pages
+// (getArticleBySlug + getReadMoreArticles, propres au slug/tags de l'article)
+// — sur l'hébergement mutualisé actuel, ça fait grimper "Build Next.js" en CI
+// de 2 à 20 min à mesure que le nombre d'articles grossit. dynamicParams reste
+// à true (défaut Next) : un article hors de cette liste se rend à la demande
+// au premier visiteur puis reste en cache ISR — zéro perte de contenu,
+// juste un premier chargement un peu plus lent sur les articles anciens/peu
+// visités au lieu de payer leur pré-rendu à CHAQUE déploiement.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateStaticParams() {
     try {
         const res = await fetch(
-            `${WP_API}/posts?per_page=100&_fields=slug,date&status=publish`
+            `${WP_API}/posts?per_page=20&_fields=slug,date&status=publish`
         );
         if (!res.ok) return [];
         const posts = (await res.json()) as Array<{ slug: string; date: string }>;
@@ -272,13 +282,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                         <article className="article">
                             <header className="article-header" data-column="full">
                                 <Breadcrumb items={breadcrumbs} />
-                                <ArticleHeader
+                                {/* <ArticleHeader
                                     strapline={article.strapline}
                                     title={article.title}
                                     category={article.category}
                                 />
 
-                                {/* Auteur — même markup que ArticleBody (.article-authors-vo) */}
+                                Auteur — même markup que ArticleBody (.article-authors-vo) */}
                                 <div className="article-authors-vo">
                                     <div className="article-authors">
                                         <div className="default-authors" style={{marginBottom:"20px"}}>

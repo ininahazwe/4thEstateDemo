@@ -51,7 +51,7 @@ export default function LoginForm() {
         <>
             <div className="card">
             <h1 className="title">Sign In</h1>
-            <p className="subtitle">Access your The Fourth Estate account.</p>
+            <p className="subtitle">Access your membership account.</p>
 
             {error && (
                 <div className="error" role="alert">

@@ -6,10 +6,14 @@ interface PaginationProps {
     month: number;
 }
 
-/** Même markup que la pagination /search, base d'URL /archives/[year]/[month]. */
+/**
+ * Même markup que la pagination /search, base d'URL /archives/[year]/[month].
+ * Segment /page/N (pas ?page=N) : garde la route éligible à l'ISR classique
+ * (searchParams désactive tout cache côté serveur — voir archiveMonthShared.tsx).
+ */
 function buildPageHref(page: number, year: number, month: number): string {
     const base = `/archives/${year}/${String(month).padStart(2, '0')}`;
-    return page > 1 ? `${base}?page=${page}` : base;
+    return page > 1 ? `${base}/page/${page}` : base;
 }
 
 export default function Pagination({ pagination, year, month }: PaginationProps) {

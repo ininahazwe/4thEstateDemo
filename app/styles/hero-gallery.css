@@ -67,13 +67,17 @@ html:not(.v-app) .hero-gallery-card:hover .hero-gallery-title {
 @media screen and (max-width: 759px) {
     .hero-gallery {
         grid-auto-flow: column;
-        grid-auto-columns: 100%;
+        /* 88% (pas 100%) : la carte suivante dépasse d'un bout à droite,
+           seul indice visuel qu'il y en a d'autres — pas de slider/dots. */
+        grid-auto-columns: 88%;
         grid-template-columns: none;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         scrollbar-width: none;
         -ms-overflow-style: none;
         padding-bottom: 2px;
+        margin-left: calc(50% - 50vw) !important;
+        margin-right: calc(50% - 50vw) !important;
     }
     .hero-gallery::-webkit-scrollbar {
         display: none !important;

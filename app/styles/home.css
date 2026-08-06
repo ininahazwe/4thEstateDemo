@@ -175,6 +175,7 @@
 }
 @media screen and (max-width:759px) {
     .home .zone-insta .wrap:after,
+    .home .zone-puzzle,
     .home .zone-insta .wrap:before {
         display:none
     }
