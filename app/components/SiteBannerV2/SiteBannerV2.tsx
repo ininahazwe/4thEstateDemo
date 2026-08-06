@@ -1,27 +1,22 @@
 import { type ArticleDataBanner } from './types';
 import { type BannerCategory } from '@/app/services/wpApi';
 import { bannerStaticTags } from "@/app/components/SiteBannerV2/bannerData";
-import { getHighlights } from '@/app/services/wpApi.highlight';
-import Image from 'next/image';
-import { HeadphonesIcon, PlayCircleIcon } from 'lucide-react';
+import BannerHighlights from './BannerHighlights'; // Adaptez le chemin si nécessaire
 
 interface SiteBannerProps {
-    articles: ArticleDataBanner[];
+    articles?: ArticleDataBanner[];
     categories: BannerCategory[];
+    showHighlights?: boolean; // Prop pour contrôler l'affichage
 }
 
-/** Icône par défaut quand pas de thumbnail (type podcast/video uniquement — serie/upcoming ont une vraie image). */
-function HighlightFallbackIcon({ type }: { type: 'podcast' | 'video' }) {
-    const Icon = type === 'podcast' ? HeadphonesIcon : PlayCircleIcon;
-    return <Icon size={20} aria-hidden="true" />;
-}
-
-export default async function SiteBannerV2({ categories }: SiteBannerProps) {
-    const highlights = await getHighlights(4);
+export default async function SiteBannerV2({
+                                               categories,
+                                               showHighlights = true
+                                           }: SiteBannerProps) {
     return (
         <div className="site-banner">
             {/* Section des catégories (Tags) — dynamiques (WP) + Tags statiques en dur à la fin */}
-            <div className="banner-hot-tags" style={{marginBottom: "20px"}}>
+            <div className="banner-hot-tags" style={{ marginBottom: "20px" }}>
                 <div className="item-list">
                     {/* 1. Vos catégories dynamiques WordPress */}
                     {categories.map((cat) => (
@@ -39,7 +34,7 @@ export default async function SiteBannerV2({ categories }: SiteBannerProps) {
                     {/* 2. Vos tags statiques (TV, Podcasts, etc.) bouclés dynamiquement */}
                     {bannerStaticTags.map((tag) => (
                         <a
-                            key={tag.ithal} // Utilisation de ithal ou href comme clé unique
+                            key={tag.ithal}
                             href={tag.href}
                             className={`item ${tag.type ? tag.type : ''} ithalc`.trim()}
                             data-ithalc="[cta_nav_banner]"
@@ -54,38 +49,8 @@ export default async function SiteBannerV2({ categories }: SiteBannerProps) {
                 </div>
             </div>
 
-            <div className="banner-hot-articles banner-hot-articles--thumbs">
-                <div className="item-list">
-                    {highlights.map((item) => (
-                        <div className="item" key={item.id}>
-                            <div className="item-thumb">
-                                {item.thumbnail ? (
-                                    <Image
-                                        src={item.thumbnail}
-                                        alt=""
-                                        width={44}
-                                        height={44}
-                                    />
-                                ) : (item.type === 'podcast' || item.type === 'video') ? (
-                                    <Image
-                                        src="/assets/img/podcast.jpg"
-                                        alt=""
-                                        width={44}
-                                        height={44}
-                                    />
-                                ) : null}
-                            </div>
-
-                            <a href={item.href} className="item-title">
-                                <div className="item-tag">
-                                    <span className="time">{item.badge}</span>
-                                </div>
-                                {item.title}
-                            </a>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            {/* Affichage conditionnel du composant des articles / highlights */}
+            {showHighlights && <BannerHighlights />}
         </div>
     );
 }

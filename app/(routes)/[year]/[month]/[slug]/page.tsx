@@ -274,7 +274,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <Header />
 
             {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
-            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} />
+            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} showHighlights={false} />
 
             <div className="site-content-wrap">
                 <div id="habillagepub" className="site-main-wrap">
@@ -282,13 +282,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                         <article className="article">
                             <header className="article-header" data-column="full">
                                 <Breadcrumb items={breadcrumbs} />
-                                {/* <ArticleHeader
+                                 <ArticleHeader
                                     strapline={article.strapline}
                                     title={article.title}
                                     category={article.category}
                                 />
 
-                                Auteur — même markup que ArticleBody (.article-authors-vo) */}
+                                {/*Auteur — même markup que ArticleBody (.article-authors-vo) */}
                                 <div className="article-authors-vo">
                                     <div className="article-authors">
                                         <div className="default-authors" style={{marginBottom:"20px"}}>
