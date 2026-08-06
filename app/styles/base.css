@@ -1083,8 +1083,7 @@ html:not(.v-app) [data-model^=button]:hover {
     color:var(--siteText)
 }
 [data-model^=article] {
-    /*background-color:var(--siteBoxBackground);*/
-    background-color:whitesmoke;
+    background-color:var(--siteBoxBackground);
     box-shadow:0 4px 4px -4px var(--siteBoxShadow);
     position:relative
 }
@@ -1177,7 +1176,7 @@ html:not(.v-app) [data-model^=article]:hover {
 [data-model^=article] .item-text .heading {
     display:-webkit-box;
     font-weight:600;
-    -webkit-line-clamp:3;
+    -webkit-line-clamp:4;
     -webkit-box-orient:vertical;
     overflow:hidden
 }
@@ -1339,6 +1338,10 @@ html:not(.v-app) [data-model^=article]:hover {
     height: 60%;
     background-color: #ffffff; /* Couleur brand */
     border-radius: 2px; /* Arrondir légèrement les coins */
+}
+:root[data-user-color-scheme="dark"] .item-text.impact::before{
+    background: #0a0a0a;
+    text-shadow: none;
 }
 [data-model=article-vertical] a {
     display:flex;
@@ -1584,10 +1587,10 @@ body {
     font-size:16px
 }
 .section-title {
-    background-clip:text;
-    background-color:var(--siteLogo);
-    font-size:24px;
-    -webkit-text-fill-color:#0000
+    background-clip: text;
+    background-color: rgba(var(--siteTextRGB), .4);
+    font-size: 24px;
+    -webkit-text-fill-color: #0000;
 }
 .page-title,
 .section-title {

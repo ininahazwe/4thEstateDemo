@@ -210,9 +210,9 @@
     margin-bottom:6px;
     padding:0
 }
-.site-header .site-menu .menu-wrap .tools-section .tool-list .item[data-icon=circle-half-stroke]:after {
+/*.site-header .site-menu .menu-wrap .tools-section .tool-list .item[data-icon=circle-half-stroke]:after {
     content:var(--themeSwitchTo)
-}
+}*/
 .site-header .site-menu .menu-wrap .tools-section .tool-list .item+.item {
     margin-left:4px
 }

@@ -81,6 +81,8 @@
     height: 44px;
     border-radius: 4px;
     overflow: hidden;
+    display: flex;
+    align-items: center;
 }
 
 .site-banner .banner-hot-articles.banner-hot-articles--thumbs .item .item-thumb img {
@@ -88,11 +90,6 @@
     height: 100%;
     object-fit: cover;
     display: block;
-}
-
-.site-banner .banner-hot-articles.banner-hot-articles--thumbs .item .item-title {
-    padding: 0;
-    -webkit-line-clamp: 5;
 }
 
 p.wp-block-paragraph, .wp-block-heading{

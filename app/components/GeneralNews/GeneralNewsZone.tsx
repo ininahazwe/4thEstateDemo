@@ -20,7 +20,9 @@ export default function GeneralNewsZone({
 
     return (
         <section className="zone zone-type zone-archives" data-slider="">
-            <h3 className="section-title">{title}</h3>
+            <a href="https://thefourthestategh.com/category/general-news/" className="section-title">
+                {title}
+            </a>
 
             {/* Flux continu (plus de chunking par 3) : un groupe de 3 remplit
                 exactement une rangée et ne déborde jamais, ce qui rendait le

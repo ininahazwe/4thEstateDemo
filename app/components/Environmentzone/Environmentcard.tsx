@@ -57,8 +57,8 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                     </div>
 
                     <div className="infos">
-                        {/*<div className="wrapper">
-                            {article.source && (
+                        <div className="wrapper">
+                            {/*{article.source && (
                                 <span className="source">
                                     <Globe
                                         size={14}
@@ -68,8 +68,8 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                                     />
                                     <span style={{ verticalAlign: 'middle' }}>{article.source}</span>
                                 </span>
-                            )}
-                        </div>*/}
+                            )}*/}
+                        </div>
                         <div className="placeholders">
                             <span></span>
                             <span></span>

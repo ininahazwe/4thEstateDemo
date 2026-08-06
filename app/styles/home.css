@@ -5,6 +5,11 @@
     background-size:7px 7px;
     padding:var(--mainPadding)
 }
+
+:root[data-user-color-scheme="dark"] .home .zone-type {
+    background-image: none;
+}
+
 .home .zone-type,
 .home .zone-type .wrap {
     margin-left:calc(var(--mainPadding)*-1);
@@ -402,8 +407,6 @@ html:not(.v-app) .home .zone-hebdo .issue-cover:hover:after {
     }
 }
 .home .zone.zone-type.zone-archives .section-title {
-    background-color:rgba(var(--siteTextRGB),1);
-    font-family:var(--serif);
     opacity:1
 }
 .home .zone.zone-type.zone-stories .section-title {

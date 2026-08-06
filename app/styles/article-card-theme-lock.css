@@ -17,16 +17,10 @@
     --siteBoxBackgroundRGB: 255,255,255 !important;
     --siteText: #111 !important;
     --siteTextRGB: 17,17,17 !important;
-    color: whitesmoke;
-}
-
-/* Ensure article card links and text remain readable */
-:root[data-user-color-scheme="dark"] .item-text .title {
-    color: #111 !important;
 }
 
 :root[data-user-color-scheme="dark"] .item-text .heading{
-    background: linear-gradient(#0000 0, #fff 40px);
+    /*background: linear-gradient(#0000 0, #fff 40px);*/
     text-shadow: none;
 }
 

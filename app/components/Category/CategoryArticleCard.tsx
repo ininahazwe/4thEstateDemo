@@ -48,34 +48,38 @@ export default function CategoryArticleCard({ article, highlight = false }: Cate
                         </p>
                     </div>
 
-                    {/*<div className="infos">
+                    <div className="infos">
                         <div className="wrapper">
-                            <span className="source" data-icon="earth-americas">{source}</span>
-                            <span className="date" data-icon="calendar-days">{publishedAt}</span>
+                            {/*{article.source && (
+                                <span className="source">
+                                    <Globe
+                                        size={14}
+                                        strokeWidth={2}
+                                        aria-hidden="true"
+                                        style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }}
+                                    />
+                                    <span style={{ verticalAlign: 'middle' }}>{article.source}</span>
+                                </span>
+                            )}*/}
                         </div>
                         <div className="placeholders">
-                            <span></span>
-                            <span></span>
+                            <TTSButton
+                                titleId={titleId}
+                                showLabel={false}
+                                showStopButton={false}
+                            />
+                            <BookmarkButton
+                                articleId={article.id}
+                                slug={slug}
+                                title={title}
+                                link={href}
+                                imageUrl={image?.src}
+                                category={source}
+                            />
                         </div>
-                    </div>*/}
+                    </div>
                 </div>
             </a>
-
-            <div className="item-buttons">
-                <TTSButton
-                    titleId={titleId}
-                    showLabel={false}
-                    showStopButton={false}
-                />
-                <BookmarkButton
-                    articleId={article.id}
-                    slug={slug}
-                    title={title}
-                    link={href}
-                    imageUrl={image?.src}
-                    category={source}
-                />
-            </div>
         </article>
     );
 }

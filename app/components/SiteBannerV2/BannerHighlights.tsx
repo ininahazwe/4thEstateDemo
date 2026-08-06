@@ -31,7 +31,12 @@ export default async function BannerHighlights() {
                             ) : null}
                         </div>
 
-                        <a href={item.href} className="item-title">
+                        <a
+                            href={item.href}
+                            className="item-title"
+                            rel="nofollow noopener noreferrer"
+                            target="_blank"
+                        >
                             <div className="item-tag">
                                 <span className="time">{item.badge}</span>
                             </div>
