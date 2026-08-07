@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import StoriesCard from './StoriesCard';
 import { type StoriesArticle } from './types';
 import {ArrowBigLeft, ArrowBigRight} from "lucide-react";
@@ -13,12 +14,14 @@ export default function StoriesZone({ articles }: StoriesZoneProps) {
         <section className="zone zone-type zone-stories" data-slider="">
 
             {/* data-icon="stories" reproduit à l'identique du HTML de référence */}
-            <a
-                href="https://thefourthestategh.com/?s=video"
+            {/* Équivalent interne de l'ancien /?s=video du WP : la recherche
+                du front prend le mot-clé en ?q= (cf. (routes)/search/page.tsx). */}
+            <Link
+                href="/search?q=video"
                 className="section-title"
             >
                 The Fourth Estate Stories
-            </a>
+            </Link>
 
             <div className="wrap" data-slider-wrap="">
                 {articles.map((article) => (

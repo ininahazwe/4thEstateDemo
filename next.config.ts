@@ -1,5 +1,20 @@
 import type { NextConfig } from "next";
 
+// Host des médias WordPress, dérivé de NEXT_PUBLIC_WP_API_URL pour rester
+// aligné automatiquement avec la source de données : si le WP déménage sur un
+// sous-domaine (ex. cms.thefourthestategh.com), les uploads suivent sans
+// second endroit à modifier. Sans ça, next/image bloque les images du
+// nouveau host et toute la home casse.
+const WP_MEDIA_HOSTNAME = (() => {
+    try {
+        return new URL(
+            process.env.NEXT_PUBLIC_WP_API_URL || "https://thefourthestategh.com/wp-json/wp/v2"
+        ).hostname;
+    } catch {
+        return "thefourthestategh.com";
+    }
+})();
+
 const nextConfig: NextConfig = {
   // Le compte cPanel a plusieurs package-lock.json à côté de ce projet
   // (Mediascape/, .trash/) : sans ce paramètre, Next.js remonte
@@ -17,6 +32,14 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: WP_MEDIA_HOSTNAME,
+        pathname: '/wp-content/uploads/**',
+      },
+      // Les articles déjà publiés référencent en base des images sur l'ancien
+      // host : on le garde autorisé pour ne pas casser l'historique après la
+      // bascule du domaine.
       {
         protocol: 'https',
         hostname: 'thefourthestategh.com',

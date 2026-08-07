@@ -65,7 +65,12 @@ export interface FooterCategory {
 // Configuration centrale
 // ---------------------------------------------------------------------------
 
-const WP_BASE = 'https://thefourthestategh.com/wp-json/wp/v2';
+// Lit NEXT_PUBLIC_WP_API_URL comme tous les autres services (wpApi.article,
+// .search, .archives, .highlight…). Le fallback ne sert qu'au dev local sans
+// .env : en production la variable DOIT être fournie au build (les
+// NEXT_PUBLIC_* sont inlinées à la compilation, pas lues au runtime).
+const WP_BASE =
+    process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
 
 /**
  * IDs de catégories WordPress.

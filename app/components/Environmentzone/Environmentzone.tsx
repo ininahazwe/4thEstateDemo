@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { type EnvironmentArticle } from './Types';
 import EnvironmentCard from './Environmentcard';
 import {ArrowBigLeft, ArrowBigRight} from "lucide-react";
@@ -22,9 +23,9 @@ export default function EnvironmentZone({
         <section className="zone zone-type zone-long-format" data-slider="">
 
             {/* Titre cliquable vers la page catégorie — identique au HTML de référence */}
-            <a href="https://thefourthestategh.com/category/environment/" className="section-title">
+            <Link href="/category/environment" className="section-title">
                 {title}
-            </a>
+            </Link>
 
             {/* Wrap slider : ref branchée sur useSlider pour le scroll horizontal */}
             <div className="wrap" data-slider-wrap="" ref={wrapRef}>

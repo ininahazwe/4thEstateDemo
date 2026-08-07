@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import GeneralNewsCard from './GeneralNewsCard';
 import { type GeneralNewsArticle } from './types';
 import { useSlider } from '@/app/hooks/useSlider';
@@ -20,9 +21,11 @@ export default function GeneralNewsZone({
 
     return (
         <section className="zone zone-type zone-archives" data-slider="">
-            <a href="https://thefourthestategh.com/category/general-news/" className="section-title">
+            {/* Lien interne : pointait vers le WP en absolu, ce qui ferait
+                sortir du site une fois le front sur le domaine principal. */}
+            <Link href="/category/general-news" className="section-title">
                 {title}
-            </a>
+            </Link>
 
             {/* Flux continu (plus de chunking par 3) : un groupe de 3 remplit
                 exactement une rangée et ne déborde jamais, ce qui rendait le

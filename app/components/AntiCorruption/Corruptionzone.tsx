@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import AntiCorruptionCard from './Corruptioncard';
 import { type AntiCorruptionArticle } from './Types';
 
@@ -18,9 +19,11 @@ export default function AntiCorruptionZone({ articles }: AntiCorruptionZoneProps
 
     return (
         <section className="zone zone-tag zone-anti-corruption">
-            <a href="https://thefourthestategh.com/category/anti-corruption/" className="section-title">
+            {/* Lien interne : pointait vers le WP en absolu, ce qui ferait
+                sortir du site une fois le front sur le domaine principal. */}
+            <Link href="/category/anti-corruption" className="section-title">
                 Anti-Corruption
-            </a>
+            </Link>
 
             <div className="wrap">
                 {areas.map((area, areaIdx) => (

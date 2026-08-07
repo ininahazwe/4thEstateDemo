@@ -158,7 +158,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     const canonicalMonth = String(publishedDate.getMonth() + 1).padStart(2, "0");
 
     if (year !== canonicalYear || month !== canonicalMonth) {
-        redirect(`/article/${canonicalYear}/${canonicalMonth}/${slug}`);
+        // Chemin SANS préfixe /article : la route est /[year]/[month]/[slug]
+        // (3 segments). L'ancienne cible /article/… en faisait 4 et tombait
+        // donc systématiquement en 404 au lieu de rediriger.
+        redirect(`/${canonicalYear}/${canonicalMonth}/${slug}`);
     }
 
     // Lien canonique de l'article, transmis au bouton Bookmark (stocké tel

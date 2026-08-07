@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {HumanRightsArticle} from "@/app/components/HumanRights/Types";
 import HumanRightsCard from "@/app/components/HumanRights/HumanRightCard";
 interface HumanRightsZoneProps {
@@ -17,9 +18,11 @@ export default function HumanRightsZone({ articles }: HumanRightsZoneProps) {
 
     return (
         <section className="zone zone-tag zone-human-rights">
-            <a href="https://thefourthestategh.com/category/human-rights/" className="section-title">
+            {/* Lien interne : pointait vers le WP en absolu, ce qui ferait
+                sortir du site une fois le front sur le domaine principal. */}
+            <Link href="/category/human-rights" className="section-title">
                 Human Rights
-            </a>
+            </Link>
 
             <div className="wrap">
                 {areas.map((area, areaIdx) => (
