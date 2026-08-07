@@ -1,7 +1,6 @@
 'use client';
 
 import { type AntiCorruptionArticle } from './Types';
-import { Globe, Headphones, Bookmark } from 'lucide-react';
 import Image from "next/image";
 import TTSButton from "@/app/components/UI/TTSButton";
 import BookmarkButton from "@/app/components/UI/BookmarkButton";

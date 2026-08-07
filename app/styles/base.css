@@ -3013,7 +3013,7 @@ html[class*=page-article-campaign][class*=preview] .site-header .header-logo:bef
 .dfpcontainer #pave_bas:not(.adm-ad-empty):not(:empty):before,
 .dfpcontainer #pave_haut:not(.adm-ad-empty):not(:empty):before,
 .dfpcontainer #pave_milieu:not(.adm-ad-empty):not(:empty):before {
-    content:"Publicité";
+    content:"Announcement";
     display:block;
     font-family:var(--sans);
     font-size:12px;
@@ -3029,7 +3029,7 @@ html[class*=page-article-campaign][class*=preview] .site-header .header-logo:bef
     text-align:center
 }
 .dfpcontainer>[id*=inread]:not(.adm-ad-empty):not(:empty):before {
-    content:"La suite après cette publicité";
+    content:"AFter the announcement";
     display:block;
     font-family:var(--sans);
     font-size:12px;

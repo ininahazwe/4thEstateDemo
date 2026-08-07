@@ -11,7 +11,6 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ article, headingLevel: Heading }: ArticleCardProps) {
-    const isLive = article.type === 'sirius-live';
     const slug = article.href.split("/").filter(Boolean).pop() ?? String(article.id);
 
     // Handle image error (React-native version of HTML onerror attribute)

@@ -1,28 +1,162 @@
 /* -------------------------------------------------------------------------
- * ads.css — emplacements pub (démo Google Ad). Fichier override autonome.
- * L'outline + fond + label "Publicité" viennent déjà du thème
- * (base.css: .dfpcontainer #pave_haut:not(:empty)) — ce fichier ne gère
- * que le rectangle de démo lui-même, taille standard skyscraper 300x600.
+ * ads.css — emplacement latéral droit de .zone-actu (aside.zone-aside).
+ * Fichier override autonome, jamais d'édition des CSS hérités du thème.
  * ---------------------------------------------------------------------------
  */
 
-.google-ad-slot {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 300px;
-    height: 600px;
-    max-width: 100%;
-    margin: 0 auto;
-    background: #e2e2e2;
-    color: #6b6b6b;
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+/* --- Sticky ---------------------------------------------------------------
+ * position:sticky se borne NATURELLEMENT au parent : l'élément ne peut pas
+ * dépasser le bas de son conteneur. Le parent est ici .zone-actu (section
+ * data-columns="2", déjà en display:flex/align-items:stretch @≥1000px), donc
+ * l'aside se colle sous le header au scroll puis se décroche automatiquement
+ * en sortant de la section — sans JS.
+ *
+ * Condition indispensable : le parent flex ne doit pas écraser la hauteur de
+ * l'aside (align-self:flex-start), sinon l'aside fait toute la hauteur de la
+ * section et n'a aucune marge pour "coller".
+ * Sticky uniquement ≥1000px : en dessous, la colonne droite passe sous le
+ * contenu, coller n'aurait pas de sens.
+ * --------------------------------------------------------------------------- */
+
+@media screen and (min-width: 1000px) {
+    .zone-actu .zone-aside {
+        position: sticky;
+        top: calc(var(--headerHeight) + 20px);
+        align-self: flex-start;
+    }
 }
 
-[data-user-color-scheme='dark'] .google-ad-slot {
-    background: #2a2a2a;
-    color: #9a9a9a;
+/* --- Spot "whistleblower" -------------------------------------------------- */
+
+.tip-spot {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    /* Contrainte demandée : le spot ne dépasse jamais 200px de haut. */
+    height: auto;
+    overflow: hidden;
+    padding: 14px 16px;
+    border-radius: var(--radius, 6px);
+    background: #ffbbbb38;
+    border-left: 3px solid #6d2929;
+    text-align: left;
+    /* Le thème met line-height:0 sur .dfpcontainer (réservé aux iframes pub) :
+       on le rétablit ici, sinon le texte du spot se superpose. */
+    line-height: 1.35;
+    animation: tip-spot-in 0.4s ease both;
+}
+
+.tip-spot__pulse {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    margin: auto;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #6d2929;
+    color: #fff;
+    animation: tip-spot-pulse 2.6s ease-in-out infinite;
+}
+
+.tip-spot__title {
+    margin: 0;
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.2;
+    color: var(--siteText, #282828);
+    text-align: center;
+}
+
+.tip-spot__title span{
+    color: var(--siteLogo);
+}
+
+.tip-spot__text {
+    margin: 0;
+    font-size: 16px;
+    color: #494949;
+    opacity: 0.75;
+    /* Tronque proprement si le texte déborde du plafond de 200px. */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    text-align: center;
+}
+
+.tip-spot__note {
+    margin: 8px auto;
+    font-size: 13px;
+    font-style: italic;
+    color: #6d2929;
+}
+
+.tip-spot__cta {
+    padding: 7px 14px;
+    border-radius: 4px;
+    background: #6d2929;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+    margin: auto;
+}
+
+a.tip-spot__cta{
+    color: #dddddd;
+}
+
+.tip-spot__cta:hover {
+    background: #571f1f;
+    transform: translateY(-1px);
+}
+
+@keyframes tip-spot-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Halo discret autour de l'icône — seul mouvement permanent du spot. */
+@keyframes tip-spot-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(109, 41, 41, 0.45);
+    }
+    50% {
+        box-shadow: 0 0 0 7px rgba(109, 41, 41, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tip-spot,
+    .tip-spot__pulse {
+        animation: none;
+    }
+    .tip-spot__cta:hover {
+        transform: none;
+    }
+}
+
+/* --- Dark mode ------------------------------------------------------------- */
+
+[data-user-color-scheme='dark'] .tip-spot {
+    background: #1b1b1b;
+}
+
+[data-user-color-scheme='dark'] .tip-spot__title,
+[data-user-color-scheme='dark'] .tip-spot__text {
+    color: #ececec;
+}
+
+[data-user-color-scheme='dark'] .tip-spot__note {
+    color: #d98b8b;
 }

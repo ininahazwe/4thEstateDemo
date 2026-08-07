@@ -1,0 +1,190 @@
+/* -------------------------------------------------------------------------
+ * whistleblower.css — page /whistleblower (appel à témoignage).
+ * Fichier override autonome, importé dans layout.tsx après les CSS de base.
+ * ---------------------------------------------------------------------------
+ */
+
+.wb-intro {
+    margin: 0.5rem 0 0;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    opacity: 0.85;
+}
+
+.wb-privacy {
+    margin: 0.4rem 0 0;
+    font-style: italic;
+    font-weight: 600;
+    color: #6d2929;
+}
+
+.wb-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 640px;
+    margin-top: 2rem;
+}
+
+.wb-info {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: var(--radius, 6px);
+    background: var(--siteBoxBackground, #f5f4f2);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.wb-info a {
+    color: #6d2929;
+    font-weight: 600;
+}
+
+.wb-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.wb-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.wb-required {
+    color: #6d2929;
+    font-weight: 700;
+}
+
+.wb-input,
+.wb-textarea {
+    width: 100%;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--border-color, #d9d9d9);
+    border-radius: 6px;
+    background: var(--surface, #fff);
+    color: inherit;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.wb-textarea {
+    resize: vertical;
+    min-height: 140px;
+    line-height: 1.5;
+}
+
+.wb-input:focus,
+.wb-textarea:focus,
+.wb-file:focus {
+    outline: 2px solid #6d2929;
+    outline-offset: 1px;
+    border-color: transparent;
+}
+
+.wb-input:disabled,
+.wb-textarea:disabled,
+.wb-file:disabled {
+    opacity: 0.6;
+}
+
+.wb-file {
+    font-size: 0.85rem;
+}
+
+.wb-file::file-selector-button {
+    margin-right: 10px;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid #6d2929;
+    border-radius: 6px;
+    background: transparent;
+    color: #6d2929;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.wb-file::file-selector-button:hover {
+    background: #f7eaea;
+}
+
+.wb-hint {
+    font-size: 0.78rem;
+    opacity: 0.65;
+}
+
+.wb-error {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #fdecea;
+    color: #a12b21;
+    font-size: 0.88rem;
+}
+
+.wb-submit {
+    align-self: flex-start;
+    padding: 0.75rem 1.8rem;
+    border: 0;
+    border-radius: 6px;
+    background: #6d2929;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.wb-submit:hover:not(:disabled) {
+    background: #571f1f;
+}
+
+.wb-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* --- Confirmation ---------------------------------------------------------- */
+
+.wb-success {
+    max-width: 640px;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-radius: var(--radius, 6px);
+    border-left: 3px solid #6d2929;
+    background: var(--siteBoxBackground, #f5f4f2);
+}
+
+.wb-success__title {
+    margin: 0 0 0.4rem;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.wb-success__text {
+    margin: 0 0 1.2rem;
+    opacity: 0.8;
+}
+
+/* --- Dark mode ------------------------------------------------------------- */
+
+[data-user-color-scheme='dark'] .wb-input,
+[data-user-color-scheme='dark'] .wb-textarea {
+    background: #1b1b1b;
+    border-color: #333;
+}
+
+[data-user-color-scheme='dark'] .wb-info,
+[data-user-color-scheme='dark'] .wb-success {
+    background: #1b1b1b;
+}
+
+[data-user-color-scheme='dark'] .wb-privacy,
+[data-user-color-scheme='dark'] .wb-info a {
+    color: #d98b8b;
+}
+
+[data-user-color-scheme='dark'] .wb-error {
+    background: #3a1c19;
+    color: #f0a89f;
+}

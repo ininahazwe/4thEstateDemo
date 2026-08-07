@@ -10,8 +10,9 @@
 //   acf.title     — texte libre affiché, optionnel
 //   acf.href      — lien utilisé seulement si acf.tag vide
 //   acf.thumbnail — ID média WP (nombre) ou "" si vide. Utilisée pour tous
-//                   les types sauf podcast (icône fixe côté composant).
-//                   Pour "video" sans thumbnail renseignée : fallback icône
+//                   les types sauf podcast et upcoming (icône fixe côté
+//                   composant, même si un média est renseigné). Pour
+//                   "video" sans thumbnail renseignée : fallback icône
 //                   video (voir showThumbnail plus bas).
 //
 // Limite éditoriale : 4 entrées, pas une limite technique côté API.
@@ -29,7 +30,7 @@ export interface HighlightItem {
     href: string;
     /** Libellé badge : nom du tag si présent, sinon libellé générique du type. */
     badge: string;
-    /** Absente pour type=podcast (icône fixe côté composant), et pour video sans image renseignée. */
+    /** Absente pour type=podcast/upcoming (icône fixe côté composant), et pour video sans image renseignée. */
     thumbnail?: string;
 }
 
@@ -128,9 +129,12 @@ export async function getHighlights(limit: number = 4): Promise<HighlightItem[]>
             const badge = tag ? tag.name : TYPE_BADGE_FALLBACK[type];
 
             const thumbnailId = typeof post.acf.thumbnail === 'number' ? post.acf.thumbnail : undefined;
-            // Thumbnail dispo pour tous les types sauf podcast (icône fixe).
-            // "video" l'utilise désormais aussi ; fallback sur l'icône video si absente.
-            const showThumbnail = type !== 'podcast';
+            // Thumbnail dispo pour tous les types sauf podcast et upcoming
+            // (icône fixe pour ces deux-là, même si un média est renseigné
+            // côté ACF — évite qu'une image générique/placeholder envoyée
+            // par erreur pour un "upcoming" s'affiche à la place de l'icône).
+            // "video" l'utilise ; fallback sur l'icône video si absente.
+            const showThumbnail = type !== 'podcast' && type !== 'upcoming';
             const thumbnail = showThumbnail && thumbnailId ? mediaMap.get(thumbnailId) : undefined;
 
             return {

@@ -26,6 +26,7 @@ import "./styles/section-critical.css";
 import "./styles/search.css";
 import "./styles/archives.css";
 import "./styles/ads.css";
+import "./styles/whistleblower.css";
 import "./styles/aside-skeleton.css";
 import "./styles/article-media.css";
 import "./styles/dark.css";

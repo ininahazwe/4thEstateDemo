@@ -1,10 +1,10 @@
 import Image from 'next/image';
-import { HeadphonesIcon, PlayCircleIcon } from 'lucide-react';
+import { HeadphonesIcon, PlayCircleIcon, CalendarClockIcon } from 'lucide-react';
 import { getHighlights } from '@/app/services/wpApi.highlight';
 
-/** Icône par défaut quand pas de thumbnail (type podcast/video uniquement — serie/upcoming ont une vraie image). */
-function HighlightFallbackIcon({ type }: { type: 'podcast' | 'video' }) {
-    const Icon = type === 'podcast' ? HeadphonesIcon : PlayCircleIcon;
+/** Icône par défaut quand pas de thumbnail (podcast/video/upcoming — serie a toujours une vraie image). */
+function HighlightFallbackIcon({ type }: { type: 'podcast' | 'video' | 'upcoming' }) {
+    const Icon = type === 'podcast' ? HeadphonesIcon : type === 'video' ? PlayCircleIcon : CalendarClockIcon;
     return <Icon size={20} aria-hidden="true" />;
 }
 
@@ -26,7 +26,7 @@ export default async function BannerHighlights() {
                                     width={44}
                                     height={44}
                                 />
-                            ) : (item.type === 'podcast' || item.type === 'video') ? (
+                            ) : (item.type === 'podcast' || item.type === 'video' || item.type === 'upcoming') ? (
                                 <HighlightFallbackIcon type={item.type} />
                             ) : null}
                         </div>
