@@ -38,6 +38,11 @@ export async function POST(req: Request) {
 
         if (!res.ok) {
             console.error(`unsave-article : WP a renvoyé ${res.status}`);
+            // Voir save-article/route.ts : forward du 401/403 WP (token
+            // membership expiré/invalide) au lieu de l'écraser en 502 générique.
+            if (res.status === 401 || res.status === 403) {
+                return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+            }
             return NextResponse.json({ error: "upstream_error" }, { status: 502 });
         }
 

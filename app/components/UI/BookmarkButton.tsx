@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Bookmark } from "lucide-react";
 import {
     saveArticle,
@@ -74,6 +74,10 @@ export default function BookmarkButton({
             saveArticle(pendingPayload).then((result) => {
                 setPending(false);
                 if (result === "ok") setSaved(true);
+                // Le token membership utilisé pour finaliser l'intention en
+                // attente a expiré entre-temps — même traitement que dans
+                // handleClick (voir le commentaire là-bas).
+                else if (result === "unauthenticated") signOut({ redirect: false });
             });
             return;
         }
@@ -103,7 +107,14 @@ export default function BookmarkButton({
         if (result === "ok") {
             setSaved(!saved);
         } else if (result === "unauthenticated") {
-            // Session expirée entre le chargement de la page et le clic.
+            // Le JWT NextAuth local est valide (status === "authenticated"
+            // plus haut) mais WP a renvoyé 401/403 : le compte/token
+            // membership, lui, a expiré ou a été révoqué (session WP côté
+            // serveur, mot de passe changé, compte désactivé…). Sans ce
+            // signOut, le cookie NextAuth reste valide jusqu'à son maxAge —
+            // le header continue d'afficher "connecté" indéfiniment alors
+            // que plus aucune action membership ne fonctionne.
+            signOut({ redirect: false });
             setShowAuthModal(true);
         } else {
             // "error" : échec réseau/upstream (mauvaise TFE_MEMBERSHIP_API_URL/KEY,

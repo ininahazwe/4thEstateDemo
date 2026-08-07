@@ -1,3 +1,5 @@
+import ArticleAside from "@/app/components/Article/ArticleAside";
+import { getMostReadArticles } from '@/app/services/wpApi.article';
 /**
  * Emplacement pub Google (démo). Structure calquée sur le DFP/GAM natif du
  * thème (aside.zone-aside[data-column=right] > .dfpcontainer > #pave_haut) :
@@ -7,15 +9,18 @@
  * pour que ces styles s'appliquent (:not(:empty)) — le rectangle gris en est
  * le contenu, à remplacer par le tag GAM réel le jour venu.
  */
-export default function GoogleAdSlot() {
+
+type MostReadArticles = Awaited<ReturnType<typeof getMostReadArticles>>;
+interface GoogleAdSlotProps {
+    mostRead: MostReadArticles;
+    showPodcast?: boolean;
+}
+
+export default function GoogleAdSlot({ mostRead, showPodcast = false }: GoogleAdSlotProps) {
     return (
         <aside className="zone-aside" data-column="right">
             <div className="dfpcontainer">
-                <div id="pave_haut" className="dfp-slot" data-format="pave_haut" data-sticky="">
-                    <div className="google-ad-slot">
-                        <span className="google-ad-slot__label">Google Ad</span>
-                    </div>
-                </div>
+                <ArticleAside mostRead={mostRead} showPodcast={showPodcast} />
             </div>
         </aside>
     );

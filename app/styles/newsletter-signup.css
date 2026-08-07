@@ -14,12 +14,21 @@
 }
 
 .newsletter-signup-title {
-    font-family: var(--serif);
     font-weight: 700;
     font-size: 32px;
     line-height: 1.15;
     color: #111;
     margin: 0 0 16px;
+}
+
+:root[data-user-color-scheme="dark"] .newsletter-signup-title, .newsletter-signup-text {
+    background-clip: text;
+    background-color: rgba(var(--siteTextRGB), .4);
+    -webkit-text-fill-color: #0000;
+}
+
+:root[data-user-color-scheme="dark"] .newsletter-signup-input{
+    border: 1px solid grey;
 }
 
 @media screen and (min-width: 760px) {
@@ -29,7 +38,6 @@
 }
 
 .newsletter-signup-text {
-    font-family: var(--sans);
     font-size: 17px;
     line-height: 1.5;
     color: #333;

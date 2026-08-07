@@ -1,3 +1,4 @@
+import { decode } from 'html-entities';
 import { type TvData, type TvVideo } from '../components/TV/Types';
 
 // ---------------------------------------------------------------------------
@@ -126,7 +127,10 @@ export async function getTvPageData(
 
         return {
             id: item.id.videoId,
-            title: item.snippet.title,
+            // YouTube Data API renvoie le titre HTML-entity-encodé
+            // ("&#39;", "&amp;", "&quot;"…) — sans decode() ces entités
+            // s'affichent brutes à l'écran (d'où les "#" visibles).
+            title: decode(item.snippet.title),
             thumbnail: thumb?.url ?? '',
             publishedAt: formatDisplayDate(item.snippet.publishedAt),
             href: `https://www.youtube.com/watch?v=${item.id.videoId}`,

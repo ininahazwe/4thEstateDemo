@@ -2222,6 +2222,15 @@ label.item-action input:not(:checked)~span[data-icon=toggle-large-off] {
     -webkit-line-clamp:3;
     overflow:hidden
 }
+
+:root[data-user-color-scheme="dark"] .site-banner .banner-hot-articles .item .item-title{
+    color: whitesmoke !important;
+}
+
+:root[data-user-color-scheme="dark"] .site-banner .banner-hot-articles.banner-hot-articles--thumbs .item .item-thumb{
+    color: whitesmoke !important;
+}
+
 .site-banner .banner-hot-articles .item:before {
     background-color:var(--sitePrimary);
     border-radius:50%;
@@ -3227,7 +3236,8 @@ body.isMobile #site-header~[id*=ftdiv]+[id*=ftdiv] {
     color:#ffffff;
 }
 .ci-services .item .item-text .description {
-    display:-webkit-box;
+    /*display:-webkit-box;*/
+    display: none;
     -webkit-line-clamp:3;
     -webkit-box-orient:vertical;
     overflow:hidden

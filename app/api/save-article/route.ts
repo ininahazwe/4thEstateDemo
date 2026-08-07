@@ -52,6 +52,16 @@ export async function POST(req: Request) {
 
         if (!res.ok) {
             console.error(`save-article : WP a renvoyé ${res.status}`);
+            // 401/403 côté WP = le compte/token membership n'est plus valide
+            // (session WP expirée, mot de passe changé, compte désactivé…)
+            // MÊME SI le JWT NextAuth local, lui, est encore valide (il a son
+            // propre maxAge, indépendant du WP). Sans ce forward, le client
+            // recevait un 502 générique et ne pouvait jamais distinguer "vraie
+            // panne serveur" de "il faut se reconnecter" — d'où le header
+            // affichant "connecté" alors que la session membership est morte.
+            if (res.status === 401 || res.status === 403) {
+                return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+            }
             return NextResponse.json({ error: "upstream_error" }, { status: 502 });
         }
 
