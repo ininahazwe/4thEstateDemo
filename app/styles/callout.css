@@ -1,5 +1,7 @@
 /* -------------------------------------------------------------------------
- * ads.css — emplacement latéral droit de .zone-actu (aside.zone-aside).
+ * callout.css — appel à témoignage de la colonne droite de .zone-actu.
+ * (ex-ads.css : le bloc n'est plus une pub, et l'ancienne nomenclature DFP
+ * le faisait masquer par les bloqueurs de pub.)
  * Fichier override autonome, jamais d'édition des CSS hérités du thème.
  * ---------------------------------------------------------------------------
  */
@@ -26,14 +28,13 @@
     }
 }
 
-/* --- Spot "whistleblower" -------------------------------------------------- */
+/* --- Bloc appel à témoignage ----------------------------------------------- */
 
-.tip-spot {
+.tip-callout {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
-    /* Contrainte demandée : le spot ne dépasse jamais 200px de haut. */
     height: auto;
     overflow: hidden;
     padding: 14px 16px;
@@ -41,13 +42,11 @@
     background: #ffbbbb38;
     border-left: 3px solid #6d2929;
     text-align: left;
-    /* Le thème met line-height:0 sur .dfpcontainer (réservé aux iframes pub) :
-       on le rétablit ici, sinon le texte du spot se superpose. */
     line-height: 1.35;
-    animation: tip-spot-in 0.4s ease both;
+    animation: tip-callout-in 0.4s ease both;
 }
 
-.tip-spot__pulse {
+.tip-callout__icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -58,10 +57,10 @@
     border-radius: 50%;
     background: #6d2929;
     color: #fff;
-    animation: tip-spot-pulse 2.6s ease-in-out infinite;
+    animation: tip-callout-pulse 2.6s ease-in-out infinite;
 }
 
-.tip-spot__title {
+.tip-callout__title {
     margin: 0;
     font-weight: 800;
     font-size: 28px;
@@ -70,16 +69,15 @@
     text-align: center;
 }
 
-.tip-spot__title span{
+.tip-callout__title span {
     color: var(--siteLogo);
 }
 
-.tip-spot__text {
+.tip-callout__text {
     margin: 0;
     font-size: 16px;
     color: #494949;
     opacity: 0.75;
-    /* Tronque proprement si le texte déborde du plafond de 200px. */
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
@@ -87,14 +85,14 @@
     text-align: center;
 }
 
-.tip-spot__note {
+.tip-callout__note {
     margin: 8px auto;
     font-size: 13px;
     font-style: italic;
     color: #6d2929;
 }
 
-.tip-spot__cta {
+.tip-callout__cta {
     padding: 7px 14px;
     border-radius: 4px;
     background: #6d2929;
@@ -106,16 +104,16 @@
     margin: auto;
 }
 
-a.tip-spot__cta{
+a.tip-callout__cta {
     color: #dddddd;
 }
 
-.tip-spot__cta:hover {
+.tip-callout__cta:hover {
     background: #571f1f;
     transform: translateY(-1px);
 }
 
-@keyframes tip-spot-in {
+@keyframes tip-callout-in {
     from {
         opacity: 0;
         transform: translateY(6px);
@@ -126,8 +124,8 @@ a.tip-spot__cta{
     }
 }
 
-/* Halo discret autour de l'icône — seul mouvement permanent du spot. */
-@keyframes tip-spot-pulse {
+/* Halo discret autour de l'icône — seul mouvement permanent du bloc. */
+@keyframes tip-callout-pulse {
     0%, 100% {
         box-shadow: 0 0 0 0 rgba(109, 41, 41, 0.45);
     }
@@ -137,26 +135,26 @@ a.tip-spot__cta{
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .tip-spot,
-    .tip-spot__pulse {
+    .tip-callout,
+    .tip-callout__icon {
         animation: none;
     }
-    .tip-spot__cta:hover {
+    .tip-callout__cta:hover {
         transform: none;
     }
 }
 
 /* --- Dark mode ------------------------------------------------------------- */
 
-[data-user-color-scheme='dark'] .tip-spot {
+[data-user-color-scheme='dark'] .tip-callout {
     background: #1b1b1b;
 }
 
-[data-user-color-scheme='dark'] .tip-spot__title,
-[data-user-color-scheme='dark'] .tip-spot__text {
+[data-user-color-scheme='dark'] .tip-callout__title,
+[data-user-color-scheme='dark'] .tip-callout__text {
     color: #ececec;
 }
 
-[data-user-color-scheme='dark'] .tip-spot__note {
+[data-user-color-scheme='dark'] .tip-callout__note {
     color: #d98b8b;
 }
