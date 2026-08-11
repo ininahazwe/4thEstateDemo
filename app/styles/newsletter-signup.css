@@ -62,15 +62,15 @@
 
 .newsletter-signup-input {
     appearance: none;
-    border: 1px solid #111;
-    border-radius: 999px;
+    border: none;
     background: transparent;
     color: #111;
-    font-family: var(--sans);
+    font-family: var(--sans), serif;
     font-size: 15px;
     padding: 16px 24px;
     flex: 1 1 auto;
     min-width: 0;
+    border-bottom: 1px dotted;
 }
 
 .newsletter-signup-input::placeholder {
@@ -78,9 +78,9 @@
 }
 
 .newsletter-signup-input:focus {
-    outline: 2px solid #111;
-    outline-offset: 2px;
+    outline: none;
 }
+
 
 .newsletter-signup-button {
     appearance: none;

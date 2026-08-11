@@ -4,13 +4,13 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.c
 
 export const metadata: Metadata = {
     title: 'Subscriptions - Support Independent Journalism',
-    description: 'Access our exclusive investigations and support quality independent journalism. Discover our subscription plans.',
-    keywords: ['subscription', 'journalism', 'investigation', 'exclusive content'],
+    description: 'Access our exclusive investigations and support quality independent journalism. Discover our subscribe plans.',
+    keywords: ['subscribe', 'journalism', 'investigation', 'exclusive content'],
     openGraph: {
         type: 'website',
         url: `${baseUrl}/subscriptions`,
         title: 'Subscriptions - The Fourth Estate',
-        description: 'Support our independent journalism with a subscription',
+        description: 'Support our independent journalism with a subscribe',
         locale: 'en_GH',
     },
     robots: {

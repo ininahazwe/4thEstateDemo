@@ -4,6 +4,7 @@ import {
     sectionsLegals,
 } from './footerData';
 import { getTopCategories } from '../../services/wpApi';
+import FooterCollapsibleTitle from './FooterCollapsibleTitle';
 import Link from "next/link";
 import Image from "next/image";
 
@@ -81,7 +82,9 @@ export default async function SiteFooter() {
 
                         {/* Colonne 1 : Topics (catégories les plus actives, via l'API) */}
                         <div className="links-box links-tags">
-                            <span className="footer-title">Topics</span>
+                            <FooterCollapsibleTitle id="footer-collapse-topics">
+                                Topics
+                            </FooterCollapsibleTitle>
                             {topCategories.map((cat) => (
                                 <a
                                     key={cat.id}
@@ -98,7 +101,9 @@ export default async function SiteFooter() {
                         {/* Colonne 2 : Groupe (Rendez-vous + Sites) */}
                         <div className="group">
                             <div className="links-box links-services">
-                                <span className="footer-title">Highlights</span>
+                                <FooterCollapsibleTitle id="footer-collapse-highlights">
+                                    Highlights
+                                </FooterCollapsibleTitle>
                                 {sectionsGroup.map((section, sIdx) => (
                                     <div className={section.boxClass} key={sIdx}>
                                         {section.links.map((link, idx) => (
@@ -121,7 +126,9 @@ export default async function SiteFooter() {
 
                         {/* Colonne 3 : Aide & Liens Liens Légaux */}
                         <div className={sectionsLegals.boxClass}>
-                            <span className="footer-title">{sectionsLegals.title}</span>
+                            <FooterCollapsibleTitle id="footer-collapse-legals">
+                                {sectionsLegals.title}
+                            </FooterCollapsibleTitle>
                             {sectionsLegals.links.map((link, idx) => (
                                 <a
                                     key={idx}

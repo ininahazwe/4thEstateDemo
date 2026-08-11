@@ -10,7 +10,7 @@ import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 
 // Membership site handles registration and paid subscriptions; Next.js frontend
 // only handles authentication. "Join Us" / "Renew" buttons link there.
-// ⚠️ Must point to actual membership subscription/registration page.
+// ⚠️ Must point to actual membership subscribe/registration page.
 const MEMBERSHIP_JOIN_URL = 'https://membership.thefourthestategh.com';
 
 export default function Header() {
@@ -121,7 +121,7 @@ export default function Header() {
                 </Link>
 
                 {/* Subscription zone — three states:
-                    • Not logged in      → "Join Us" (subscription CTA)
+                    • Not logged in      → "Join Us" (subscribe CTA)
                     • Logged in + active → badge + message (SSO to dashboard)
                     • Logged in + inactive → "Renew your support"
                     Membership links open in new tab. */}

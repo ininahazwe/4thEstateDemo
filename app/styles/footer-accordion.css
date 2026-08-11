@@ -1,0 +1,79 @@
+/* -------------------------------------------------------------------------
+ * footer-accordion.css — accordéon des colonnes du footer en mobile.
+ * Fichier override autonome : global.css (hérité du thème) n'est pas modifié,
+ * on neutralise juste ce qui doit l'être depuis ici.
+ * Importé dans layout.tsx APRÈS global.css.
+ * ---------------------------------------------------------------------------
+ */
+
+/* Le chevron d'origine passait par la police d'icônes `ci-icons`, absente du
+   projet (aucun @font-face, aucun fichier dans public/) : le pseudo-élément
+   rendait donc un glyphe vide. Remplacé par une icône lucide dans le markup
+   (FooterCollapsibleTitle), on coupe l'ancien :after. */
+.site-footer .footer-links .links-box .footer-title:after {
+    content: none;
+}
+
+/* Checkbox de contrôle : masquée, comme #toggle-menu du header.
+   Le clic sur <label for> continue de la basculer. */
+.footer-collapse-toggle {
+    display: none;
+}
+
+.site-footer .footer-links .links-box .footer-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.footer-title__chevron {
+    flex: 0 0 auto;
+    transition: transform 0.2s ease;
+}
+
+/* Déplié → chevron retourné. */
+.footer-collapse-toggle:checked ~ .footer-title .footer-title__chevron {
+    transform: rotate(180deg);
+}
+
+/* Focus clavier : le label n'est pas focusable, mais la checkbox masquée
+   reste atteignable au clavier dans certains navigateurs. On rend l'état
+   visible sur le titre associé. */
+.footer-collapse-toggle:focus-visible ~ .footer-title {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* La colonne "Highlights" imbrique ses liens dans des .links-box
+   intermédiaires (cf. sectionsGroup dans footerData.ts), si bien que la règle
+   du thème `input:not(:checked) ~ .item` — qui exige des frères DIRECTS — ne
+   les atteint pas : cette colonne restait dépliée.
+
+   On replie donc aussi les conteneurs frères. Markup laissé intact : cette
+   imbrication porte le box-shadow de séparation en desktop
+   (`.footer-links .group .links-box`), l'aplatir régresserait le rendu.
+
+   Même media query que le thème : le repli n'existe qu'en mobile. */
+@media screen and (max-width: 759px) {
+    .site-footer .footer-links .footer-collapse-toggle:not(:checked) ~ .links-box {
+        display: none;
+    }
+}
+
+/* Desktop : pas de repli (la règle du thème est en max-width:759px),
+   donc ni chevron ni curseur "cliquable". */
+@media screen and (min-width: 760px) {
+    .footer-title__chevron {
+        display: none;
+    }
+    .site-footer .footer-links .links-box .footer-title {
+        cursor: default;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .footer-title__chevron {
+        transition: none;
+    }
+}

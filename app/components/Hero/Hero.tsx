@@ -1,57 +1,49 @@
 import Image from 'next/image';
-import { getFourthEstateArticles } from '@/app/services/wpApi';
-
-function formatPublished(iso?: string): string | null {
-    if (!iso) return null;
-    return new Date(iso).toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-}
+import { getSpotlightArticles } from '@/app/services/wpApi.spotlight';
 
 /**
  * Hero — galerie de 3 articles en grandes cartes verticales, image plein
- * cadre + dégradé + titre. Réutilise le même appel que la zone-1 de
- * NewsZone (getFourthEstateArticles) : les 3 premiers articles renvoyés
- * par zone1 sont ceux affichés ici.
+ * cadre + dégradé + titre.
+ *
+ * Source : onglet SPOTLIGHT du plugin WordPress "CapEDx Composition"
+ * (dossier Weave). Les 3 articles affichés sont les 3 premières positions
+ * choisies en admin, dans l'ordre choisi — voir wpApi.spotlight.ts pour le
+ * détail du stockage (catégorie `spotlight` + post meta `cp_order_home`).
+ *
+ * Avant : les 3 premiers articles de zone1 (getFourthEstateArticles), donc les
+ * 3 derniers publiés — l'ordre éditorial défini en admin était ignoré.
  */
 export default async function Hero() {
-    const { zone1 } = await getFourthEstateArticles();
-    const articles = zone1.slice(0, 3);
+    const articles = await getSpotlightArticles(3);
 
     if (!articles.length) return null;
 
     return (
         <section className="hero-gallery">
-            {articles.map((article, index) => {
-                const publishedLabel = formatPublished(article.publishedAtISO);
+            {articles.map((article, index) => (
+                <a
+                    href={article.href}
+                    className="hero-gallery-card"
+                    key={article.id}
+                >
+                    {article.image && (
+                        <Image
+                            src={article.image.src}
+                            alt=""
+                            fill
+                            sizes="(min-width: 760px) 33vw, 80vw"
+                            priority={index === 0}
+                            style={{ objectFit: 'cover' }}
+                        />
+                    )}
 
-                return (
-                    <a
-                        href={article.href}
-                        className="hero-gallery-card"
-                        key={article.id}
-                    >
-                        {article.image && (
-                            <Image
-                                src={article.image.src}
-                                alt=""
-                                fill
-                                sizes="(min-width: 760px) 33vw, 80vw"
-                                priority={index === 0}
-                                style={{ objectFit: 'cover' }}
-                            />
-                        )}
+                    <div className="hero-gallery-scrim" aria-hidden="true" />
 
-                        <div className="hero-gallery-scrim" aria-hidden="true" />
-
-                        <div className="hero-gallery-caption">
-                            <span className="hero-gallery-title">{article.title}</span>
-                        </div>
-                    </a>
-                );
-            })}
+                    <div className="hero-gallery-caption">
+                        <span className="hero-gallery-title">{article.title}</span>
+                    </div>
+                </a>
+            ))}
         </section>
     );
 }

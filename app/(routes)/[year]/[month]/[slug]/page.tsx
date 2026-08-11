@@ -5,10 +5,11 @@ import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
 import Breadcrumb from "@/app/components/UI/Breadcrumb";
 import ArticleHeader from "@/app/components/Article/ArticleHeader";
 import ArticleBody from "@/app/components/Article/ArticleBody";
+import ArticleMediaLayout from "@/app/components/Article/ArticleMediaLayout";
 import type { Metadata } from "next";
 import { getArticleBySlug, getMostReadArticles, getReadMoreArticles } from "@/app/services/wpApi.article";
+import { mapWpBlocksToMediaBlocks } from "@/app/services/blockMapper";
 import { Calendar, Clock } from "lucide-react";
-import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 import {
     getBannerCategories,
     getLatestBannerArticles,
@@ -16,6 +17,7 @@ import {
 import { BANNER_CATEGORY_SLUGS } from "@/app/components/SiteBanner/bannerCategorySlugs";
 import TrackReader from "@/app/components/track-reader";
 import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
+import NewsletterSignup from "@/app/components/NewsletterSignup/NewsletterSignup";
 
 
 const WP_API =
@@ -277,77 +279,106 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <Header />
 
             {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
-            <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} showHighlights={false} />
+            {/* Bannière masquée en storytelling (équivalent display:none demandé —
+                on évite juste le hack CSS cross-sibling en ne la rendant pas). */}
+            {!article.isStorytelling && (
+                <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} showHighlights={false} />
+            )}
 
             <div className="site-content-wrap">
                 <div id="habillagepub" className="site-main-wrap">
-                    <main className="site-main" id="site-main">
-                        <article className="article">
-                            <header className="article-header" data-column="full">
-                                <Breadcrumb items={breadcrumbs} />
-                                 <ArticleHeader
-                                    strapline={article.strapline}
-                                    title={article.title}
-                                    category={article.category}
-                                />
+                    <main
+                        className="site-main"
+                        id="site-main"
+                        data-template={article.isStorytelling ? "media" : undefined}
+                    >
+                        {article.isStorytelling ? (
+                            // Template storytelling (ACF is_storytelling coché) : mise en
+                            // page dédiée, alimentée par les blocs Gutenberg mappés depuis
+                            // article.blocks (voir app/services/blockMapper.ts).
+                            <ArticleMediaLayout
+                                article={{
+                                    id: article.id,
+                                    slug,
+                                    link: canonicalUrl,
+                                    category: article.category?.name,
+                                    title: article.title,
+                                    authors: article.authors,
+                                    hero: {
+                                        src: article.featuredImage ?? "",
+                                        alt: article.imageCaption ?? article.title,
+                                    },
+                                    blocks: article.blocks ? mapWpBlocksToMediaBlocks(article.blocks) : [],
+                                }}
+                            />
+                        ) : (
+                            <article className="article">
+                                <header className="article-header" data-column="full">
+                                    <Breadcrumb items={breadcrumbs} />
+                                     <ArticleHeader
+                                        strapline={article.strapline}
+                                        title={article.title}
+                                        category={article.category}
+                                    />
 
-                                {/*Auteur — même markup que ArticleBody (.article-authors-vo) */}
-                                <div className="article-authors-vo">
-                                    <div className="article-authors">
-                                        <div className="default-authors" style={{marginBottom:"20px"}}>
-                                            <span style={{marginRight:"5px"}}>By</span>
-                                            {article.authors.length ? (
-                                                article.authors.map((author, index) => (
-                                                    <span key={author.slug}>
-                                                        <a href={`/author/${author.slug}`} className="author-link" style={{fontWeight: "bold"}}>
-                                                            {author.displayName}
-                                                        </a>
-                                                        {index < article.authors.length - 1 && " | "}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span>The Fourth Estate</span>
-                                            )}
+                                    {/*Auteur — même markup que ArticleBody (.article-authors-vo) */}
+                                    <div className="article-authors-vo">
+                                        <div className="article-authors">
+                                            <div className="default-authors" style={{marginBottom:"20px"}}>
+                                                <span style={{marginRight:"5px"}}>By</span>
+                                                {article.authors.length ? (
+                                                    article.authors.map((author, index) => (
+                                                        <span key={author.slug}>
+                                                            <a href={`/author/${author.slug}`} className="author-link" style={{fontWeight: "bold"}}>
+                                                                {author.displayName}
+                                                            </a>
+                                                            {index < article.authors.length - 1 && " | "}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span>The Fourth Estate</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <p className="article-lede">{article.excerpt}</p>
+                                    <p className="article-lede">{article.excerpt}</p>
 
-                                <div className="article-rule" aria-hidden="true" />
+                                    <div className="article-rule" aria-hidden="true" />
 
-                                <div className="article-metas">
-                                    {article.readTime && (
-                                        <div className="article-infos">
-                                            <span className="info-time">
-                                                <Clock size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: "4px" }} />
-                                                {article.readTime}
-                                            </span>
-                                            <span className="info-date">
-                                                <Calendar size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: "4px" }} />
-                                                {article.publishedAt}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            </header>
+                                    <div className="article-metas">
+                                        {article.readTime && (
+                                            <div className="article-infos">
+                                                <span className="info-time">
+                                                    <Clock size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: "4px" }} />
+                                                    {article.readTime}
+                                                </span>
+                                                <span className="info-date">
+                                                    <Calendar size={14} strokeWidth={2} aria-hidden="true" style={{ marginRight: "4px" }} />
+                                                    {article.publishedAt}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </header>
 
-                            <ArticleBody
-                                id={article.id}
-                                slug={slug}
-                                link={canonicalUrl}
-                                category={article.category?.name}
-                                title={article.title}
-                                content={article.content}
-                                featuredImage={article.featuredImage}
-                                imageCaption={article.imageCaption}
-                                imageCredit={article.imageCredit}
-                                relatedArticles={relatedArticles}
-                                readMoreArticles={readMoreArticles}
-                                tags={article.tags}
-                                authors={article.authors}
-                            />
-                        </article>
+                                <ArticleBody
+                                    id={article.id}
+                                    slug={slug}
+                                    link={canonicalUrl}
+                                    category={article.category?.name}
+                                    title={article.title}
+                                    content={article.content}
+                                    featuredImage={article.featuredImage}
+                                    imageCaption={article.imageCaption}
+                                    imageCredit={article.imageCredit}
+                                    relatedArticles={relatedArticles}
+                                    readMoreArticles={readMoreArticles}
+                                    tags={article.tags}
+                                    authors={article.authors}
+                                />
+                            </article>
+                        )}
 
                         {/* Tracking de lecture (membre connecté uniquement, garde
                             côté client). Rend null — n'affecte ni le rendu ni le
@@ -357,7 +388,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </div>
             </div>
 
-            <SubscriptionBanner />
+            <NewsletterSignup />
 
             <SiteFooter />
         </>

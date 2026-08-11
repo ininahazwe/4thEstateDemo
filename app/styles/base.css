@@ -367,6 +367,9 @@ q:before {
     content:"";
     content:none
 }
+p.article-text{
+    font-size: 20px;
+}
 table {
     border-collapse:collapse;
     border-spacing:0
@@ -1652,7 +1655,7 @@ img[loading=lazy].loading {
     background-color:var(--siteBackground);
     margin:auto;
     max-width:1000px;
-    min-height:calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    /*min-height:calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));*/
     padding:calc(var(--mainPadding)*2.5) var(--mainPadding)!important
 }
 #site-main [data-sticky] {

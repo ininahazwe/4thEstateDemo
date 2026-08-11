@@ -62,3 +62,30 @@ export async function getWpPage(slug: string): Promise<WpPage | null> {
         return null;
     }
 }
+
+// Variante par ID — même contrat que getWpPage(slug), pour les pages WP dont
+// on ne veut pas dépendre du slug (ex. /subscribe ↔ page WP id 21955).
+export async function getWpPageById(id: number): Promise<WpPage | null> {
+    try {
+        const res = await fetch(
+            `${WP_BASE}/pages/${id}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!res.ok) return null;
+
+        const page: WPPageRaw = await res.json();
+        if (!page?.id) return null;
+
+        return {
+            id: page.id,
+            slug: page.slug,
+            title: decode(page.title.rendered),
+            content: page.content.rendered,
+            excerpt: stripHtml(page.excerpt.rendered),
+        };
+
+    } catch (error) {
+        console.error(`Erreur wpApi.page [getWpPageById(${id})]:`, error);
+        return null;
+    }
+}

@@ -48,7 +48,8 @@ export const sectionsGroup: FooterSection[] = [
         boxClass: 'links-box links-services',
         title: 'Highlights',
         links: [
-            { label: 'Podcasts',       href: '/podcasts',       ithal: 'podcasts' },
+            { label: 'Podcasts', href: '/podcasts', ithal: 'podcasts' },
+            { label: 'Archives', href: '/archives', rel: 'noopener', ithal: 'archives' },
         ],
     },
     {
@@ -56,7 +57,7 @@ export const sectionsGroup: FooterSection[] = [
         title: 'Our sites',
         links: [
             { label: 'MFWA', href: 'https://mfwa.org', target: '_blank', rel: 'noopener', ithal: 'site-main' },
-            { label: 'Archives', href: '/archives', rel: 'noopener', ithal: 'site-main' },
+            { label: 'Fact-Check Ghana', href: 'https://www.fact-checkghana.com', target: '_blank', rel: 'noopener', ithal: 'Fact-Check Ghana' },
         ],
     },
 ];

@@ -1,0 +1,399 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   article-storytelling.css
+   Template "storytelling" (ArticleMediaLayout, ACF is_storytelling coché).
+   Reprend les tokens du site (base.css : --siteText, --serifGeorgia…) et les
+   classes déjà stylées de l'article standard (article-authors-vo,
+   article-tools/tools-list, cf. article-critical.css) plutôt que d'inventer
+   une palette/des composants parallèles.
+
+   Effet "pin + cover" (hero, cover) : voir la note en tête de
+   ArticleMediaLayout.tsx — .am-hero-media et .am-cover-media sont
+   position:sticky SANS wrapper de hauteur fixe autour d'elles (leur bloc
+   englobant doit être <article class="article-media">, seul ancêtre assez
+   haut pour leur laisser de la place à rester épinglées). Ne pas les
+   envelopper dans un conteneur avec une hauteur définie.
+   ───────────────────────────────────────────────────────────────────────── */
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* ─── Racine / largeur de lecture ─────────────────────────────────────── */
+
+.article-media {
+    color: var(--siteText);
+    font-family: var(--serifGeorgia), serif;
+}
+
+.am-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Espace entre les blocs du corps de l'article. Ciblé sur les wrappers de
+   blocs plutôt que via ":is(article-media) > * + *" pour ne pas perturber
+   le chevauchement volontaire du texte de cover (margin négative, voir
+   plus bas). */
+.am-wrap + .am-wrap,
+.am-wrap + .am-gallery,
+.am-wrap + .am-media-text,
+.am-wrap + .am-media-full,
+.am-gallery + .am-wrap,
+.am-gallery + .am-gallery,
+.am-gallery + .am-media-full,
+.am-media-full + .am-wrap,
+.am-media-full + .am-gallery,
+.am-media-full + .am-media-full,
+.am-media-text + .am-wrap,
+.am-media-text + .am-gallery,
+.am-media-text + .am-media-full {
+    margin-top: 48px;
+}
+
+/* ─── Hero (sticky, cf. note en tête de fichier) ──────────────────────── */
+
+.am-hero-media {
+    position: sticky;
+    top: var(--headerHeight, 0px);
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    height: 80vh;
+    overflow: hidden;
+    background-color: #111;
+    z-index: 0;
+}
+
+.am-hero-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.am-hero-title-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    z-index: 2;
+    padding: 64px 24px 48px;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    /*background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));*/
+}
+
+.am-title {
+    color: #fff;
+    font-size: clamp(2.75rem, 5vw, 4rem);
+    font-weight: 600;
+    line-height: 1.15;
+    max-width: 900px;
+    margin: 0;
+}
+
+/* ─── Sections blanches (plaques de contenu) ──────────────────────────── */
+/* Chaque groupe de blocs entre deux images épinglées (hero/cover) vit dans
+   une .container-background : fond blanc opaque, étirée sur toute la
+   largeur de la page, z-index au-dessus des images sticky (z 0) — c'est
+   elle qui "recouvre" l'image épinglée en remontant au scroll. */
+
+.container-background {
+    background: #fff;
+    position: relative;
+    z-index: 2;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 48px 0;
+}
+
+/* Auteur : réutilise les classes .article-authors-vo / .default-authors /
+   .author-link déjà stylées pour l'article standard (article.css /
+   article-layout.css) — pas de CSS dédié ici. */
+
+/* Outils (partage/écoute/favoris) : réutilise .article-tools/.tools-list
+   déjà stylées (article-critical.css) — juste le comportement mobile
+   (scroll horizontal sans barre) qui est scopé à ".article", reproduit ici
+   pour ".article-media". */
+.article-media .article-tools .tools-list {
+    font-size: 0;
+}
+
+@media screen and (max-width: 759px) {
+    .article-media .article-tools .tools-list {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        overflow: auto;
+        white-space: nowrap;
+    }
+
+    .article-media .article-tools .tools-list::-webkit-scrollbar {
+        display: none !important;
+        height: 0 !important;
+        width: 0 !important;
+    }
+}
+
+/* ─── 1. Heading ───────────────────────────────────────────────────────── */
+
+.am-heading {
+    width: 100%;
+    min-height: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: 500;
+    margin: 0 auto;
+}
+
+/* ─── 2. Quote ─────────────────────────────────────────────────────────── */
+
+.am-quote-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.am-quote {
+    width: 400px;
+    max-width: 100%;
+    font-size: rem;
+    line-height: 1.6;
+    text-align: left;
+    font-style: italic;
+    padding-left: 20px;
+    border-left: 3px solid var(--siteText);
+    margin: 0;
+}
+
+/* ─── 3. Body (standard — taille/police alignées sur ArticleContent) ──── */
+
+.am-body {
+    font-size: 1.25rem;
+    line-height: 1.6;
+}
+
+.am-body p {
+    margin: 0 0 20px;
+}
+
+.am-list {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    padding-left: 22px;
+    margin: 0;
+}
+
+/* ─── Image seule / galerie ────────────────────────────────────────────── */
+
+.am-media-full {
+    margin: 0 auto;
+}
+
+.am-media-full img {
+    width: 100%;
+    display: block;
+}
+
+.am-figcaption {
+    font-size: 0.85rem;
+    opacity: 0.65;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* ─── 6. Gallery ───────────────────────────────────────────────────────── */
+
+.am-gallery {
+    width: 80%;
+    max-height: 50vh;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.am-gallery-item {
+    /* Largeur adaptée au nombre d'images sur la ligne (--am-cols posé
+       inline par le composant, plafonné à 4). */
+    flex: 1 1 calc((100% - (var(--am-cols) - 1) * 8px) / var(--am-cols));
+    max-height: 50vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+.am-gallery-item img {
+    width: 100%;
+    height: 100%;
+    max-height: 50vh;
+    object-fit: cover;
+    display: block;
+}
+
+/* ─── 4. Media + text (split-screen, image sticky) ────────────────────── */
+
+.am-media-text {
+    width: 80vw;
+    margin-left: calc(50% - 40vw);
+    margin-right: calc(50% - 40vw);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+.am-media-text-media {
+    /* align-self:start indispensable : sans lui l'item grid s'étire à la
+       hauteur de la rangée (stretch par défaut) et le sticky n'a aucune
+       marge pour se déplacer. Épinglé sous le header jusqu'à la fin du
+       défilement du texte de l'autre colonne (= fin de la rangée grid). */
+    align-self: start;
+    position: sticky;
+    top: var(--headerHeight, 0px);
+    height: calc(100vh - var(--headerHeight, 0px));
+    overflow: hidden;
+}
+
+.am-media-text-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.am-media-text-content {
+    display: flex;
+    align-items: center;
+    padding: 48px;
+    max-width: 760px;
+    font-size: 1.25rem;
+    line-height: 1.6;
+}
+
+.am-media-text--reverse .am-media-text-media {
+    order: 2;
+}
+
+.am-media-text--reverse .am-media-text-content {
+    order: 1;
+    justify-self: end;
+}
+
+@media (max-width: 860px) {
+    .am-media-text {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+
+    .am-media-text-media {
+        position: static;
+        height: 60vh;
+    }
+
+    .am-media-text--reverse .am-media-text-media,
+    .am-media-text--reverse .am-media-text-content {
+        order: initial;
+    }
+}
+
+/* ─── 5. Cover — image épinglée (sticky, statique), max-height 60vh.
+   Le texte (.am-cover-text-flow) N'EST PAS sticky : il chevauche l'image au
+   départ (margin-top négatif) puis remonte normalement au scroll, avec les
+   blocs suivants, pour la recouvrir — cf. note pin+cover en tête de
+   fichier. Pas de vrai déplacement de l'image elle-même (demande produit :
+   pas de parallaxe sur les images). ───────────────────────────────────── */
+
+.am-cover-media {
+    position: sticky;
+    top: var(--headerHeight, 0px);
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    height: 60vh;
+    max-height: 60vh;
+    overflow: hidden;
+    background-color: #111;
+    z-index: 0;
+}
+
+.am-cover-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.am-cover-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.am-cover-text-flow {
+    position: relative;
+    z-index: 1;
+    margin-top: -70vh;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+}
+
+.am-cover-text {
+    color: #fff;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 600;
+    text-align: center;
+    max-width: 900px;
+    margin: 0;
+}
+
+/* ─── 7. Audio (largeur texte standard) ────────────────────────────────── */
+
+.am-audio {
+    width: 100%;
+    display: block;
+}
+
+/* ─── 8. Video (80% de largeur) ────────────────────────────────────────── */
+
+.am-video-wrap {
+    width: 80%;
+    margin: 48px auto;
+}
+
+.am-video {
+    width: 100%;
+    display: block;
+}
+
+/* ─── 9. Embeds (liens collés dans l'éditeur : Spotify, YouTube, Vimeo) ── */
+
+.am-embed-spotify {
+    width: 100%;
+    height: 152px;
+    border: 0;
+    border-radius: 12px;
+    display: block;
+}
+
+.am-embed-video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    display: block;
+}
+
+/* ─── #site-main : pas de padding en storytelling ─────────────────────── */
+/* Le hero/cover/media-text doivent atteindre les bords du viewport ; la
+   règle de base (#site-main { padding: ... !important }) est surchargée ici
+   avec une sélectivité plus forte (id + attribut) pour rester prioritaire. */
+
+#site-main[data-template="media"] {
+    padding: 0 !important;
+}

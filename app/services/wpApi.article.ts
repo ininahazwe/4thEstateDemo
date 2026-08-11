@@ -31,6 +31,23 @@ export interface WpArticle {
     // IDs bruts pour les requêtes de recommandation
     tagIds: number[];
     categoryIds: number[];
+    // Template "storytelling" (ACF is_storytelling, cf. functions.php du thème)
+    isStorytelling: boolean;
+    // Arbre de blocs Gutenberg brut (register_rest_field 'blocks', null si !isStorytelling)
+    blocks: WpBlock[] | null;
+}
+
+/**
+ * Bloc Gutenberg brut tel que renvoyé par parse_blocks() côté WP
+ * (register_rest_field 'blocks' dans functions.php). Seulement présent
+ * quand acf.is_storytelling est coché — voir mapWpBlocksToMediaBlocks()
+ * dans ./blockMapper.ts pour la conversion en MediaBlock[] (front).
+ */
+export interface WpBlock {
+    blockName: string;
+    attrs: Record<string, unknown>;
+    innerHTML: string;
+    innerBlocks: WpBlock[];
 }
 
 export interface WpArticleCard {
@@ -209,6 +226,8 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
             // IDs bruts pour les requêtes getReadMoreArticles
             tagIds: (post.tags as number[]) ?? [],
             categoryIds: (post.categories as number[]) ?? [],
+            isStorytelling: (acf.is_storytelling as boolean) ?? false,
+            blocks: (post.blocks as WpBlock[] | null) ?? null,
         };
     } catch {
         return null;

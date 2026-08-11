@@ -26,10 +26,11 @@ import "./styles/section-critical.css";
 import "./styles/search.css";
 import "./styles/archives.css";
 import "./styles/callout.css";
+import "./styles/footer-accordion.css";
 import "./styles/whistleblower.css";
 import "./styles/aside-skeleton.css";
-import "./styles/article-media.css";
 import "./styles/dark.css";
+import "./styles/article-storytelling.css";
 import "./globals.css";
 import Providers from "@/app/providers";
 
@@ -133,8 +134,14 @@ export default function RootLayout({
         },
     };
 
+    // suppressHydrationWarning sur <html> : le script inline du <head> écrase
+    // data-user-color-scheme depuis localStorage AVANT l'hydratation, alors que
+    // le serveur rend toujours "light" (il n'a pas accès au localStorage). Sans
+    // ça, tout visiteur en thème sombre déclenche une erreur d'hydratation.
+    // La suppression ne porte QUE sur les attributs de cet élément, pas sur ses
+    // enfants — les vrais mismatches ailleurs restent signalés.
     return (
-        <html lang="en" data-user-color-scheme="light">
+        <html lang="en" data-user-color-scheme="light" suppressHydrationWarning>
         <head>
             {/* Theme initialization - runs before hydration */}
             <script
