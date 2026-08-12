@@ -1,52 +1,32 @@
 // ---------------------------------------------------------------------------
-// wpApi.spotlight.ts — lecture de l'onglet SPOTLIGHT du plugin WordPress
-// "CapEDx Composition" (dossier Weave, composition.php v3.4), consommé par le
-// composant Hero de la homepage.
+// wpApi.spotlight.ts — articles mis en avant dans le Hero de la homepage.
 //
 // Fichier autonome (pas d'import croisé wpApi.ts), même convention que
 // wpApi.archives.ts / wpApi.highlight.ts.
 //
-// COMMENT LE PLUGIN STOCKE L'ONGLET SPOTLIGHT
-// À chaque clic sur "Update", cp_make_spotlight() :
-//   1. retire la catégorie `spotlight` + le tag `cp_spotlight` de TOUS les
-//      anciens posts spotlight ;
-//   2. sur les 5 posts sélectionnés : pose la catégorie `spotlight`, le tag
-//      `cp_spotlight`, et écrit l'ordre en post meta `cp_order_home`.
+// SOURCE : le mu-plugin `tfe-composition.php` côté WordPress. Il expose une
+// entrée unique du type de contenu `composition` portant un champ ACF
+// Relationship par zone. Le champ stocke une LISTE ORDONNÉE d'IDs d'articles,
+// et l'ordre de la liste EST l'ordre d'affichage :
 //
-// SENS DE L'ORDRE — le tableau des <select> passe par array_reverse() avant la
-// boucle qui incrémente $i : la 1re position de l'UI admin reçoit donc la
-// valeur cp_order_home la PLUS HAUTE. L'ordre d'affichage est
-// `cp_order_home` DESC, ce que fait aussi le plugin lui-même côté admin avec
-// orderby=meta_value_num (DESC par défaut de get_posts).
+//   GET /wp-json/wp/v2/composition?_fields=id,zones
+//   → { "id": 123, "zones": { "spotlight": [24080, 23947, 24038, …] } }
 //
-// PRÉREQUIS CÔTÉ WORDPRESS
-// `cp_order_home` doit être déclarée show_in_rest, sinon elle est absente de la
-// réponse REST → voir le mu-plugin `tfe-composition-rest.php`
-// (wp-content/mu-plugins/). Sans lui, cette fonction renvoie quand même les
-// articles de la catégorie spotlight, mais dans l'ordre WP par défaut (date
-// desc) au lieu de l'ordre éditorial : dégradation silencieuse, pas de crash.
+// Deux requêtes au total : la composition (les IDs), puis les articles avec
+// `orderby=include`, qui demande à WordPress de respecter l'ordre des IDs
+// passés dans `include` au lieu de retomber sur un tri par date. C'est ce
+// paramètre qui évite d'avoir à retrier côté JS.
 //
-// Le tri est fait ici et non côté API car le paramètre `orderby` de l'API REST
-// WP est un enum fermé (date, title, id, modified…) et n'accepte pas de meta
-// arbitraire. Volume concerné : 5 posts — coût négligeable.
+// L'édito choisit et réordonne par glisser-déposer dans le menu "Composition"
+// de l'admin WP. Aucun article n'est modifié au passage.
 // ---------------------------------------------------------------------------
 
 import { decode } from 'html-entities';
 
 const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
 
-/** Slug de la catégorie WP posée par le plugin sur les posts de l'onglet SPOTLIGHT. */
-const SPOTLIGHT_CATEGORY_SLUG = 'spotlight';
-
-/** Meta d'ordre écrite par cp_make_spotlight() (onglet SPOTLIGHT uniquement). */
-const SPOTLIGHT_ORDER_META = 'cp_order_home';
-
-/**
- * Le plugin gère 5 positions. On en demande un peu plus pour rester correct si
- * la catégorie contient des résidus (post ajouté à la main en admin, etc.) :
- * le tri + le slice(limit) final tranchent de toute façon.
- */
-const SPOTLIGHT_FETCH_SIZE = 10;
+/** Clé de zone dans `zones` — doit correspondre à tfe_composition_zones() côté PHP. */
+const SPOTLIGHT_ZONE = 'spotlight';
 
 /**
  * Forme minimale consommée par le Hero. Volontairement plus étroite que
@@ -59,14 +39,19 @@ export interface SpotlightArticle {
     title: string;
     /** Date de publication brute (ISO, post.date) — formatage laissé au composant. */
     publishedAtISO: string;
-    /** Valeur brute de cp_order_home, exposée pour debug/log. */
-    order: number;
+    /** Rang dans la composition, 1 = première position choisie en admin. */
+    position: number;
     image?: {
         src: string;
         width: number;
         height: number;
         blurDataURL: string;
     };
+}
+
+interface WPCompositionEntry {
+    id: number;
+    zones?: Record<string, number[]>;
 }
 
 interface WPMediaSize {
@@ -91,12 +76,6 @@ interface WPSpotlightPost {
     date: string;
     title: { rendered: string };
     featured_media: number;
-    meta?: Record<string, unknown>;
-}
-
-interface WPTerm {
-    id: number;
-    slug: string;
 }
 
 /** Même placeholder LQIP que wpApi.ts (SVG gris 640×426) — dupliqué, fichier autonome. */
@@ -160,45 +139,54 @@ async function fetchMediaBatch(mediaIds: number[]): Promise<Map<number, WPMedia>
 }
 
 /**
- * ID du terme `spotlight`. Résolu dynamiquement (pas d'ID en dur) et mis en
- * cache 1h : la catégorie existe déjà en prod, mais un ID codé en dur casserait
- * silencieusement sur un autre environnement (staging, réinstall).
+ * IDs d'articles d'une zone, dans l'ordre choisi en admin.
+ *
+ * revalidate court (5 min) : c'est le seul appel qui porte un choix éditorial,
+ * on veut qu'un changement de Hero se voie vite. Les articles et les médias
+ * derrière restent sur 10 min, ils bougent moins.
  */
-async function resolveSpotlightCategoryId(): Promise<number | null> {
+async function getZoneIds(zone: string): Promise<number[]> {
     const res = await fetch(
-        `${WP_BASE}/categories?slug=${SPOTLIGHT_CATEGORY_SLUG}`,
-        { next: { revalidate: 3600 } }
+        `${WP_BASE}/composition?per_page=1&_fields=id,zones`,
+        { next: { revalidate: 300 } }
     );
-    if (!res.ok) return null;
-    const terms: WPTerm[] = await res.json();
-    return terms[0]?.id ?? null;
-}
 
-/** Lit cp_order_home en tolérant l'absence de meta ou une valeur en string. */
-function readOrder(post: WPSpotlightPost): number {
-    const raw = post.meta?.[SPOTLIGHT_ORDER_META];
-    const value = typeof raw === 'string' ? Number(raw) : raw;
-    return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+    if (!res.ok) {
+        console.error(`Erreur wpApi.spotlight [composition]: ${res.status}`);
+        return [];
+    }
+
+    const entries: WPCompositionEntry[] = await res.json();
+    const ids = entries[0]?.zones?.[zone];
+
+    if (!Array.isArray(ids)) return [];
+
+    return ids.filter((id) => Number.isInteger(id) && id > 0);
 }
 
 /**
- * Articles de l'onglet SPOTLIGHT, dans l'ordre défini en admin.
+ * Articles mis en avant, dans l'ordre défini en admin.
  *
- * @param limit Nombre d'articles renvoyés (Hero = 3, plugin en gère 5).
+ * Renvoie [] si la composition est vide ou injoignable — le Hero se masque
+ * alors de lui-même (`if (!articles.length) return null`).
+ *
+ * Un article dépublié ou supprimé entre-temps disparaît simplement de la
+ * liste : l'API ne le renvoie plus, on se retrouve avec moins d'articles que
+ * demandé plutôt qu'avec un lien mort.
+ *
+ * @param limit Nombre d'articles renvoyés (Hero = 3, la zone en accepte 5).
  */
 export async function getSpotlightArticles(limit: number = 3): Promise<SpotlightArticle[]> {
     try {
-        const categoryId = await resolveSpotlightCategoryId();
-        if (categoryId === null) {
-            console.error(
-                `Erreur wpApi.spotlight : catégorie "${SPOTLIGHT_CATEGORY_SLUG}" introuvable`
-            );
-            return [];
-        }
+        const ids = (await getZoneIds(SPOTLIGHT_ZONE)).slice(0, limit);
+        if (!ids.length) return [];
 
+        // orderby=include : WordPress renvoie les articles dans l'ordre exact
+        // des IDs passés à `include`. Sans ce paramètre, le tri par défaut
+        // (date décroissante) écraserait le choix éditorial.
         const res = await fetch(
-            `${WP_BASE}/posts?categories=${categoryId}&per_page=${SPOTLIGHT_FETCH_SIZE}` +
-                `&status=publish&_fields=id,slug,date,title,featured_media,meta`,
+            `${WP_BASE}/posts?include=${ids.join(',')}&orderby=include&per_page=${ids.length}` +
+                `&status=publish&_fields=id,slug,date,title,featured_media`,
             { next: { revalidate: 600 } }
         );
 
@@ -210,24 +198,12 @@ export async function getSpotlightArticles(limit: number = 3): Promise<Spotlight
         const posts: WPSpotlightPost[] = await res.json();
         if (!posts.length) return [];
 
-        // Tri cp_order_home DESC (voir en-tête : 1re position admin = valeur la
-        // plus haute). Départage par date desc pour un ordre déterministe quand
-        // deux posts partagent la même valeur — cas d'un résidu sans meta, qui
-        // vaut 0 et se retrouve donc en fin de liste.
-        const ordered = [...posts].sort((a, b) => {
-            const delta = readOrder(b) - readOrder(a);
-            if (delta !== 0) return delta;
-            return new Date(b.date).getTime() - new Date(a.date).getTime();
-        });
-
-        const selected = ordered.slice(0, limit);
-
         const mediaIds = Array.from(
-            new Set(selected.map((p) => p.featured_media).filter((id) => id > 0))
+            new Set(posts.map((p) => p.featured_media).filter((id) => id > 0))
         );
         const mediaMap = await fetchMediaBatch(mediaIds);
 
-        return selected.map((post) => {
+        return posts.map((post, index) => {
             const media = mediaMap.get(post.featured_media);
 
             const article: SpotlightArticle = {
@@ -235,7 +211,7 @@ export async function getSpotlightArticles(limit: number = 3): Promise<Spotlight
                 href: buildHref(post),
                 title: cleanHtmlTitle(post.title.rendered),
                 publishedAtISO: post.date,
-                order: readOrder(post),
+                position: index + 1,
             };
 
             if (media) {

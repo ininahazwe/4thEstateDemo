@@ -70,7 +70,7 @@ export const sectionsLegals: FooterSection = {
     boxClass: 'links-box links-legals',
     title: 'Help & legal',
     links: [
-        { label: 'Contact us',        href: '/contact' },
+        { label: 'Contact us',        href: '/contact-us' },
         { label: 'About us',          href: '/about-us' },
         { label: 'Terms of use',      href: '/terms' },
         { label: 'Privacy policy',    href: '/privacy' },

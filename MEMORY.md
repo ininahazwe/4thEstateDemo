@@ -1,5 +1,230 @@
 # Mémoire projet — 4thestate
 
+## 2026-08-11 — Page /contact-us (formulaire + envoi Gmail)
+
+Mise en page calquée sur une maquette fournie par Yv (portfolio Dribbble d'une
+agence UX). **Le contenu de la maquette a été écarté** : bureaux USA/Inde,
+"Improve usability of your product", contact.growthux@gmail.com — rien à voir
+avec TFE. Seule la structure est reprise.
+
+Coordonnées réelles récupérées sur https://thefourthestategh.com/contact-us/ :
+Aar-Bakor Street, Ogbojo, Accra, Ghana / +233 302 555327. Email public donné
+par Yv : **thefourthestate@mfwa.org** (WebFetch masque les emails, il a fallu
+demander).
+
+Choix validés par Yv : colonne droite = "Other ways to reach us", champ
+**Subject conservé** (comme le formulaire WP actuel), case à cocher pointant
+vers **/privacy** (page existante) et non /terms (route inexistante), tout en
+anglais.
+
+Fichiers créés :
+
+- `app/api/contact/route.ts` — **copie de la mécanique de /api/whistleblower** :
+  nodemailer + `service: "gmail"` + mot de passe d'application Google,
+  `runtime = "nodejs"` (SMTP impossible en Edge). Différences : corps en JSON
+  (pas de pièce jointe donc pas de multipart), et name/email/subject requis
+  (le contact n'est pas anonyme, contrairement à l'appel à témoignage).
+  - `from` reste la boîte Gmail du site, jamais l'adresse du visiteur :
+    usurper l'expéditeur casserait SPF/DKIM et enverrait tout en spam. C'est
+    `replyTo` qui permet à la rédaction de répondre.
+  - Consentement revalidé côté serveur (`consent !== true` → 400) : le
+    verrou client ne protège pas d'une requête directe.
+  - Longueurs bornées (name 200 / email 200 / subject 300 / message 10000).
+  - **Honeypot** : champ `website` masqué en CSS, `tabIndex={-1}`,
+    `aria-hidden`. S'il est rempli → réponse `{ok:true}` SANS envoi, pour ne
+    pas indiquer au robot ce qui l'a trahi. En CSS, `position:absolute;
+    left:-9999px` et surtout PAS `display:none` (des robots ignorent les
+    champs en display:none).
+- `app/components/Contact/ContactForm.tsx` — composant client, même machine à
+  états `idle/sending/sent/error` que WhistleblowerForm, POST JSON.
+- `app/(routes)/contact-us/page.tsx` — statique (`revalidate = 86400`), aucun
+  fetch WP. En-tête centré + grille 2 colonnes. Colonne droite : 4 puces
+  (whistleblower, proposer un sujet, don MFWA, droit de réponse), réseaux
+  sociaux **réutilisés depuis `footerData.socialLinks`** (RSS filtré), bloc
+  adresse Accra.
+- `app/styles/contact.css` + import ajouté dans `layout.tsx` après
+  `whistleblower.css`. Grille qui s'empile sous 900 px, dark mode.
+  **Accent bordeaux #6d2929 du site conservé** au lieu du bouton noir de la
+  maquette, pour rester cohérent avec le formulaire whistleblower.
+
+Fichiers modifiés :
+
+- `footerData.ts` — le lien "Contact us" pointait vers **`/contact`, route qui
+  n'existe pas** (lien mort en prod). Corrigé en `/contact-us`.
+- `sitemap.ts` — `/contact-us` ajouté aux routes statiques.
+
+Points d'attention :
+
+- **Variable d'env à ajouter : `CONTACT_TO`** (destinataire, défaut =
+  `GMAIL_USER`). `.env.local` contient `GMAIL_USER=techsupport@gmail.com` et
+  `WHISTLEBLOWER_TO=techsupport@gmail.com`, visiblement des valeurs de test —
+  à corriger avant mise en ligne, sinon les messages partent dans le vide.
+  Vérifier aussi que `GMAIL_APP_PASSWORD` est bien renseigné en prod (Vercel).
+- Message non requis, comme sur le formulaire WP d'origine.
+- Aucun lien ajouté dans la nav header (`navigationData.ts`) — seul le footer
+  pointe vers la page.
+- La page WP `/contact-us` existe toujours côté WordPress : prévoir la
+  redirection au moment de la bascule du DNS.
+- Vérif : `npx tsc --noEmit` OK (exit 0). Le passage de tsc valide au passage
+  que `CheckCircle2 / Mail / MapPin / Phone` existent bien dans lucide-react
+  v1.20. Pas de test d'envoi réel (pas d'accès SMTP depuis la session).
+
+## 2026-08-11 — tfe-composition.php v1.1 : libellés EN + recherche par titre
+
+- Tous les textes visibles en admin passés en **anglais** (équipe anglophone) :
+  labels du CPT, entrée de menu, titre du groupe ACF, label et instructions du
+  champ, titre de l'entrée unique, description du schéma REST. Le menu admin
+  s'appelle désormais **"Featured Articles"** (plus "Composition") ; le slug du
+  CPT et la clé d'API restent `composition` / `zones.spotlight` — inchangés,
+  donc le service Next.js n'est pas impacté. Commentaires laissés en français,
+  comme le reste du projet.
+- **Recherche ACF restreinte aux titres.** Par défaut le champ Relationship
+  délègue au `s` de WP_Query, qui balaie `post_title` + `post_excerpt` +
+  `post_content` — inutilisable sur des articles d'investigation longs. ACF
+  n'expose aucune option pour ça, donc deux étapes :
+  1. `acf/fields/relationship/query` pose un query var maison
+     `tfe_composition_title_search` (uniquement si `$args['s']` non vide, et
+     uniquement sur nos champs — test sur le préfixe de clé
+     `TFE_COMPOSITION_FIELD_PREFIX`) ;
+  2. `posts_search` réécrit la clause SQL en `LIKE` sur `post_title` seul pour
+     les requêtes marquées.
+  Le marquage est indispensable : `posts_search` est un filtre **global**, il
+  ne doit pas toucher la recherche du reste de l'admin ni du site. Les termes
+  sont découpés sur les espaces et combinés en AND (« big push » matche « The
+  Big Push initiative »). Recherche entre guillemets non gérée, inutile ici.
+- Vérifié : `php -l` OK, extraction des littéraux de chaîne par `token_get_all`
+  → plus aucun libellé français résiduel.
+- Si l'entrée unique a déjà été créée par la v1.0, elle garde son ancien titre
+  français « Composition de la page d'accueil » — à renommer à la main dans
+  l'éditeur, le titre n'est utilisé nulle part ailleurs.
+
+## 2026-08-11 — DÉCISION : remplacer Composition par un CPT + champ ACF Relationship
+
+Yv a tranché : **option ACF Relationship**, et il est en **ACF gratuit** → pas
+d'options page (`acf_add_options_page` = ACF Pro), donc repli sur un CPT
+`composition` à entrée unique. Périmètre : zone `spotlight` / Hero uniquement.
+
+Principe retenu : **une seule liste ordonnée d'IDs, à un seul endroit**, au lieu
+de l'ordre éparpillé en meta sur chaque article. Les articles ne sont plus
+jamais modifiés (ni catégorie, ni tag, ni `post_modified` bumpé).
+
+Fichiers :
+
+- **`tfe-composition.php`** (NOUVEAU, à déposer dans `wp-content/mu-plugins/`).
+  Contenu :
+  - CPT `composition` : `public => false` + `show_in_rest => true` (schéma
+    headless standard : pas d'URL publique, mais lisible par l'API). Un post
+    publié d'un CPT non public reste lisible en REST anonyme dès lors que
+    `show_in_rest` est vrai — vérifié dans `WP_REST_Posts_Controller`.
+  - Entrée unique : `create_posts => do_not_allow` + création paresseuse via
+    `tfe_composition_get_singleton_id()` (option `tfe_composition_post_id`,
+    filet de secours par `get_posts` si l'option a sauté, création réservée à
+    `is_admin()`).
+  - Menu admin "Composition" dont le slug EST une URL `post.php?post=<id>&action=edit`
+    → WP en fait un lien direct vers l'unique entrée, pas de liste à 1 élément.
+    `parent_file` filtré pour garder le surlignage.
+  - Field group ACF déclaré **en code** via `acf_add_local_field_group()` sur
+    `acf/init` (versionné, rien à cliquer dans l'UI ACF). Champ Relationship :
+    `return_format => 'id'`, `elements => featured_image` (vignettes),
+    `filters => search + taxonomy`, `max => 5`.
+  - `register_rest_field('composition', 'zones')` → contrat figé
+    `{ "spotlight": [id, id, …] }`, toujours un tableau d'entiers, jamais null.
+    Volontairement PAS le champ `acf` natif, dont la forme varie selon la
+    version d'ACF et le return_format.
+  - Ajouter une zone plus tard = éditer le seul tableau `tfe_composition_zones()`
+    (les 4 autres zones sont déjà écrites en commentaire) ; champ ACF, REST et
+    admin suivent automatiquement.
+  - Capability d'édition : `edit_others_posts` (= rôle Éditeur, pas Auteur),
+    constante `TFE_COMPOSITION_CAP`.
+- `app/services/wpApi.spotlight.ts` (RÉÉCRIT) — 2 requêtes :
+  `/composition?per_page=1&_fields=id,zones` (revalidate 300, c'est le seul
+  appel qui porte un choix édito) puis
+  `/posts?include=<ids>&orderby=include` (revalidate 600).
+  **`orderby=include`** est la clé : WP respecte alors l'ordre des IDs passés
+  au lieu de retomber sur date desc — aucun retri côté JS.
+  Signature `getSpotlightArticles(limit=3)` et interface `SpotlightArticle`
+  conservées (champ `order` → `position`, 1-based). Hero.tsx : seul le
+  commentaire d'en-tête change.
+
+Points d'attention :
+
+- **Pas de fallback** : composition vide ou injoignable → `[]` → le Hero se
+  masque (`if (!articles.length) return null`). Tant que Yv n'a pas rempli le
+  champ en admin, il n'y a pas de Hero sur la home. À remplir juste après le
+  dépôt du mu-plugin.
+- L'ancien **`tfe-composition-rest.php` devient inutile** — ne pas le déployer
+  (ou le retirer s'il l'a déjà fait). Il ne sert qu'à l'ancienne lecture par
+  meta `cp_order_home`.
+- Le plugin CapEDx Composition reste installé et actif : ses failles
+  (escalade de privilèges `manage_options` sur author/editor, AJAX sans nonce
+  ni capability) sont toujours ouvertes. Le désinstaller une fois la nouvelle
+  chaîne validée, puis nettoyer catégorie 100 `spotlight` + tag `cp_spotlight`
+  sur les articles et supprimer les deux termes.
+- Migration des données : inutile d'écrire un script, ce sont 5 articles à
+  re-sélectionner une fois à la main.
+- Vérifs : `php -l` OK, `npx tsc --noEmit` OK (exit 0, sur la machine de Yv).
+  eslint toujours pas exécutable (>120 s, cap de 45 s du pont device).
+  Pas encore de test contre l'API WP (le mu-plugin n'est pas déployé).
+- API WP de prod lente/instable en lecture : plusieurs `/tags?include=` ont
+  timeout pendant l'audit. Les appels `/categories` et `/posts` passent.
+
+## 2026-08-11 — Audit du plugin Composition (décision remplacer/réparer en attente)
+
+Vérifié en direct contre l'API WP de prod :
+
+- catégorie `spotlight` = **term id 100**, `count: 5` (le plugin tient bien 5 posts).
+- sur un post spotlight, `categories` = `[111, 100]` / `[109, 100]` → **100 arrive
+  en dernier** (wp_set_post_categories en mode append). Donc `categories[0]` reste
+  la vraie catégorie édito : le `tagOrCategory` de wpApi.ts n'affiche PAS
+  "Spotlight" sur les cartes. Risque écarté (ordre non garanti par contrat, mais
+  empiriquement stable).
+- `meta` d'un post spotlight = `{_acf_changed, content-type, footnotes}` →
+  **`cp_order_home` toujours absente : le mu-plugin n'est pas encore déployé.**
+- tag **101** présent sur les 3 posts spotlight testés = quasi certainement
+  `cp_spotlight` (id adjacent à la catégorie 100). Non confirmé : l'endpoint
+  `/tags?include=` timeout côté WP de façon répétée (API prod lente/instable).
+
+Défauts relevés dans `composition.php` (233 lignes) :
+
+1. 🔴 `add_user_caps()` donne `manage_options` aux rôles `author` et `editor` à
+   chaque `admin_init` → escalade de privilèges persistée en base (accès à tous
+   les réglages WP). À supprimer + révoquer les caps déjà posées.
+2. 🔴 `pl_wp_ajax_function()` : aucun `check_ajax_referer()`, aucun
+   `current_user_can()`, IDs non castés → tout utilisateur connecté peut
+   réécrire la homepage. (`wp_ajax_nopriv_myaction` ne matche pas l'action
+   `pl_action` → non exploitable en anonyme, par chance.)
+3. 🟠 Onglet HUMAN RIGHTS ne sauvegarde rien : typo JS `#posts_human-right`
+   au lieu de `#posts_human-rights` → tableau vide, "success" affiché quand même.
+4. 🟠 `sleep(1)` dans les deux boucles → ≥5 s par save, sans raison. Combiné au
+   caractère non atomique de `cp_make_spotlight()` (retire la catégorie de TOUS
+   les posts avant de réattribuer) : un timeout PHP en cours de route laisse le
+   Hero vide.
+5. 🟠 `wp_update_post()` sur les 5 posts à chaque save → bump de `post_modified`.
+   Or `app/sitemap.ts` utilise `post.modified` comme `lastModified` → chaque
+   changement de Hero signale aux moteurs 5 articles "modifiés".
+6. 🟠 Le tag `cp_spotlight` est rendu aux lecteurs : `ArticleBody.tsx` affiche
+   `article-tags` / `tags-list`, et `/tag/[slug]` existe → mot-clé parasite
+   public. Idem `/category/spotlight` = page catégorie publique.
+   (Ni l'un ni l'autre n'est dans `sitemap.ts`, qui ne liste que les articles
+   + 4 routes statiques.)
+7. Code mort : `nestable.js` enqueué jamais utilisé (le drag & drop était
+   l'intention d'origine), `get_terms('category')` ancienne signature dont le
+   résultat n'est jamais lu, `if ($i > 5)` inatteignable, sélecteur JS
+   `#cp_posts` (la classe réelle est `.cp-posts`), `uninstall.php` vide (0 octet,
+   ne nettoie pas les meta écrites), `check_duplicated_post()` non appelé pour
+   spotlight (doublon possible → même article 2× dans le Hero).
+
+Diagnostic de fond : le problème n'est pas le code mais le **modèle de données**
+— la taxonomie (catégorie + tag) sert de stockage d'affichage, ce qui pollue la
+taxonomie éditoriale et l'URL publique. Non réparable par patch.
+
+Recommandation faite à Yv : 4 correctifs d'urgence (points 1-4) puis
+remplacement par un champ **ACF Relationship** (ACF déjà exposé en REST dans
+l'install, cf. `wpApi.highlight.ts`) — search + drag & drop natifs, stockage en
+une ligne `wp_options` (atomique), ~0-40 lignes de PHP custom au lieu de 233.
+Point à vérifier : `acf_add_options_page()` requiert ACF **Pro** ; sinon
+repli sur un CPT `composition` à entrée unique. Décision non prise.
+
 ## 2026-08-11 — Hero branché sur l'onglet SPOTLIGHT du plugin Composition
 
 Contexte : plugin WP `CapEDx Composition` v3.4 (dossier `Weave`, un seul fichier
