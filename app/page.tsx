@@ -99,8 +99,6 @@ export default async function App() {
 
                             <HumanRightsZone articles={humanRightsNews} />
 
-                            <HealthZone articles={healthNews} />
-
                             <TikTokStoriesSlider />
 
                             {/*<StoriesZone articles={storiesNews} />*/}
@@ -110,6 +108,8 @@ export default async function App() {
                             <VideoZone />
 
                             <EnvironmentZone articles={environmentlNews} />
+
+                            <HealthZone articles={healthNews} />
 
                             <NewsletterSignup />
 
