@@ -7,6 +7,7 @@ import { type AntiCorruptionArticle } from '../components/AntiCorruption/Types';
 import { type OurImpactArticle }      from '../components/Impact/Types';
 import {type StoriesArticle} from "../components/Stories/types";
 import {type HumanRightsArticle} from "../components/HumanRights/Types";
+import {type HealthArticle} from "../components/Health/Types";
 import {CategoryArticle, CategoryData, CategoryTag} from "@/app/components/Category/Types";
 import {getCategoryConfig} from "@/app/components/Category/categoryConfig";
 import { decode } from 'html-entities';
@@ -84,6 +85,8 @@ const CATEGORY_IDS = {
     environment:    131  as number,
     antiCorruption: 111  as number,
     humanRight:     121  as number,
+    // Vérifié le 2026-08-11 : GET /wp-json/wp/v2/categories?slug=health → id 105.
+    health:         105  as number,
 };
 
 /**
@@ -650,6 +653,63 @@ export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
 
     } catch (error) {
         console.error('Erreur wpApi [getHumanRightArticles]:', error);
+        return [];
+    }
+}
+
+// ---------------------------------------------------------------------------
+// getHealthArticles
+// ---------------------------------------------------------------------------
+// Calqué sur getHumanRightArticles : même forme de retour, même découpage
+// [1, 2, 2] côté composant. Seules changent la catégorie visée et l'étiquette
+// de repli.
+// ---------------------------------------------------------------------------
+
+export async function getHealthArticles(): Promise<HealthArticle[]> {
+    try {
+        const categoryId = await resolveCategoryId(CATEGORY_IDS.health, 'health');
+        const url = categoryId
+            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish`
+            : `${WP_BASE}/posts?per_page=5&status=publish`;
+
+        const posts = await fetchPosts(url);
+        if (!posts.length) return [];
+
+        const { mediaIds, categoryIds } = extractIds(posts);
+
+        const [mediaMap, categoryMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
+        ]);
+
+        return posts.map((post, index) => {
+            const media = mediaMap.get(post.featured_media);
+
+            let tagOrCategory = 'Health';
+            if (post.categories.length > 0) {
+                const cat = categoryMap.get(post.categories[0]);
+                if (cat) tagOrCategory = cat;
+            }
+
+            const article: HealthArticle = {
+                id:            `health-post-${post.id}`,
+                href:          buildHref(post),
+                title:         cleanHtmlTitle(post.title.rendered),
+                tagOrCategory: cleanHtmlTitle(tagOrCategory),
+                source:        'The Fourth Estate',
+                section:       'health',
+                model:         index === 0 ? 'article-vertical' : 'article',
+                type:          'article',
+                index:         index + 1,
+            };
+
+            if (media) article.image = buildImage(media, index);
+
+            return article;
+        });
+
+    } catch (error) {
+        console.error('Erreur wpApi [getHealthArticles]:', error);
         return [];
     }
 }

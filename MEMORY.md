@@ -1,5 +1,176 @@
 # Mémoire projet — 4thestate
 
+## 2026-08-11 — Storytelling : correctif hauteur cover + paragraphes assainis
+
+### Correctif — la fenêtre de révélation du cover s'était effondrée
+
+Régression introduite par la version précédente : `margin-top: -90vh` sur
+`.am-cover-media` pré-épinglait bien l'image, mais **retirait aussi 90vh à la
+hauteur du document** — or c'était exactement le budget de scroll pendant
+lequel l'image restait visible. La section suivante remontait donc la
+recouvrir presque immédiatement (fenêtre réduite à ~10vh).
+
+Nouvelle approche, à somme nulle : la compensation se fait **dans la plaque
+précédente**, plus dans le cover.
+
+```css
+.container-background:has(+ .am-cover-media) {
+    padding-bottom: calc(var(--am-plate-padding) + var(--am-cover-reveal));
+    margin-bottom:  calc(-1 * var(--am-cover-reveal));
+}
+```
+
+- La plaque gagne une bande de fond blanc en bas (padding), le cover est
+  remonté d'autant (le margin négatif fusionne avec le margin-top nul du
+  cover). **Padding + margin = 0 → hauteur du document et position de tout ce
+  qui suit strictement inchangées.**
+- Le cover est déjà épinglé pendant toute la bande, masqué derrière elle
+  (plaque z-index 2, cover z-index 0) ; le bord inférieur de la plaque le
+  découvre en remontant.
+- `.am-cover-media` ne porte plus AUCUN décalage → le `-70vh` de
+  `.am-cover-text-flow` garde son calibrage d'origine.
+- Variables déplacées sur `.article-media` : `--am-cover-height`,
+  `--am-cover-reveal`, `--am-plate-padding`.
+
+### Paragraphes assainis (choix de Yv : nettoyer le HTML, pas la CSS)
+
+`blockMapper.ts`, cas `core/paragraph` : nouvelle fonction
+`sanitizeInlineHtml()`.
+
+- Ne conserve que les balises SÉMANTIQUES : `a, strong, b, em, i, br, sup,
+  sub`. Tout le reste (`span`, `font`, `mark`, `u`, `small`…) est dépouillé —
+  la balise disparaît, le texte reste. Aucun attribut conservé sauf `href`.
+- Motif : l'éditeur WP laisse passer `<span style="color:…">`, des tailles de
+  police en dur, des classes `has-*`. Sur un template dont la typo est imposée
+  par le design, ça casse l'uniformité. (Les attributs du `<p>` lui-même
+  étaient déjà écartés : le regex ne capture que l'intérieur de la balise.)
+- **`decode()` retiré du chemin paragraphe** : la chaîne part en
+  `dangerouslySetInnerHTML`, les entités doivent RESTER des entités. La
+  décoder d'abord transformait un `&lt;script&gt;` saisi dans l'éditeur en
+  vraie balise à l'affichage. Le test de vacuité se fait maintenant sur
+  `stripTags(inner)`, ce qui écarte aussi `<p>&nbsp;</p>` et `<p><span></span></p>`.
+- `href` non ré-échappé (valeur déjà encodée dans le HTML source, la
+  ré-échapper donnerait `&amp;amp;`). Schémas hors
+  `http(s)/mailto/tel//#` → `<a>` nu, pour ne pas laisser de `</a>` orphelin.
+- Regex et non DOMParser : le mapper tourne côté serveur, pas de DOM. Noté
+  dans le code que ce n'est PAS une frontière de sécurité (entrée = HTML
+  produit par WP depuis la saisie rédaction).
+- Vérifié par un script Node sur 13 cas (span coloré, font-size inline, mark,
+  `<u>`, lien externe avec `&amp;` en query, lien interne, `javascript:`,
+  entités, `&lt;script&gt;`, `<br>`, `<sup>`, imbrication, `<a>` sans href) :
+  aucun résidu de mise en forme, entités préservées, `javascript:` neutralisé.
+- Portée : uniquement le bloc `body`. `mediaText` passe déjà par `stripTags`.
+
+Toujours pas de vérification visuelle possible (aucun Chrome connecté).
+`tsc --noEmit` OK.
+
+## 2026-08-11 — Storytelling : fond noir sur la vidéo + cover sticky permanent
+
+### 1. `.container-background` passe en noir quand la vidéo est à l'écran
+
+- `app/components/Article/ArticleMediaVideoWrap.tsx` (NOUVEAU, client) —
+  remplace le `<div className="am-video-wrap">` du composant serveur. Même
+  markup, plus un IntersectionObserver qui pose/retire
+  `container-background--dark` sur `el.closest('.container-background')`.
+  - `rootMargin: '-25% 0px -25% 0px'` → bascule quand la vidéo entre dans la
+    bande centrale du viewport, pas dès qu'un pixel dépasse en bas.
+  - **Compteur en `WeakMap<Element, number>`** : indispensable si une même
+    plaque contient DEUX vidéos, sinon la sortie d'écran de la première
+    retirerait la classe alors que la seconde est encore visible. Décrément
+    aussi au démontage (navigation client), sinon le compteur reste bloqué.
+  - IntersectionObserver et non listener `scroll` : le calcul se fait hors du
+    thread principal, pas de handler à chaque pixel.
+- Appliqué aux DEUX cas qui utilisent `am-video-wrap` : `video` (fichier) et
+  `embed` non-Spotify (iframe YouTube/Vimeo). Yv ne mentionnait que l'iframe,
+  mais même wrapper et même intention visuelle.
+- CSS : `.container-background--dark` (fond #000) + `transition` 0.45s,
+  neutralisée sous `prefers-reduced-motion`.
+- **Inversion du texte obligatoire, pas cosmétique** : sans elle le corps
+  reste en `--siteText` (quasi noir) et devient illisible. Règles ajoutées sur
+  `.am-heading`, `.am-body`, `.am-list`, `.am-quote` (+ `border-left-color`),
+  `.am-figcaption`, `.default-authors`, `.author-link`, liens du corps. Les
+  icônes des outils sont en `currentColor`, elles suivent seules.
+
+### 2. `.am-cover-media` sticky en permanence (révélé par la plaque précédente)
+
+Avant : l'image montait depuis le bas puis s'épinglait en atteignant le
+header. Demande : qu'elle soit déjà en place et que la plaque blanche qui la
+précède la découvre en remontant.
+
+- Une seule ligne de fond : `margin-top: calc(-1 * var(--am-cover-height))`
+  sur `.am-cover-media`, avec `--am-cover-height: 90vh` qui pilote aussi
+  `height`/`max-height` (les deux DOIVENT rester égales, d'où la variable).
+- Mécanique : l'image remonte de sa propre hauteur, donc derrière la plaque
+  précédente (plaque z-index 2, image z-index 0). Le sticky s'active pendant
+  que la plaque occupe encore l'écran ; c'est son bord inférieur qui, en
+  remontant, découvre l'image du bas vers le haut.
+- **Le texte de cover n'est pas affecté** : la boîte occupe toujours 90vh dans
+  le flux, seul son point de départ bouge — le `margin-top: -70vh` de
+  `.am-cover-text-flow` reste calibré.
+- Garde-fou : `.container-background:has(+ .am-cover-media) { min-height: 90vh }`.
+  Sans lui, une plaque plus courte que 90vh laisserait le cover déborder sur
+  la section d'encore avant. Ciblé via `:has()` pour ne pas imposer cette
+  hauteur aux plaques non concernées (section courte en fin d'article).
+  `:has()` est supporté partout aujourd'hui ; à défaut la dégradation est
+  simplement l'absence de garde-fou.
+
+Points d'attention :
+
+- **Rien n'a été vérifié visuellement** : aucun navigateur Chrome n'était
+  connecté à la session (`list_connected_browsers` → []), et le conteneur
+  cloud ne peut pas joindre le localhost:3000 de Yv. `tsc --noEmit` OK (exit 0)
+  ne valide que le TypeScript, pas la chorégraphie de scroll. À valider par
+  Yv : le seuil de bascule du fond noir, et le fait que la remontée de 90vh
+  ne crée pas de chevauchement sur des articles réels.
+- Le total de scroll de la page diminue de 90vh par cover (la remontée
+  supprime la phase « l'image monte depuis le bas »).
+
+## 2026-08-11 — Zone Health (duplication de HumanRights)
+
+Catégorie WP `health` vérifiée en direct : **term id 105**, 47 articles publiés.
+
+Fichiers créés — `app/components/Health/` :
+
+- `Types.ts` — `HealthArticle`, identique à `HumanRightsArticle` sauf
+  `section: 'health'`.
+- `HealthCard.tsx` — copie de `HumanRightCard`. **Deux nettoyages** : imports
+  lucide-react `Globe, Headphones, Bookmark` supprimés (aucun n'était utilisé,
+  `Globe` n'apparaissait que dans du JSX commenté) et blocs JSX commentés
+  (strapline, source) retirés. Rendu identique à l'original.
+- `HealthZone.tsx` — copie de `HumanRightsZone`, même découpage `[1, 2, 2]`,
+  lien vers `/category/health`, titre « Health ».
+
+Fichiers modifiés :
+
+- `app/services/wpApi.ts` — import du type, `CATEGORY_IDS.health = 105`, et
+  `getHealthArticles()` calquée sur `getHumanRightArticles()`
+  (préfixe d'id `health-post-`, étiquette de repli « Health »).
+- `app/page.tsx` — import, ajout au `Promise.all` (9e position, l'ordre du
+  tableau et celui du destructuring doivent rester alignés) et rendu de
+  `<HealthZone />` juste après `<HumanRightsZone />`.
+
+Points d'attention :
+
+- **Aucun CSS ajouté, et c'est volontaire** : vérifié par grep, toute la mise
+  en page vient de la classe `zone-tag` (31 occurrences dans le CSS). Les
+  classes `zone-human-rights`, `zone-anti-corruption`, `zone-environment` et
+  donc `zone-health` n'ont AUCUN style dédié — ce sont de simples points
+  d'accroche. Dupliquer du CSS aurait été inutile.
+- Placement sur la homepage entre Human Rights et le slider TikTok : choix par
+  défaut, une ligne à déplacer dans `page.tsx` si Yv veut autre chose.
+- « Health » n'a **pas** été ajouté à `navigationData.ts` (menu header) ni à
+  `categoryConfig.ts` — décisions éditoriales, à faire sur demande. La page
+  `/category/health` fonctionne déjà sans config (route `[slug]` générique).
+- Incohérence latente repérée dans `getHumanRightArticles()` : le slug de repli
+  passé à `resolveCategoryId` est `'human-right'` (singulier) alors que la
+  catégorie réelle est `human-rights` (pluriel, cf. nav et lien de la zone).
+  Sans effet aujourd'hui car `CATEGORY_IDS.humanRight = 121` court-circuite le
+  repli — mais si cet ID devenait faux, le repli échouerait silencieusement et
+  la zone afficherait les 5 derniers articles toutes catégories confondues.
+- Vérif : `npx tsc --noEmit` OK (exit 0). Le typage valide au passage
+  l'alignement du `Promise.all` (un décalage aurait fait échouer
+  `<HealthZone articles={healthNews} />`). Pas de rendu testé en navigateur.
+
 ## 2026-08-11 — Page /contact-us (formulaire + envoi Gmail)
 
 Mise en page calquée sur une maquette fournie par Yv (portfolio Dribbble d'une

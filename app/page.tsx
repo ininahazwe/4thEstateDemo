@@ -6,6 +6,7 @@ import {
     getEnvironmentArticles,
     getFourthEstateArticles,
     getGeneralNewsArticles,
+    getHealthArticles,
     getHumanRightArticles,
     getLatestBannerArticles,
     getOurImpactArticles,
@@ -19,6 +20,7 @@ import AntiCorruptionZone from "@/app/components/AntiCorruption/Corruptionzone";
 import OurImpactZone from "@/app/components/Impact/ImpactZone";
 //import StoriesZone from "@/app/components/Stories/Storieszone";
 import HumanRightsZone from "@/app/components/HumanRights/HumanRightZone";
+import HealthZone from "@/app/components/Health/HealthZone";
 import TikTokStoriesSlider from "@/app/components/VideoSlider/TikTokStoriesSlider";
 import {BANNER_CATEGORY_SLUGS} from "@/app/components/SiteBanner/bannerCategorySlugs";
 import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
@@ -43,6 +45,7 @@ export default async function App() {
         impactNews,
         storiesNews,
         humanRightsNews,
+        healthNews,
         bannerCategories,
     ] = await Promise.all([
         getFourthEstateArticles(),
@@ -53,6 +56,7 @@ export default async function App() {
         getOurImpactArticles(),
         getStoriesArticles(),
         getHumanRightArticles(),
+        getHealthArticles(),
         getBannerCategories(BANNER_CATEGORY_SLUGS),
     ]);
 
@@ -94,6 +98,8 @@ export default async function App() {
                             <GeneralNewsZone articles={generalNews} />
 
                             <HumanRightsZone articles={humanRightsNews} />
+
+                            <HealthZone articles={healthNews} />
 
                             <TikTokStoriesSlider />
 

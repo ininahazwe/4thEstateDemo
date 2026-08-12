@@ -12,7 +12,7 @@ import type { WpBlock } from "./wpApi.article";
 export type MediaBlock =
     | { type: "heading"; text: string }
     | { type: "quote"; text: string }
-    | { type: "body"; paragraphs: string[] } // HTML interne conservé (gras, liens…)
+    | { type: "body"; paragraphs: string[] } // HTML inline assaini (cf. sanitizeInlineHtml)
     | { type: "list"; items: string[] }
     | { type: "image"; src: string; alt: string; caption?: string }
     | { type: "gallery"; images: { src: string; alt: string; caption?: string }[] }
@@ -35,6 +35,66 @@ export type MediaBlock =
 
 function stripTags(html: string): string {
     return decode(html.replace(/<[^>]+>/g, "")).trim();
+}
+
+/**
+ * Balises inline conservées dans les paragraphes : celles qui portent du SENS.
+ * Tout le reste (span, font, mark, small, u…) est dépouillé — la balise
+ * disparaît, son texte reste.
+ */
+const ALLOWED_INLINE_TAGS = new Set(["a", "strong", "b", "em", "i", "br", "sup", "sub"]);
+
+/**
+ * Neutralise la mise en forme inline injectée par l'éditeur WordPress.
+ *
+ * L'éditeur de blocs laisse passer, dans le corps d'un paragraphe, des
+ * `<span style="color:…">`, des tailles de police en dur, des `<mark>`, des
+ * classes `has-*`… Sur le template storytelling, dont la typographie est
+ * imposée par le design, ces styles cassent l'uniformité du texte. On ne
+ * garde donc que les balises sémantiques, sans aucun attribut — sauf `href`
+ * sur les liens.
+ *
+ * Implémentation par regex et non par DOMParser : ce mapper tourne côté
+ * serveur (composant serveur Next), où il n'y a pas de DOM. Acceptable ici
+ * parce que l'entrée est du HTML produit par WordPress à partir de la saisie
+ * de la rédaction — ce n'est pas une frontière de sécurité face à du contenu
+ * arbitraire. Pour ça il faudrait une vraie lib de sanitisation.
+ */
+function sanitizeInlineHtml(html: string): string {
+    return html
+        // Commentaires (délimiteurs de blocs Gutenberg résiduels, etc.).
+        .replace(/<!--[\s\S]*?-->/g, "")
+        .replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>/g, (match, rawTag: string, attrs: string) => {
+            const tag = rawTag.toLowerCase();
+
+            // Balise non retenue : on la dépouille, le texte qu'elle entoure
+            // reste en place (y compris la balise fermante, d'où le traitement
+            // identique pour l'ouvrante et la fermante).
+            if (!ALLOWED_INLINE_TAGS.has(tag)) return "";
+
+            if (match.startsWith("</")) return `</${tag}>`;
+            if (tag === "br") return "<br />";
+
+            // strong / em / sup / sub : aucun attribut n'est utile.
+            if (tag !== "a") return `<${tag}>`;
+
+            const href = /\shref=["']([^"']*)["']/i.exec(attrs)?.[1]?.trim() ?? "";
+            const isSafe =
+                /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(href) && !/["<>]/.test(href);
+
+            // href absent ou douteux (javascript:, data:…) : on garde un <a>
+            // nu plutôt que rien, pour ne pas laisser un </a> orphelin.
+            // Le texte s'affiche normalement, sans lien.
+            if (!isSafe) return "<a>";
+
+            // Pas de ré-échappement du href : la valeur vient du HTML source,
+            // elle est déjà encodée (un &amp; dans une query string le
+            // resterait, le ré-échapper donnerait &amp;amp;).
+            return /^https?:/i.test(href)
+                ? `<a href="${href}" target="_blank" rel="noopener noreferrer">`
+                : `<a href="${href}">`;
+        })
+        .trim();
 }
 
 function extractAttr(html: string, tag: string, attr: string): string | undefined {
@@ -98,9 +158,21 @@ export function mapWpBlocksToMediaBlocks(blocks: WpBlock[]): MediaBlock[] {
         // (plusieurs <p> à la suite dans l'éditeur = un seul paragraphe de
         // lecture côté design, pas une section par phrase).
         if (block.blockName === "core/paragraph") {
+            // Le regex capture l'INTÉRIEUR du <p> : les attributs du <p>
+            // lui-même (class="has-large-font-size", style inline, alignement)
+            // sont donc déjà écartés. sanitizeInlineHtml s'occupe de ce qui
+            // reste à l'intérieur.
             const inner = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block.innerHTML)?.[1] ?? "";
-            const text = decode(inner).trim();
-            if (text) pendingParagraphs.push(text);
+
+            // Test de vacuité sur le texte nu : écarte <p></p>, <p>&nbsp;</p>
+            // et <p><span></span></p>, qui donneraient un paragraphe vide.
+            if (!stripTags(inner)) continue;
+
+            // Volontairement PAS de decode() ici : la chaîne part en
+            // dangerouslySetInnerHTML, les entités doivent rester des entités.
+            // Les décoder d'abord transformerait un &lt;script&gt; écrit dans
+            // l'éditeur en vraie balise à l'affichage.
+            pendingParagraphs.push(sanitizeInlineHtml(inner));
             continue;
         }
         flushParagraphs();

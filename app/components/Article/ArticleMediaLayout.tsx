@@ -1,4 +1,5 @@
 import ArticleMediaPodcast from './ArticleMediaPodcast';
+import ArticleMediaVideoWrap from './ArticleMediaVideoWrap';
 import HeroTitle from './HeroTitle';
 import ArticleShareButton from '@/app/components/UI/ArticleShareButton';
 import TTSButton from '@/app/components/UI/TTSButton';
@@ -148,10 +149,13 @@ function Block({ block }: { block: MediaBlock }) {
             );
 
         case 'video':
+            // ArticleMediaVideoWrap remplace le <div className="am-video-wrap">
+            // : même markup, plus le passage en fond noir de la plaque
+            // englobante quand la vidéo atteint le centre de l'écran.
             return (
-                <div className="am-video-wrap">
+                <ArticleMediaVideoWrap>
                     <video className="am-video" src={block.src} poster={block.poster} controls preload="metadata" playsInline />
-                </div>
+                </ArticleMediaVideoWrap>
             );
 
         case 'embed':
@@ -168,7 +172,7 @@ function Block({ block }: { block: MediaBlock }) {
                     />
                 </div>
             ) : (
-                <div className="am-video-wrap">
+                <ArticleMediaVideoWrap>
                     <iframe
                         className="am-embed-video"
                         src={block.src}
@@ -177,7 +181,7 @@ function Block({ block }: { block: MediaBlock }) {
                         allowFullScreen
                         title="Video player"
                     />
-                </div>
+                </ArticleMediaVideoWrap>
             );
 
         case 'podcast':

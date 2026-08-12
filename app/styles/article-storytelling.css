@@ -22,7 +22,16 @@ html {
 
 .article-media {
     color: var(--siteText);
-    font-family: var(--serifGeorgia), serif;
+    /*font-family: var(--serifGeorgia), serif;*/
+
+    /* Hauteur d'un cover épinglé. */
+    --am-cover-height: 90vh;
+    /* Distance de scroll pendant laquelle la plaque précédente découvre le
+       cover. Voir la section Cover en bas de fichier. */
+    --am-cover-reveal: 90vh;
+    /* Padding vertical d'une plaque blanche — repris tel quel dans le calcul
+       de padding-bottom de la règle :has() ci-dessous. */
+    --am-plate-padding: 48px;
 }
 
 .am-wrap {
@@ -76,22 +85,23 @@ html {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 100px;
+    bottom: 0;
     z-index: 2;
     padding: 64px 24px 48px;
     display: flex;
     justify-content: center;
     text-align: center;
-    /*background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));*/
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
 }
 
 .am-title {
     color: #fff;
-    font-size: clamp(2.75rem, 5vw, 4rem);
+    font-size: clamp(2.75rem, 5vw, 5rem);
     font-weight: 600;
     line-height: 1.15;
     max-width: 900px;
-    margin: 0;
+    margin-bottom: 100px;
+    text-transform: uppercase !important;
 }
 
 /* ─── Sections blanches (plaques de contenu) ──────────────────────────── */
@@ -107,7 +117,69 @@ html {
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
-    padding: 48px 0;
+    padding: var(--am-plate-padding, 48px) 0;
+    transition: background-color 0.45s ease, color 0.45s ease;
+}
+
+/* ─── Piste de révélation du cover suivant ────────────────────────────────
+   La plaque gagne en bas une bande de fond blanc supplémentaire (padding),
+   et le cover qui suit est remonté d'exactement la même valeur (margin
+   négatif, qui fusionne avec le margin-top nul du cover). Somme nulle : la
+   hauteur du document et la position de TOUT ce qui suit sont inchangées.
+
+   C'est le point qui manquait à la première version : le cover portait
+   lui-même un margin-top négatif, ce qui retirait 90vh au document — or
+   c'était justement le budget de scroll pendant lequel l'image restait
+   visible. La fenêtre de révélation s'effondrait à une dizaine de vh.
+
+   Ici le cover est déjà épinglé pendant toute la bande, simplement masqué
+   derrière elle (plaque z-index 2, cover z-index 0) ; c'est le bord
+   inférieur de la plaque qui, en remontant, le découvre progressivement.
+
+   :has() cible uniquement les plaques réellement suivies d'un cover — une
+   section courte en fin d'article garde sa hauteur naturelle. */
+/*.container-background:has(+ .am-cover-media) {
+    padding-bottom: calc(var(--am-plate-padding, 48px) + var(--am-cover-reveal));
+    margin-bottom: calc(-1 * var(--am-cover-reveal));
+}*/
+
+/* ─── Variante sombre (vidéo au centre de l'écran) ────────────────────────
+   Classe posée/retirée par ArticleMediaVideoWrap (IntersectionObserver).
+   L'inversion du texte n'est pas cosmétique : sans elle le corps de l'article
+   reste en --siteText (quasi noir) et devient illisible sur fond noir. */
+
+.container-background--dark {
+    background: #000;
+    color: #fff;
+}
+
+.container-background--dark .am-heading,
+.container-background--dark .am-body,
+.container-background--dark .am-body p,
+.container-background--dark .am-list,
+.container-background--dark .am-quote,
+.container-background--dark .am-figcaption,
+.container-background--dark .default-authors,
+.container-background--dark .author-link {
+    color: #fff;
+}
+
+.container-background--dark .am-quote {
+    border-left-color: #fff;
+}
+
+.container-background--dark .am-body a {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* Les icônes des outils (partage/écoute/favoris) sont dessinées en
+   currentColor : elles suivent donc l'inversion sans règle dédiée. */
+
+@media (prefers-reduced-motion: reduce) {
+    .container-background {
+        transition: none;
+    }
 }
 
 /* Auteur : réutilise les classes .article-authors-vo / .default-authors /
@@ -161,7 +233,7 @@ html {
 .am-quote {
     width: 400px;
     max-width: 100%;
-    font-size: rem;
+    font-size: 1.4rem;
     line-height: 1.6;
     text-align: left;
     font-style: italic;
@@ -300,21 +372,25 @@ html {
     }
 }
 
-/* ─── 5. Cover — image épinglée (sticky, statique), max-height 60vh.
+/* ─── 5. Cover — image épinglée (sticky), révélée par la plaque précédente.
    Le texte (.am-cover-text-flow) N'EST PAS sticky : il chevauche l'image au
    départ (margin-top négatif) puis remonte normalement au scroll, avec les
    blocs suivants, pour la recouvrir — cf. note pin+cover en tête de
    fichier. Pas de vrai déplacement de l'image elle-même (demande produit :
    pas de parallaxe sur les images). ───────────────────────────────────── */
 
+/* L'image ne porte AUCUN décalage : c'est la plaque précédente qui crée la
+   piste de révélation (padding + margin négatif, voir plus haut). Le cover
+   reste donc une simple boîte sticky de --am-cover-height, et le -70vh de
+   .am-cover-text-flow garde exactement le même calibrage qu'avant. */
 .am-cover-media {
     position: sticky;
     top: var(--headerHeight, 0px);
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
-    height: 60vh;
-    max-height: 60vh;
+    height: var(--am-cover-height);
+    max-height: var(--am-cover-height);
     overflow: hidden;
     background-color: #111;
     z-index: 0;
@@ -346,11 +422,12 @@ html {
 
 .am-cover-text {
     color: #fff;
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-size: clamp(1.5rem, 4vw, 4.5rem);
     font-weight: 600;
     text-align: center;
     max-width: 900px;
     margin: 0;
+    text-transform: uppercase;
 }
 
 /* ─── 7. Audio (largeur texte standard) ────────────────────────────────── */
