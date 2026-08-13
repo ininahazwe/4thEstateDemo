@@ -9,18 +9,20 @@ import type { MediaBlock } from '@/app/services/blockMapper';
 // ---------------------------------------------------------------------------
 // ArticleMediaLayout — template "storytelling" (ACF is_storytelling).
 //
-// Architecture "pin + cover" :
-// - hero et cover sont des images position:sticky (z-index:0), enfants
-//   directs de <article> — elles s'épinglent sous le header et ne bougent
-//   plus.
-// - tout le reste du contenu est regroupé en SECTIONS blanches
-//   (.container-background : fond blanc, pleine largeur de page,
-//   z-index supérieur) qui remontent au scroll et finissent par recouvrir
-//   l'image épinglée qui les précède.
-// - le flux de blocs est donc DÉCOUPÉ à chaque bloc 'cover' : les blocs
-//   entre deux covers forment une section blanche ; le cover lui-même est
-//   émis entre les sections (image sticky + son texte qui, lui, monte au
-//   scroll en flux normal).
+// Architecture "pin + panneau" :
+// - le HERO est épinglé (position:sticky, z-index 0, enfant direct de
+//   <article>) : il ne bouge plus une fois collé sous le header et se laisse
+//   progressivement voiler par le contenu qui remonte.
+// - tout le contenu courant est regroupé en SECTIONS blanches
+//   (.container-background : fond blanc opaque, pleine largeur, z-index 2)
+//   qui remontent au scroll et recouvrent le hero épinglé.
+// - un COVER est un panneau autonome de 100vh (.am-cover-media, z-index 2) :
+//   image immobile CONFINÉE à ce panneau (background-attachment:fixed) et
+//   texte centré par-dessus. Le panneau reste dans le flux : il se dévoile
+//   en entrant par le bas et se couvre en sortant par le haut, l'image ne
+//   bougeant jamais. Rien n'est peint hors du panneau.
+// - le flux de blocs est donc DÉCOUPÉ à chaque bloc 'cover' : les blocs entre
+//   deux covers forment une section blanche, le cover est émis entre elles.
 // ---------------------------------------------------------------------------
 
 export interface ArticleMediaAuthor {
@@ -207,26 +209,27 @@ function Block({ block }: { block: MediaBlock }) {
     }
 }
 
+// Panneau plein écran (100vh) : l'image est portée par le BACKGROUND d'un
+// calque interne et non par un <img>. C'est le seul moyen d'avoir à la fois
+// une image immobile au scroll (background-attachment:fixed) ET strictement
+// confinée à son bloc — un <img> en position:fixed serait peint sur toute la
+// fenêtre pendant tout l'article, et `overflow:hidden` sur le parent ne clippe
+// pas un descendant fixed.
 function Cover({ block }: { block: CoverBlock }) {
     return (
-        <>
-            <div className="am-cover-media">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={block.src} alt={block.alt} loading="lazy" />
-                <div
-                    className="am-cover-overlay"
-                    style={{
-                        backgroundColor: block.overlayColor ?? '#000',
-                        opacity: (block.dimRatio ?? 50) / 100,
-                    }}
-                />
-            </div>
-            {block.text && (
-                <div className="am-cover-text-flow">
-                    <p className="am-cover-text">{block.text}</p>
-                </div>
-            )}
-        </>
+        <section className="am-cover-media">
+            {/* Calque décoratif (l'ACF cover WordPress ne fournit pas d'alt) :
+                pas de role="img" sans libellé, il serait annoncé à vide. */}
+            <div className="am-cover-image" style={{ backgroundImage: `url("${block.src}")` }} />
+            <div
+                className="am-cover-overlay"
+                style={{
+                    backgroundColor: block.overlayColor ?? '#000',
+                    opacity: (block.dimRatio ?? 50) / 100,
+                }}
+            />
+            {block.text && <p className="am-cover-text">{block.text}</p>}
+        </section>
     );
 }
 

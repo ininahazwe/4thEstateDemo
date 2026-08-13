@@ -1,5 +1,95 @@
 # Mémoire projet — 4thestate
 
+## 2026-08-13 — Cover en position:fixed (mécanique BBC) — VÉRIFIÉ
+
+Abandon définitif de l'approche sticky + piste par padding. Le cover reproduit
+maintenant `.section.section-text-over-media.viewport-height` de la BBC.
+
+**Structure :**
+
+- `.am-cover-media` : `position: relative`, `height: var(--am-cover-height)`
+  (100vh), `z-index: 0`. Bloc en FLUX qui ne fait que réserver la piste de
+  scroll — équivalent de la `.section.viewport-height` BBC. Son `z-index: 0` +
+  position:relative en fait un contexte d'empilement, donc tout le sous-arbre
+  compte comme un seul plan z-0 face à ses frères.
+- `.am-cover-media img` ET `.am-cover-overlay` : `position: fixed; top:0;
+  left:0; width:100vw; height:100vh`. **Les deux** doivent être fixed, sinon le
+  voile se décale de l'image au scroll.
+- `position: relative` sur le parent ne fait PAS de lui le bloc conteneur des
+  enfants fixed : ils restent calés sur la fenêtre. (Il faudrait un transform /
+  filter / contain pour ça.)
+
+**Pourquoi fixed et pas sticky** : un élément sticky reste dans le flux et
+arrive donc par le bas de l'écran avant de s'épingler — pendant cette entrée
+l'image SE DÉPLACE. Le seul moyen de l'éviter en sticky était la marge négative,
+qui imposait une bande de blanc vide. `fixed` supprime le problème à la racine :
+plus aucun padding sur `.container-background` (retour à 48px), plus de bande
+blanche.
+
+**Le hero a dû cesser d'être sticky** (`position: relative`, z-index 1).
+Nécessité, pas esthétique : l'image de cover en fixed est peinte en permanence
+sur toute la fenêtre. Pour qu'elle ne masque pas le hero au chargement, le hero
+doit passer devant (z 1 > 0) ; mais sticky, il ne quitte jamais l'écran et
+masquerait alors le cover pendant tout le reste de l'article (constaté). Un
+z-index fixe ne peut pas être au-dessus puis en dessous. La BBC fait pareil :
+sa section-titre est en position:absolute et défile.
+
+**Empilement final** : cover fixed z-0 < hero z-1 < plaques `.container-background`
+z-2. `.am-cover-text-flow` z-1, frère du cover → texte au-dessus de l'image.
+
+**Mesuré aux 5 étapes** (fenêtre 772px) — `imgFixe` = [0,772] PARTOUT, l'image
+ne bouge jamais :
+
+| scrollY | état | fenêtre visible de l'image |
+|---|---|---|
+| 0 | haut de page, hero devant | 0px |
+| 1250 | plaque0 remonte | 444px |
+| 2000 | image seule | 772px (plein écran) |
+| 3200 | plaque1 voile | 154px |
+| 4200 | masquée | 0px |
+
+**LIMITE CONNUE — plusieurs covers dans un même article.** Toutes les images
+fixed sont peintes en permanence et partagent le z-index 0 : la dernière du DOM
+passe donc devant les précédentes. Un article à 2 covers ou plus afficherait la
+mauvaise image. C'est précisément pour ça que la BBC ajoute du JS. Correctif
+possible : un IntersectionObserver qui bascule `visibility: hidden` sur un cover
+dont la boîte en flux est hors écran (~20 lignes, même principe que
+ArticleMediaVideoWrap). NON IMPLÉMENTÉ — le post de test n'a qu'un cover.
+
+## 2026-08-13 — Analyse de la référence BBC + hauteurs hero/cover
+
+Page de référence de Yv : bbc.co.uk/news/resources/idt-sh/sex_and_the_sugar_daddy
+(le texte de son post de test en est repris). Inspectée dans le navigateur.
+
+**Mécanique BBC — deux traitements distincts :**
+
+- Section titre (première image) : `<picture>` en **`position: absolute`** dans
+  une section de 100vh → elle défile normalement. **Aucun parallax sur le hero.**
+- Parallax internes : `<picture>` en **`position: fixed`**, `top: 0`, hauteur
+  pleine fenêtre, `z-index: 3`, dans une section de 100vh SANS fond opaque.
+  Vérifié au scroll : la picture reste `fixed` et `top: 0` en permanence, même
+  hors de sa section (mesuré à ±800px). Ce sont les sections de texte, opaques,
+  qui glissent par-dessus.
+
+Conclusion : le « parallax » n'en est pas un — rien ne se déplace à vitesse
+différente, il y a une image immobile et du texte qui passe devant. C'est
+exactement notre principe. La BBC utilise `fixed` + du JS pour gérer les
+entrées/sorties parce que la page précède la fiabilité de `position: sticky` ;
+notre `sticky` obtient le même résultat sans JS. **Rien à réarchitecturer.**
+
+**Hauteurs posées (demande de Yv) :**
+
+- `--am-hero-height: 90vh` (nouvelle variable, remplace le `height: 80vh` en
+  dur). Pas 100vh : le hero est épinglé SOUS le header
+  (`top: var(--headerHeight)`, mesuré à 84px), donc 90vh + header remplit déjà
+  l'écran — à 100vh le bas serait coupé. Mesuré : 851px = 90.0vh, bas à 935px
+  pour 945px de fenêtre. ✓
+- `--am-cover-height: 100vh` — déjà en place. Mesuré : 945px = 100.0vh. ✓
+
+Écart assumé avec la BBC : notre hero est `sticky` et non `absolute`, donc la
+première plaque blanche vient le recouvrir en remontant, comme pour les covers.
+Plus cohérent avec la suite de l'article.
+
 ## 2026-08-13 — Galerie survolable + cover en image de fond (VÉRIFIÉ AU NAVIGATEUR)
 
 Première session avec l'extension Claude dans Chrome. Tout ce qui suit est
@@ -35,6 +125,17 @@ voisines.
 
 Note : `--am-cols`, posé inline par le composant, n'est plus utilisé par la CSS.
 
+**Correctif après relecture du HTML réel** — les `<figure>` de galerie peuvent
+porter un `<figcaption class="am-figcaption">`. La première version fixait
+`height: var(--am-gallery-h)` + `overflow: hidden` sur la figure, ce qui
+rognait totalement les légendes (mesuré : légende à 310px dans une figure de
+302px). Corrigé : la figure n'a plus ni hauteur fixe ni overflow — c'est
+l'IMAGE qui porte le carré (`height` + `object-fit: cover`, le recadrage
+n'a pas besoin d'overflow). Figures mesurées après correction : 302×302 sans
+légende, 302×326 avec. Légende forcée sur une ligne
+(`white-space: nowrap` + ellipsis) : sinon elle se ré-enroule quand la vignette
+se resserre au survol, ce qui fait varier la hauteur et sauter la rangée.
+
 ### Cover — image de fond épinglée, révélée puis voilée
 
 Séquence demandée par Yv, obtenue et mesurée. Positions en coordonnées
@@ -58,6 +159,19 @@ cover [2166,3055], texte [3500,4211], plaque1 [4211,7686].
   sur l'image épinglée à scrollY 3560, puis plaque1 qui monte la voiler. ✓
 - Ne JAMAIS remettre un margin-top négatif sur `.am-cover-text-flow` sans
   revoir la règle `:has()` — c'est noté dans le CSS.
+
+**Correctif : `--am-cover-reveal` ramenée de 100vh à 25vh.** Yv a relevé le
+padding-bottom énorme sur la première plaque. Il est intentionnel (c'est la
+piste), mais la conséquence que j'avais manquée : **la piste EST une bande de
+blanc vide**, puisque la plaque doit recouvrir l'image pour la découvrir alors
+que son contenu est déjà terminé. À 100vh, mesuré à scrollY 1639 :
+`ecranEntierementBlanc: true` — un écran entier vide à traverser. À 25vh :
+bande de 237px, image visible sur 708px, plus d'écran vide (vérifié en capture).
+
+Règle à retenir : **`--am-cover-reveal` = hauteur exacte de la bande blanche
+vide**. La garder bien en dessous de 100vh. `0` désactive proprement la
+révélation (la règle `:has()` devient inopérante, l'image remonte par le bas
+avant de s'épingler).
 
 ### Notes d'outillage navigateur
 
@@ -764,3 +878,50 @@ Points d'attention :
 - Aucun lien vers /archives ajouté dans `navigationData.ts` / `footerData.ts`.
 - Vérifs passées : `npx tsc --noEmit` OK, `npx eslint` sur les nouveaux fichiers OK.
   Pas de test runtime contre l'API WP (fetch réseau indisponible dans la session).
+
+---
+
+## Storytelling — hero sticky, cover en panneau confiné, galerie élastique (13/08/2026)
+
+Refonte de l'empilement de `ArticleMediaLayout.tsx` + `app/styles/article-storytelling.css`.
+
+**Cause racine du blocage précédent** : l'image de cover était en `position: fixed`,
+donc peinte sur toute la fenêtre pendant TOUT l'article. Le hero devait passer devant
+(z-index 1) pour ne pas être masqué au chargement, ce qui lui interdisait d'être sticky
+(il aurait alors masqué le cover pour le reste de l'article). Confiner le cover débloque
+le hero — les deux points ne sont pas indépendants.
+
+1. **Hero** (`.am-hero-media`) — `position: sticky; top: var(--headerHeight)`,
+   `height: var(--am-hero-height)` = 90vh, `z-index: 0`. Les plaques blanches
+   (`.container-background`, z-index 2) remontent et le voilent par le bas ; il ne quitte
+   jamais l'écran. `top` = `--headerHeight` (70px / 84px ≥1000px) et non 0 : `.site-header`
+   est lui-même sticky top:0 dans le flux, donc à scrollY 0 la position naturelle du hero
+   vaut déjà exactement `--headerHeight` → aucun décalage sticky, aucune bande vide en
+   haut de page. Ne jamais poser overflow/clip/transform sur un ancêtre (casse le sticky).
+
+2. **Cover** (`.am-cover-media`) — panneau autonome de 100vh DANS LE FLUX, `z-index: 2`,
+   `overflow: hidden`, flex centré. L'image passe du `<img>` à un calque
+   `.am-cover-image` (`position: absolute; inset: 0`) en
+   **`background-attachment: fixed`** + `background-size: cover` : immobile au scroll ET
+   peinte uniquement dans la surface du panneau. Le voile `.am-cover-overlay` passe en
+   `absolute; inset: 0` (même géométrie → pas de désynchro).
+   Le texte du cover vit désormais DANS le panneau (`.am-cover-text`, centré) :
+   `.am-cover-text-flow` et `--am-cover-text-gap` sont **supprimés**.
+   Repli `background-attachment: scroll` sous `@media (hover: none)` (iOS/Android gèrent
+   mal `fixed`) et sous `prefers-reduced-motion`.
+   Pistes écartées et pourquoi : `<img fixed>` (non clippable — `overflow:hidden` ne
+   clippe pas un fixed, et `clip-path` sur le parent en fait le bloc conteneur donc
+   l'image redevient mobile) ; `<img sticky>` dans 100vh (plage d'épinglage = 0).
+
+3. **Galerie** (`.am-gallery-item`) — le `width: auto` du survol est remplacé par
+   `calc(var(--am-gallery-h) * var(--am-gallery-grow))` (1.9). `auto` n'est pas
+   interpolable (aucune animation à l'élargissement) et pouvait se résoudre à 0 en
+   flex-wrap → la vignette survolée disparaissait. `object-fit: cover` maintenu au
+   survol (le `contain` provoquait un saut). Retrait des voisines à 0.55,
+   transition 0.55s `cubic-bezier(0.34, 1.28, 0.48, 1)` (léger dépassement = rendu
+   élastique). Rangée toujours plus étroite au survol → aucun saut de ligne.
+
+**Vérifs** : aucune référence orpheline à `am-cover-text-flow` / `am-cover-media img` /
+`--am-cover-text-gap` dans app/. `npx tsc --noEmit` non exécuté (timeout de la session
+sur la VM Windows) — modifs TSX limitées au remplacement d'un `<img>` par un `<div>`
+avec `style={{ backgroundImage }}`.

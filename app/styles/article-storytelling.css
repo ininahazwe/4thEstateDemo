@@ -6,12 +6,13 @@
    article-tools/tools-list, cf. article-critical.css) plutôt que d'inventer
    une palette/des composants parallèles.
 
-   Effet "pin + cover" (hero, cover) : voir la note en tête de
-   ArticleMediaLayout.tsx — .am-hero-media et .am-cover-media sont
-   position:sticky SANS wrapper de hauteur fixe autour d'elles (leur bloc
-   englobant doit être <article class="article-media">, seul ancêtre assez
-   haut pour leur laisser de la place à rester épinglées). Ne pas les
-   envelopper dans un conteneur avec une hauteur définie.
+   Effet "pin + panneau" : voir la note en tête de ArticleMediaLayout.tsx.
+   .am-hero-media est position:sticky SANS wrapper de hauteur fixe autour
+   d'elle (son bloc englobant doit rester <article class="article-media">,
+   seul ancêtre assez haut pour lui laisser de la place à rester épinglée).
+   Ne pas l'envelopper dans un conteneur avec une hauteur définie.
+   .am-cover-media, lui, reste dans le flux : c'est un panneau de 100vh dont
+   l'image est immobile via background-attachment (voir section 5).
    ───────────────────────────────────────────────────────────────────────── */
 
 html {
@@ -24,14 +25,13 @@ html {
     color: var(--siteText);
     /*font-family: var(--serifGeorgia), serif;*/
 
-    /* Hauteur d'un cover épinglé — plein écran, il se comporte en image de fond. */
+    /* Vignette d'ouverture de l'article (hero), épinglée. */
+    --am-hero-height: 90vh;
+    /* Hauteur du panneau cover — plein écran. */
     --am-cover-height: 100vh;
-    /* Distance de scroll pendant laquelle la plaque précédente découvre le
-       cover. Égale à sa hauteur : la révélation dure un écran. */
-    --am-cover-reveal: 100vh;
-    /* Respiration entre la révélation complète de l'image et l'arrivée du
-       texte par le bas. Mettre à 0 pour que le texte suive immédiatement. */
-    --am-cover-text-gap: 0vh;
+    /* (--am-cover-reveal et --am-cover-text-gap supprimées : la piste par
+       padding créait une bande de blanc vide, et le texte du cover vit
+       désormais DANS le panneau — il n'y a plus de décalage à régler.) */
     /* Padding vertical d'une plaque blanche. */
     --am-plate-padding: 48px;
 }
@@ -64,13 +64,33 @@ html {
 
 /* ─── Hero (sticky, cf. note en tête de fichier) ──────────────────────── */
 
+/* STICKY : le hero s'épingle sous le header et ne bouge plus. Ce sont les
+   plaques blanches opaques (z-index 2) qui remontent au scroll et le voilent
+   progressivement par le bas — le hero ne quitte jamais l'écran, il disparaît
+   derrière le contenu.
+
+   z-index 0 : il doit passer DERRIÈRE tout le reste (plaques blanches et
+   panneaux cover, tous en z-index 2). Ce n'était pas possible du temps où
+   l'image de cover était en position:fixed (peinte sur toute la fenêtre en
+   permanence, elle aurait masqué le hero dès le chargement, d'où le z-index 1
+   et le hero non-sticky de la version précédente). Le cover étant désormais
+   confiné à son propre panneau, le conflit n'existe plus.
+
+   top : --headerHeight et non 0 — le .site-header est lui-même sticky top:0
+   (base.css), il occupe donc les 70/84 premiers px du viewport. Caler le hero
+   dessous évite à la fois qu'il passe sous le header et qu'un décalage sticky
+   ouvre une bande vide en haut de page au chargement (à scrollY 0 la position
+   naturelle du hero vaut déjà exactement --headerHeight : aucun déplacement).
+
+   Ne pas ajouter d'overflow/clip/transform sur un ancêtre : cela romprait le
+   sticky. */
 .am-hero-media {
     position: sticky;
     top: var(--headerHeight, 0px);
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
-    height: 80vh;
+    height: var(--am-hero-height);
     overflow: hidden;
     background-color: #111;
     z-index: 0;
@@ -123,31 +143,14 @@ html {
     transition: background-color 0.45s ease, color 0.45s ease;
 }
 
-/* ─── Piste de révélation du cover ────────────────────────────────────────
-   La plaque gagne en bas une bande de fond blanc (padding-bottom) et le cover
-   qui suit est remonté d'autant (margin-bottom négatif, qui fusionne avec le
-   margin-top nul du cover). Somme nulle : la hauteur du document et la
-   position de tout ce qui suit sont inchangées.
-
-   Le cover est donc déjà épinglé pendant toute la bande, masqué derrière elle
-   (plaque z-index 2, cover z-index 0) ; c'est le bord inférieur de la plaque
-   qui, en remontant, le découvre du bas vers le haut.
-
-   HISTORIQUE — cette règle a été retirée une fois parce qu'elle recouvrait le
-   texte de cover. La cause n'était pas ici mais dans `.am-cover-text-flow`,
-   qui remontait de -70vh : il tombait donc à l'intérieur de la bande, peinte
-   en blanc par-dessus lui. Le texte descend maintenant APRÈS le cover
-   (--am-cover-text-gap positif), hors de la bande. Ne pas réintroduire de
-   margin-top négatif sur .am-cover-text-flow sans revoir cette règle.
-
-   :has() cible uniquement les plaques réellement suivies d'un cover — une
-   section courte en fin d'article garde sa hauteur naturelle. Et c'est le
-   padding qui crée la piste, donc l'effet fonctionne même si la plaque a peu
-   de contenu. */
-.container-background:has(+ .am-cover-media) {
-    /*padding-bottom: calc(var(--am-plate-padding, 48px) + var(--am-cover-reveal));*/
-    margin-bottom: calc(-1 * var(--am-cover-reveal));
-}
+/* HISTORIQUE — il y avait ici une règle
+   `.container-background:has(+ .am-cover-media)` qui étendait la plaque d'une
+   bande de padding pour créer une piste de révélation, en remontant le cover
+   d'autant. Elle est SUPPRIMÉE : cette bande de padding était par définition
+   du blanc VIDE (le contenu de la plaque est déjà terminé à cet endroit), donc
+   un trou visible que le lecteur devait traverser. Le cover utilise désormais
+   position:fixed, qui n'a besoin d'aucune piste artificielle — voir la section
+   Cover en bas de fichier. Ne pas réintroduire de padding ici. */
 
 /* ─── Variante sombre (vidéo au centre de l'écran) ────────────────────────
    Classe posée/retirée par ArticleMediaVideoWrap (IntersectionObserver).
@@ -335,22 +338,26 @@ html {
 
 /* ─── 6. Gallery ───────────────────────────────────────────────────────── */
 
-/* Vignettes carrées, format original au survol : l'élément survolé s'élargit
-   au ratio réel de l'image, les autres se resserrent pour lui libérer la place.
+/* Accordéon élastique : la vignette survolée s'élargit, les autres se
+   resserrent pour lui libérer la place, et les DEUX mouvements sont animés.
 
    La hauteur de la rangée est fixe (--am-gallery-h) : c'est elle qui définit le
-   côté du carré, et c'est aussi elle qui permet à l'image de retrouver son
-   ratio au survol (hauteur imposée + largeur libre = format naturel).
+   côté du carré au repos, et la largeur seule varie au survol.
 
    flex-wrap: wrap est conservé pour les galeries de plus de 4 images, qui
    déborderaient horizontalement en nowrap. Le survol ne provoque pas de saut
-   de ligne : la rangée RÉTRÉCIT au survol (une vignette gagne ~170px, chacune
-   des autres en perd ~150), donc le nombre d'éléments par ligne ne peut pas
-   augmenter. */
+   de ligne : la rangée RÉTRÉCIT au survol (une vignette gagne 0.9× sa largeur,
+   chacune des autres en perd 0.45×), donc le nombre d'éléments par ligne ne
+   peut pas augmenter. */
 .am-gallery {
     --am-gallery-h: min(34vh, 320px);
+    /* Facteur d'élargissement de la vignette survolée. */
+    --am-gallery-grow: 1.9;
     /* Facteur de retrait des vignettes non survolées. */
-    --am-gallery-shrink: 0.5;
+    --am-gallery-shrink: 0.55;
+    /* Sortie décélérée avec un léger dépassement en fin de course : c'est ce
+       dépassement qui donne le rendu "élastique" plutôt que mécanique. */
+    --am-gallery-ease: cubic-bezier(0.34, 1.28, 0.48, 1);
 
     width: 80%;
     margin: 0 auto;
@@ -367,37 +374,50 @@ html {
        (--am-cols, posé inline par le composant, n'est plus utilisé.) */
     flex: 0 0 auto;
     width: var(--am-gallery-h);
-    height: var(--am-gallery-h);
     margin: 0;
+    transition: width 0.55s var(--am-gallery-ease);
+
+    /* NI hauteur fixe NI overflow:hidden sur la <figure> : c'est l'IMAGE qui
+       porte le carré (height + object-fit ci-dessous), la figure doit rester
+       libre de grandir pour afficher son <figcaption>. Une hauteur fixe de
+       302px doublée d'un overflow:hidden rognait complètement les légendes
+       (mesuré : légende à 310px dans une figure de 302px).
+       Le recadrage carré n'a pas besoin d'overflow : object-fit s'en charge. */
+}
+
+/* Légende sur une seule ligne, tronquée si besoin. Sans ça, elle se
+   ré-enroule quand la vignette se resserre au survol, ce qui fait varier la
+   hauteur de la figure et donc sauter toute la rangée pendant la transition. */
+.am-gallery-item .am-figcaption {
     overflow: hidden;
-    transition: width 0.35s ease;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* height en valeur EXPLICITE et non 100% : en flex-wrap, le navigateur doit
    calculer la largeur intrinsèque de l'élément pour décider des retours à la
-   ligne, et à ce moment-là un height:100% n'est pas encore résoluble. La
-   largeur `auto` du survol tombait alors à 0 et la vignette disparaissait.
-   Une hauteur en dur est résoluble à tout moment. */
+   ligne, et à ce moment-là un height:100% n'est pas encore résoluble.
+   Une hauteur en dur est résoluble à tout moment.
+
+   `object-fit: cover` en permanence, y compris au survol : c'est l'image qui
+   se recadre dans la boîte animée, elle n'a donc aucune géométrie propre à
+   recalculer et suit la largeur au pixel près pendant toute la transition. */
 .am-gallery-item img {
     width: 100%;
     height: var(--am-gallery-h);
-    /* cover : recadrage centré pour remplir le carré. */
     object-fit: cover;
     display: block;
 }
 
-/* Survol — la vignette reprend le format original.
-   `width: auto` laisse la largeur être dictée par l'image (hauteur imposée,
-   largeur libre) : aucun besoin de connaître le ratio en CSS. Contrepartie
-   assumée : cette largeur-là ne s'anime pas, `auto` n'étant pas interpolable.
-   Le retrait des voisines, lui, est animé — c'est ce qui porte le mouvement. */
+/* Survol — largeur EXPLICITE (multiple de --am-gallery-h) et non `width: auto`.
+   `auto` donnait bien le format original de l'image, mais au prix de deux
+   défauts rédhibitoires : il n'est pas interpolable (donc aucune animation à
+   l'élargissement, seules les voisines bougeaient), et en flex-wrap sa
+   résolution pouvait tomber à 0 — la vignette survolée disparaissait alors
+   purement et simplement. Un facteur fixe est animable et toujours résoluble ;
+   le recadrage est absorbé par object-fit: cover. */
 .am-gallery-item:hover {
-    width: auto;
-}
-
-.am-gallery-item:hover img {
-    width: auto;
-    object-fit: contain;
+    width: calc(var(--am-gallery-h) * var(--am-gallery-grow));
 }
 
 /* :has() et non `.am-gallery:hover …` : sans lui, survoler l'espace ENTRE deux
@@ -477,66 +497,71 @@ html {
     }
 }
 
-/* ─── 5. Cover — image de fond épinglée, plein écran ──────────────────────
-   Séquence au scroll, dans l'ordre :
-     1. la plaque précédente la découvre du bas vers le haut (piste de
-        révélation, voir la règle :has() plus haut) ;
-     2. l'image occupe seule l'écran, épinglée ;
-     3. le texte de cover monte par le bas et défile par-dessus ;
-     4. la plaque suivante monte à son tour et la voile.
+/* ─── 5. Cover — panneau 100vh à image immobile ────────────────────────────
+   Équivalent de `.section.section-text-over-media.viewport-height` de la BBC :
+   une section de 100vh DANS LE FLUX, image immobile, texte centré par-dessus.
 
-   `top: 0` et non var(--headerHeight) : c'est une image de FOND, elle passe
-   sous le header — sinon 100vh + la hauteur du header déborderait de l'écran.
-   L'image elle-même ne se déplace jamais (pas de parallaxe) : tout le
-   mouvement vient des plaques opaques qui glissent devant.
+   L'image est portée par le `background` d'un calque interne, en
+   `background-attachment: fixed` : le fond est alors calé sur le viewport et
+   ne bouge donc pas d'un pixel au scroll, tout en n'étant peint QUE dans la
+   surface du panneau. Le panneau, lui, défile normalement : sa fenêtre glisse
+   sur l'image immobile — le cover se dévoile en entrant par le bas et se
+   couvre en sortant par le haut, sans jamais rien peindre ailleurs.
+
+   Pourquoi PAS les deux autres pistes, déjà essayées :
+   - `<img position:fixed>` : peint sur toute la fenêtre pendant TOUT l'article
+     (un `overflow:hidden` sur le parent ne clippe pas un descendant fixed, et
+     un `clip-path` sur le parent en ferait le bloc conteneur du fixed, qui
+     redeviendrait alors mobile). C'est ce que faisait la version précédente,
+     et c'est ce qui interdisait au hero d'être sticky.
+   - `<img position:sticky>` dans un panneau de 100vh : la plage d'épinglage
+     vaut hauteur du panneau − hauteur de l'image = 0, l'image défile donc
+     normalement. Il aurait fallu allonger le panneau (piste) ou le remonter
+     par marge négative — soit du blanc vide, soit du scroll perdu.
    ────────────────────────────────────────────────────────────────────────── */
 
 .am-cover-media {
-    position: sticky;
-    top: 0;
+    position: relative;
+    /* z-index 2, comme les plaques blanches : le panneau est opaque et doit
+       recouvrir le hero épinglé (z-index 0). */
+    z-index: 2;
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     height: var(--am-cover-height);
-    min-height: 100vh;
     overflow: hidden;
     background-color: #111;
-    z-index: 0;
-}
-
-.am-cover-media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.am-cover-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-}
-
-/* Le texte n'est PAS sticky : il monte par le bas et défile par-dessus l'image
-   épinglée (z-index 1 > 0), puis sort par le haut.
-
-   margin-top POSITIF, et c'est essentiel : l'ancienne valeur (-70vh) le faisait
-   remonter dans la bande de révélation de la plaque précédente, qui le peignait
-   en blanc par-dessus. Le décalage positif le place après la fin de la bande —
-   l'image reste donc seule à l'écran pendant --am-cover-text-gap avant que le
-   texte n'arrive. */
-.am-cover-text-flow {
-    position: relative;
-    z-index: 1;
-    margin-top: var(--am-cover-text-gap);
-    min-height: 100vh;
+    /* Centrage du texte du cover, qui vit désormais DANS le panneau. */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 24px;
 }
 
+/* Calque image. `inset: 0` → il couvre exactement le panneau, soit 100vw ×
+   100vh : la même géométrie que celle du fond `fixed`, l'image n'est donc ni
+   décalée ni recadrée différemment de ce que `cover` calcule. */
+.am-cover-image {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-attachment: fixed;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+/* Voile : même géométrie que le calque image, en absolute lui aussi — les deux
+   sont dans le panneau, ils ne peuvent donc pas se désynchroniser au scroll. */
+.am-cover-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
 .am-cover-text {
+    position: relative;
+    z-index: 2;
     color: #fff;
     font-size: clamp(1.5rem, 4vw, 4.5rem);
     font-weight: 600;
@@ -544,6 +569,23 @@ html {
     max-width: 900px;
     margin: 0;
     text-transform: uppercase;
+}
+
+/* iOS/Android ignorent (ou rendent de travers) background-attachment: fixed.
+   Repli explicite en `scroll` : l'image reste confinée au panneau et le
+   remplit, elle défile simplement avec lui. Ciblé sur l'absence de survol
+   plutôt que sur la largeur — c'est le tactile qui pose problème, pas la
+   taille d'écran. */
+@media (hover: none) {
+    .am-cover-image {
+        background-attachment: scroll;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .am-cover-image {
+        background-attachment: scroll;
+    }
 }
 
 /* ─── 7. Audio (largeur texte standard) ────────────────────────────────── */
