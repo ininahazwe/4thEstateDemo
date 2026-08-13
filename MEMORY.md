@@ -1,5 +1,241 @@
 # Mémoire projet — 4thestate
 
+## 2026-08-13 — Galerie survolable + cover en image de fond (VÉRIFIÉ AU NAVIGATEUR)
+
+Première session avec l'extension Claude dans Chrome. Tout ce qui suit est
+mesuré sur `http://localhost:3000/2026/08/story` (post 24175, viewport
+1920×889), pas déduit.
+
+### Galerie — vignettes carrées, format original au survol
+
+`.am-gallery` : hauteur de rangée `--am-gallery-h: min(34vh, 320px)`, vignettes
+carrées (width = height), `--am-gallery-shrink: 0.5` pour le retrait des
+voisines.
+
+- Survol : `.am-gallery-item:hover { width: auto }` + img `width: auto` →
+  la largeur est dictée par l'image (hauteur imposée, largeur libre), donc
+  **aucun besoin de connaître le ratio en CSS**. Mesuré : 558×302, ratio
+  affiché 1.845 = ratio naturel 1.845 (1024×555). ✓
+- Voisines : `.am-gallery:has(.am-gallery-item:hover) .am-gallery-item:not(:hover)`
+  → 151×302 mesuré. `:has()` et non `.am-gallery:hover …`, sinon survoler
+  l'espace ENTRE deux vignettes resserrerait tout sans rien élargir.
+- `flex: 0 0 auto` obligatoire : avec flex-grow, la place libérée serait
+  réattribuée et annulerait l'effet.
+
+**Deux pièges rencontrés, à ne pas réintroduire :**
+
+1. `flex-wrap: nowrap` déborde horizontalement dès plus de 4 images. Repassé en
+   `wrap` — sans risque de saut de ligne au survol, car la rangée RÉTRÉCIT
+   (une vignette +170px, chacune des autres −150px).
+2. En `flex-wrap: wrap`, l'image doit avoir une **hauteur explicite**
+   (`height: var(--am-gallery-h)`) et non `height: 100%`. Le navigateur calcule
+   la largeur intrinsèque des items pour décider des retours à la ligne, et à
+   ce moment-là `100%` n'est pas résoluble : la largeur `auto` du survol tombait
+   à **0** et la vignette disparaissait (mesuré `0x302`).
+
+Note : `--am-cols`, posé inline par le composant, n'est plus utilisé par la CSS.
+
+### Cover — image de fond épinglée, révélée puis voilée
+
+Séquence demandée par Yv, obtenue et mesurée. Positions en coordonnées
+document : hero [85,796], plaque0 [796,3055] (1371 de contenu + 889 de piste),
+cover [2166,3055], texte [3500,4211], plaque1 [4211,7686].
+
+- `--am-cover-height: 100vh`, `top: 0` (et non `--headerHeight` : c'est une
+  image de FOND, elle passe sous le header, sinon 100vh + header déborde),
+  `min-height: 100vh`.
+- Piste de révélation réintroduite sur `.container-background:has(+ .am-cover-media)`
+  (padding-bottom + margin-bottom négatif, somme nulle). Mesuré : le cover
+  finit exactement là où la plaque finit (3055), donc à scrollY 2166 la plaque
+  couvre pile tout l'écran, puis son bord inférieur découvre l'image du bas
+  vers le haut. Capture d'écran à scrollY 2600 : bord de plaque à 455px,
+  conforme au calcul. ✓
+- **La correction qui a débloqué l'affaire** : `.am-cover-text-flow` passe de
+  `margin-top: -70vh` à `margin-top: var(--am-cover-text-gap)` (+50vh). C'est
+  le -70vh qui faisait remonter le texte DANS la piste, où la plaque le
+  peignait en blanc — cause des deux échecs précédents. Le texte arrive
+  maintenant 445px après la fin de la piste. Vérifié : « THE STUDENT » en blanc
+  sur l'image épinglée à scrollY 3560, puis plaque1 qui monte la voiler. ✓
+- Ne JAMAIS remettre un margin-top négatif sur `.am-cover-text-flow` sans
+  revoir la règle `:has()` — c'est noté dans le CSS.
+
+### Notes d'outillage navigateur
+
+- `html { scroll-behavior: smooth }` (défini dans ce fichier CSS) fausse toute
+  mesure après `scrollTo` : la mesure a lieu pendant l'animation. Forcer
+  `document.documentElement.style.scrollBehavior='auto'` et
+  `scrollTo({behavior:'instant'})` avant de mesurer.
+- Le lazy-loading des images décale la mise en page entre deux appels et fait
+  rater les coordonnées de survol. Forcer `img.loading='eager'` + attendre
+  `decode()` avant de viser.
+- Les coordonnées de `computer` sont dans l'espace de la capture (1568px de
+  large ici), pas du viewport (1920px) : facteur 0.8167.
+- `Page.captureScreenshot` a timeout plusieurs fois en batch ; l'appel isolé
+  après une pause passe.
+
+
+## 2026-08-13 — Typo du corps storytelling + retrait de la piste de révélation
+
+### Typo : la source de vérité est article-layout.css, pas article-critical.css
+
+Trois itérations ratées avant de trouver. Les valeurs réellement appliquées au
+corps d'un article standard viennent de **`article-layout.css`**, importée
+APRÈS `article-critical.css` dans layout.tsx, et qui pose un `!important` :
+
+```css
+.article .article-text { font-size: 1.25rem !important; line-height: 1.875rem; }
+.article .article-text { font-family: var(--serifGeorgia), serif; }
+```
+
+- `--serifGeorgia: Georgia,"Times New Roman",Times,serif` (base.css:84)
+- `--sans: "Fira Sans"…` (base.css:82) — c'est ce dont `.am-body` héritait,
+  faute de déclaration de famille.
+
+Erreurs commises, à ne pas refaire :
+
+1. m'être arrêté à `article-critical.css` (`font-size: 1.125rem`,
+   `line-height: 1.6`) sans vérifier les feuilles importées après ;
+2. avoir cru que `wp-block-paragraph` portait la typo — sa seule déclaration
+   dans custom.css est `margin-top: 1rem`, absorbé de toute façon par la
+   fusion des marges verticales entre paragraphes adjacents. La classe est
+   conservée pour la parité de balisage, elle ne joue aucun rôle de rendu ;
+3. avoir mis `.am-body` à 1.125rem alors que sa valeur d'origine, 1.25rem,
+   était DÉJÀ la bonne (= 20px). Seuls manquaient `font-family` et le
+   `line-height` (1.875rem = 30px, pas 1.6 = 32px).
+
+État final de `.am-body` et `.am-list` : `var(--serifGeorgia)`, 1.25rem,
+1.875rem. Conservé de l'itération précédente (correct, aligné sur
+`.article .article-text`) : `p { margin: 0 }` + `p + p { margin-top: 1rem }`,
+et les règles `em` / `strong` / `p a` (pointillé + survol `--sitePrimary`).
+
+Non touché volontairement : `.am-heading`, `.am-quote`, `.am-cover-text`,
+`.am-title` gardent la police sans-serif. La ligne
+`/*font-family: var(--serifGeorgia)*/` commentée sur `.article-media` reste
+commentée — l'appliquer là changerait titres, citations et textes de cover.
+
+### Retrait de `.container-background:has(+ .am-cover-media)`
+
+La piste de révélation (padding-bottom sur la plaque + margin-bottom négatif)
+**recouvrait le texte de cover**. Cause structurelle, pas un réglage :
+`.am-cover-text-flow` remonte de -70vh dans le cover, il tombe donc
+nécessairement dans la bande de padding, peinte en blanc et en z-index 2
+au-dessus du texte (z-index 1). Toute bande ≥ 70vh produit le même
+recouvrement, et faire passer le texte au-dessus de la plaque ne réglerait
+rien : blanc sur blanc avant révélation.
+
+Règle et variable `--am-cover-reveal` supprimées. `.am-cover-media` revient à
+son comportement d'origine (sticky dès qu'il atteint le header). L'effet
+« révélé par la plaque précédente » demanderait de revoir la structure : piste
+de scroll dédiée à l'image, texte de cover sorti du flux du cover. Non fait.
+
+
+## 2026-08-13 — RÉSOLU : le champ REST `blocks` vidait les posts storytelling
+
+### Symptôme et reproduction (par Yv)
+
+1. post classique avec des blocs → enregistre, rafraîchit, blocs présents ✓
+2. coche `is_storytelling` → le front prend bien la forme storytelling ✓
+3. rafraîchit / réouvre l'éditeur → **les blocs et leurs contenus ont disparu**
+4. tout enregistrement depuis cet état écrit `post_content = ''` → perte sèche
+
+Constaté sur le post **24175** (slug `story`) : `acf.is_storytelling: true`,
+`status: publish`, mais `blocks: []` ET `content.rendered` à **0 caractère**.
+Deux signaux indépendants (l'un filtré par `the_content`, l'autre issu de
+`parse_blocks` sur le contenu brut) → `post_content` réellement vide en base.
+
+Le front n'était PAS en cause : la bascule se fait sur `article.isStorytelling`
+seul, donc `ArticleMediaLayout` était bien monté — mais avec zéro bloc, d'où le
+hero + la plaque auteur/outils et rien d'autre. « Il ne prend pas la forme »
+était en fait « la forme est vide ».
+
+### Cause
+
+`register_rest_field('post', 'blocks', …)` dans le `functions.php` du thème
+Foxiz calculait le champ à **chaque** lecture REST d'un post, y compris
+`context=edit` — la requête dont l'éditeur de blocs dépend pour charger le
+post. Isolation confirmée par Yv : en supprimant ce bloc, les blocs
+réapparaissent immédiatement dans l'éditeur.
+
+Défauts relevés dans le code d'origine :
+
+- aucune garde sur `context` → calculé en édition, alors que l'éditeur lit
+  `content.raw` et n'a aucun besoin de ce champ ;
+- aucun `schema` → champ non déclaré, donc non filtrable par contexte ;
+- pas de `function_exists('get_field')` → si ACF est désactivé, fatal
+  « Call to undefined function » qui casse TOUTE réponse REST de posts ;
+- fonction globale nommée `clean_block()` → nom assez générique pour entrer en
+  collision avec un plugin (fatal « Cannot redeclare ») ;
+- pas de garde sur `$post['id']`, ni de limite de récursion ;
+- `innerHTML` conservé à chaque niveau d'imbrication → la charge duplique le
+  contenu de l'article plusieurs fois dans la réponse d'édition, qui porte déjà
+  `content.raw` + `content.rendered` + `excerpt.*`.
+
+**Piège documenté** : `'context' => ['view']` dans le schéma ne suffit pas.
+WordPress exécute le `get_callback` d'abord et ne filtre par contexte qu'au
+moment de sérialiser. C'est le `return null` explicite en tête de callback qui
+corrige ; le schéma n'est qu'une ceinture-bretelles.
+
+### Correctif livré
+
+**`tfe-storytelling.php`** (NOUVEAU mu-plugin, `wp-content/mu-plugins/`) —
+reprend le champ REST ET le field group ACF `group_storytelling_template`
+(mêmes `key`/`name`, donc les valeurs déjà saisies sont conservées).
+
+- garde `context === 'edit'` → `return null` ;
+- `schema` complet avec `'context' => ['view']`, `readonly` ;
+- `update_callback => null` explicite ;
+- gardes ACF / `$post['id']` / contenu vide (renvoie `[]` et non `null`) ;
+- helper renommé `tfe_storytelling_clean_block()` + limite de profondeur
+  `TFE_STORYTELLING_MAX_DEPTH = 10` ;
+- field group accroché à `acf/init` et non au chargement du fichier : un
+  mu-plugin se charge AVANT les plugins, donc avant ACF —
+  `acf_add_local_field_group()` n'existe pas encore à ce moment-là.
+- Forme de sortie vérifiée identique à l'interface `WpBlock` du front
+  (`blockName`, `attrs`, `innerHTML`, `innerBlocks`), avec casts garantissant
+  les types. `php -l` OK.
+
+**Sortie du functions.php assumée** : Foxiz est un thème commercial mis à jour,
+tout code dans son `functions.php` disparaît à la première mise à jour. Yv doit
+**supprimer les trois blocs d'origine** (le `rest_api_init`, `clean_block()`, le
+`acf_add_local_field_group`) — le thème se charge APRÈS les mu-plugins, sa
+version écraserait sinon celle du mu-plugin et le bug reviendrait, plus un
+fatal « Cannot redeclare » sur `clean_block`.
+
+`wpApi.article.ts` : commentaire de `WpBlock` mis à jour (pointait vers
+functions.php). `tsc --noEmit` OK.
+
+### Garde-fou côté Next (implémenté)
+
+`app/(routes)/[year]/[month]/[slug]/page.tsx` : la bascule ne se fait plus sur
+`article.isStorytelling` seul.
+
+```ts
+const mediaBlocks = article.blocks ? mapWpBlocksToMediaBlocks(article.blocks) : [];
+const useStorytelling = article.isStorytelling && mediaBlocks.length > 0;
+```
+
+- Le test porte sur les blocs **MAPPÉS**, pas les blocs bruts : un post peut
+  avoir des blocs que `blockMapper` ne gère pas et qui donneraient quand même
+  une page vide.
+- Le mapping est calculé UNE fois et réutilisé au rendu (avant, il tournait
+  dans le JSX).
+- `useStorytelling` remplace `article.isStorytelling` aux trois endroits du
+  rendu : masquage de `SiteBannerV2`, `data-template="media"` (qui pilote
+  `#site-main[data-template="media"] { padding: 0 !important }`), et le choix
+  du composant. Les trois doivent rester cohérents — un repli qui garderait
+  `data-template="media"` donnerait un article standard sans padding.
+- `console.warn` quand la case est cochée mais qu'il n'y a aucun bloc
+  exploitable : le repli reste visible dans les logs plutôt que silencieux.
+
+`tsc --noEmit` OK.
+
+### Reste à faire
+
+- Récupérer le contenu de 24175 via les révisions WP (requête SQL fournie :
+  `SELECT ID, post_date, LENGTH(post_content) FROM <prefix>posts WHERE
+  post_parent = 24175 AND post_type = 'revision'`).
+- Déployer `tfe-storytelling.php` et retirer les 3 blocs du functions.php.
+
 ## 2026-08-11 — Storytelling : correctif hauteur cover + paragraphes assainis
 
 ### Correctif — la fenêtre de révélation du cover s'était effondrée

@@ -148,6 +148,32 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     if (!article) notFound();
 
     // ─────────────────────────────────────────────────────────────────────
+    // Choix du template.
+    //
+    // La case ACF `is_storytelling` ne suffit pas : un post peut l'avoir
+    // cochée sans avoir un seul bloc exploitable — contenu vide, blocs perdus
+    // côté WordPress, ou uniquement des types de blocs que blockMapper ne gère
+    // pas. Dans ce cas ArticleMediaLayout ne rendait que le hero et la plaque
+    // auteur/outils : une page blanche silencieuse.
+    //
+    // On retombe donc sur le template standard, qui affiche `article.content`
+    // (le HTML rendu par WordPress) et montre quelque chose de lisible dès
+    // qu'il y a du contenu.
+    //
+    // Le mapping est fait ICI, une seule fois, et réutilisé au rendu : c'est
+    // le nombre de blocs MAPPÉS qui décide, pas celui des blocs bruts.
+    // ─────────────────────────────────────────────────────────────────────
+    const mediaBlocks = article.blocks ? mapWpBlocksToMediaBlocks(article.blocks) : [];
+    const useStorytelling = article.isStorytelling && mediaBlocks.length > 0;
+
+    if (article.isStorytelling && !useStorytelling) {
+        console.warn(
+            `[article] "${slug}" a is_storytelling coché mais aucun bloc exploitable ` +
+            `(${article.blocks?.length ?? 0} bloc(s) brut(s)) — repli sur le template standard.`
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // Canonicalisation année/mois : le slug est l'unique clé réelle pour
     // WordPress (getArticleBySlug ne filtre pas par date). Si l'URL visitée
     // porte une année/mois qui ne correspond pas à la date réelle de
@@ -281,7 +307,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
             {/* Bannière masquée en storytelling (équivalent display:none demandé —
                 on évite juste le hack CSS cross-sibling en ne la rendant pas). */}
-            {!article.isStorytelling && (
+            {!useStorytelling && (
                 <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} showHighlights={false} />
             )}
 
@@ -290,12 +316,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     <main
                         className="site-main"
                         id="site-main"
-                        data-template={article.isStorytelling ? "media" : undefined}
+                        data-template={useStorytelling ? "media" : undefined}
                     >
-                        {article.isStorytelling ? (
-                            // Template storytelling (ACF is_storytelling coché) : mise en
-                            // page dédiée, alimentée par les blocs Gutenberg mappés depuis
-                            // article.blocks (voir app/services/blockMapper.ts).
+                        {useStorytelling ? (
+                            // Template storytelling : case ACF cochée ET au moins un bloc
+                            // exploitable (voir le calcul de useStorytelling plus haut).
+                            // Mise en page dédiée, alimentée par les blocs Gutenberg
+                            // mappés depuis article.blocks (app/services/blockMapper.ts).
                             <ArticleMediaLayout
                                 article={{
                                     id: article.id,
@@ -308,7 +335,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                         src: article.featuredImage ?? "",
                                         alt: article.imageCaption ?? article.title,
                                     },
-                                    blocks: article.blocks ? mapWpBlocksToMediaBlocks(article.blocks) : [],
+                                    blocks: mediaBlocks,
                                 }}
                             />
                         ) : (

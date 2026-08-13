@@ -24,13 +24,15 @@ html {
     color: var(--siteText);
     /*font-family: var(--serifGeorgia), serif;*/
 
-    /* Hauteur d'un cover épinglé. */
-    --am-cover-height: 90vh;
+    /* Hauteur d'un cover épinglé — plein écran, il se comporte en image de fond. */
+    --am-cover-height: 100vh;
     /* Distance de scroll pendant laquelle la plaque précédente découvre le
-       cover. Voir la section Cover en bas de fichier. */
-    --am-cover-reveal: 90vh;
-    /* Padding vertical d'une plaque blanche — repris tel quel dans le calcul
-       de padding-bottom de la règle :has() ci-dessous. */
+       cover. Égale à sa hauteur : la révélation dure un écran. */
+    --am-cover-reveal: 100vh;
+    /* Respiration entre la révélation complète de l'image et l'arrivée du
+       texte par le bas. Mettre à 0 pour que le texte suive immédiatement. */
+    --am-cover-text-gap: 0vh;
+    /* Padding vertical d'une plaque blanche. */
     --am-plate-padding: 48px;
 }
 
@@ -121,27 +123,31 @@ html {
     transition: background-color 0.45s ease, color 0.45s ease;
 }
 
-/* ─── Piste de révélation du cover suivant ────────────────────────────────
-   La plaque gagne en bas une bande de fond blanc supplémentaire (padding),
-   et le cover qui suit est remonté d'exactement la même valeur (margin
-   négatif, qui fusionne avec le margin-top nul du cover). Somme nulle : la
-   hauteur du document et la position de TOUT ce qui suit sont inchangées.
+/* ─── Piste de révélation du cover ────────────────────────────────────────
+   La plaque gagne en bas une bande de fond blanc (padding-bottom) et le cover
+   qui suit est remonté d'autant (margin-bottom négatif, qui fusionne avec le
+   margin-top nul du cover). Somme nulle : la hauteur du document et la
+   position de tout ce qui suit sont inchangées.
 
-   C'est le point qui manquait à la première version : le cover portait
-   lui-même un margin-top négatif, ce qui retirait 90vh au document — or
-   c'était justement le budget de scroll pendant lequel l'image restait
-   visible. La fenêtre de révélation s'effondrait à une dizaine de vh.
+   Le cover est donc déjà épinglé pendant toute la bande, masqué derrière elle
+   (plaque z-index 2, cover z-index 0) ; c'est le bord inférieur de la plaque
+   qui, en remontant, le découvre du bas vers le haut.
 
-   Ici le cover est déjà épinglé pendant toute la bande, simplement masqué
-   derrière elle (plaque z-index 2, cover z-index 0) ; c'est le bord
-   inférieur de la plaque qui, en remontant, le découvre progressivement.
+   HISTORIQUE — cette règle a été retirée une fois parce qu'elle recouvrait le
+   texte de cover. La cause n'était pas ici mais dans `.am-cover-text-flow`,
+   qui remontait de -70vh : il tombait donc à l'intérieur de la bande, peinte
+   en blanc par-dessus lui. Le texte descend maintenant APRÈS le cover
+   (--am-cover-text-gap positif), hors de la bande. Ne pas réintroduire de
+   margin-top négatif sur .am-cover-text-flow sans revoir cette règle.
 
    :has() cible uniquement les plaques réellement suivies d'un cover — une
-   section courte en fin d'article garde sa hauteur naturelle. */
-/*.container-background:has(+ .am-cover-media) {
-    padding-bottom: calc(var(--am-plate-padding, 48px) + var(--am-cover-reveal));
+   section courte en fin d'article garde sa hauteur naturelle. Et c'est le
+   padding qui crée la piste, donc l'effet fonctionne même si la plaque a peu
+   de contenu. */
+.container-background:has(+ .am-cover-media) {
+    /*padding-bottom: calc(var(--am-plate-padding, 48px) + var(--am-cover-reveal));*/
     margin-bottom: calc(-1 * var(--am-cover-reveal));
-}*/
+}
 
 /* ─── Variante sombre (vidéo au centre de l'écran) ────────────────────────
    Classe posée/retirée par ArticleMediaVideoWrap (IntersectionObserver).
@@ -242,20 +248,69 @@ html {
     margin: 0;
 }
 
-/* ─── 3. Body (standard — taille/police alignées sur ArticleContent) ──── */
+/* ─── 3. Body — typographie alignée sur l'article standard ─────────────────
+   Reprend `.article .article-text` (article-critical.css) pour que le corps de
+   texte soit identique dans les deux templates.
 
+   À noter : la classe `wp-block-paragraph` que portent les <p> ne joue AUCUN
+   rôle ici. Sa seule déclaration, dans custom.css, est `margin-top: 1rem` —
+   et comme les marges verticales de paragraphes adjacents fusionnent, elle
+   était de toute façon absorbée par la marge du paragraphe précédent. Elle est
+   conservée pour la parité de balisage avec les posts standards, pas pour son
+   effet. Ce qui suit est ce qui fait réellement le rendu.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Valeurs relevées sur `.article .article-text` dans article-layout.css —
+   c'est CE fichier qui fait foi, pas article-critical.css : il est importé
+   après dans layout.tsx et pose un `font-size: … !important`.
+     font-size   : 1.25rem  (20px)
+     line-height : 1.875rem (30px, et non le 1.6 d'article-critical)
+     font-family : var(--serifGeorgia) = Georgia, "Times New Roman", Times
+   Sans la déclaration de famille, .am-body héritait de --sans (Fira Sans). */
 .am-body {
+    font-family: var(--serifGeorgia), serif;
     font-size: 1.25rem;
-    line-height: 1.6;
+    line-height: 1.875rem;
 }
 
+/* Espacement calqué sur `.article .article-text > * + *`, la règle qui espace
+   réellement les paragraphes en mode standard. Écrit en `p + p` et non
+   `> * + *` parce que la structure diffère selon le bloc : dans `body` les <p>
+   sont enfants directs de .am-body, dans `media-text` ils sont enveloppés dans
+   un <div> intermédiaire. `p + p` couvre les deux. */
 .am-body p {
-    margin: 0 0 20px;
+    margin: 0;
+}
+
+.am-body p + p {
+    margin-top: 1rem;
+}
+
+/* Reprises telles quelles de `.article .article-text` : sans elles, un mot en
+   gras ou en italique dans le storytelling ne se distinguait pas du texte
+   courant, et les liens n'étaient pas repérables. */
+.am-body em {
+    font-style: italic;
+}
+
+.am-body strong {
+    font-weight: 600;
+}
+
+.am-body p a {
+    border-bottom: 1px dotted;
+}
+
+.am-body p a:hover {
+    color: var(--sitePrimary);
 }
 
 .am-list {
+    /* Mêmes valeurs que .am-body : sans ça, une liste au milieu du texte
+       change de police et de taille. */
+    font-family: var(--serifGeorgia), serif;
     font-size: 1.25rem;
-    line-height: 1.6;
+    line-height: 1.875rem;
     padding-left: 22px;
     margin: 0;
 }
@@ -280,31 +335,81 @@ html {
 
 /* ─── 6. Gallery ───────────────────────────────────────────────────────── */
 
+/* Vignettes carrées, format original au survol : l'élément survolé s'élargit
+   au ratio réel de l'image, les autres se resserrent pour lui libérer la place.
+
+   La hauteur de la rangée est fixe (--am-gallery-h) : c'est elle qui définit le
+   côté du carré, et c'est aussi elle qui permet à l'image de retrouver son
+   ratio au survol (hauteur imposée + largeur libre = format naturel).
+
+   flex-wrap: wrap est conservé pour les galeries de plus de 4 images, qui
+   déborderaient horizontalement en nowrap. Le survol ne provoque pas de saut
+   de ligne : la rangée RÉTRÉCIT au survol (une vignette gagne ~170px, chacune
+   des autres en perd ~150), donc le nombre d'éléments par ligne ne peut pas
+   augmenter. */
 .am-gallery {
+    --am-gallery-h: min(34vh, 320px);
+    /* Facteur de retrait des vignettes non survolées. */
+    --am-gallery-shrink: 0.5;
+
     width: 80%;
-    max-height: 50vh;
     margin: 0 auto;
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
     gap: 8px;
     justify-content: center;
 }
 
 .am-gallery-item {
-    /* Largeur adaptée au nombre d'images sur la ligne (--am-cols posé
-       inline par le composant, plafonné à 4). */
-    flex: 1 1 calc((100% - (var(--am-cols) - 1) * 8px) / var(--am-cols));
-    max-height: 50vh;
+    /* flex: 0 0 auto — la largeur est pilotée explicitement, pas répartie :
+       sinon flex-grow réattribuerait la place libérée et annulerait l'effet.
+       (--am-cols, posé inline par le composant, n'est plus utilisé.) */
+    flex: 0 0 auto;
+    width: var(--am-gallery-h);
+    height: var(--am-gallery-h);
     margin: 0;
     overflow: hidden;
+    transition: width 0.35s ease;
 }
 
+/* height en valeur EXPLICITE et non 100% : en flex-wrap, le navigateur doit
+   calculer la largeur intrinsèque de l'élément pour décider des retours à la
+   ligne, et à ce moment-là un height:100% n'est pas encore résoluble. La
+   largeur `auto` du survol tombait alors à 0 et la vignette disparaissait.
+   Une hauteur en dur est résoluble à tout moment. */
 .am-gallery-item img {
     width: 100%;
-    height: 100%;
-    max-height: 50vh;
+    height: var(--am-gallery-h);
+    /* cover : recadrage centré pour remplir le carré. */
     object-fit: cover;
     display: block;
+}
+
+/* Survol — la vignette reprend le format original.
+   `width: auto` laisse la largeur être dictée par l'image (hauteur imposée,
+   largeur libre) : aucun besoin de connaître le ratio en CSS. Contrepartie
+   assumée : cette largeur-là ne s'anime pas, `auto` n'étant pas interpolable.
+   Le retrait des voisines, lui, est animé — c'est ce qui porte le mouvement. */
+.am-gallery-item:hover {
+    width: auto;
+}
+
+.am-gallery-item:hover img {
+    width: auto;
+    object-fit: contain;
+}
+
+/* :has() et non `.am-gallery:hover …` : sans lui, survoler l'espace ENTRE deux
+   vignettes resserrerait tout le monde sans qu'aucune ne s'élargisse. */
+.am-gallery:has(.am-gallery-item:hover) .am-gallery-item:not(:hover) {
+    width: calc(var(--am-gallery-h) * var(--am-gallery-shrink));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .am-gallery-item {
+        transition: none;
+    }
 }
 
 /* ─── 4. Media + text (split-screen, image sticky) ────────────────────── */
@@ -372,25 +477,28 @@ html {
     }
 }
 
-/* ─── 5. Cover — image épinglée (sticky), révélée par la plaque précédente.
-   Le texte (.am-cover-text-flow) N'EST PAS sticky : il chevauche l'image au
-   départ (margin-top négatif) puis remonte normalement au scroll, avec les
-   blocs suivants, pour la recouvrir — cf. note pin+cover en tête de
-   fichier. Pas de vrai déplacement de l'image elle-même (demande produit :
-   pas de parallaxe sur les images). ───────────────────────────────────── */
+/* ─── 5. Cover — image de fond épinglée, plein écran ──────────────────────
+   Séquence au scroll, dans l'ordre :
+     1. la plaque précédente la découvre du bas vers le haut (piste de
+        révélation, voir la règle :has() plus haut) ;
+     2. l'image occupe seule l'écran, épinglée ;
+     3. le texte de cover monte par le bas et défile par-dessus ;
+     4. la plaque suivante monte à son tour et la voile.
 
-/* L'image ne porte AUCUN décalage : c'est la plaque précédente qui crée la
-   piste de révélation (padding + margin négatif, voir plus haut). Le cover
-   reste donc une simple boîte sticky de --am-cover-height, et le -70vh de
-   .am-cover-text-flow garde exactement le même calibrage qu'avant. */
+   `top: 0` et non var(--headerHeight) : c'est une image de FOND, elle passe
+   sous le header — sinon 100vh + la hauteur du header déborderait de l'écran.
+   L'image elle-même ne se déplace jamais (pas de parallaxe) : tout le
+   mouvement vient des plaques opaques qui glissent devant.
+   ────────────────────────────────────────────────────────────────────────── */
+
 .am-cover-media {
     position: sticky;
-    top: var(--headerHeight, 0px);
+    top: 0;
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     height: var(--am-cover-height);
-    max-height: var(--am-cover-height);
+    min-height: 100vh;
     overflow: hidden;
     background-color: #111;
     z-index: 0;
@@ -409,11 +517,19 @@ html {
     z-index: 1;
 }
 
+/* Le texte n'est PAS sticky : il monte par le bas et défile par-dessus l'image
+   épinglée (z-index 1 > 0), puis sort par le haut.
+
+   margin-top POSITIF, et c'est essentiel : l'ancienne valeur (-70vh) le faisait
+   remonter dans la bande de révélation de la plaque précédente, qui le peignait
+   en blanc par-dessus. Le décalage positif le place après la fin de la bande —
+   l'image reste donc seule à l'écran pendant --am-cover-text-gap avant que le
+   texte n'arrive. */
 .am-cover-text-flow {
     position: relative;
     z-index: 1;
-    margin-top: -70vh;
-    min-height: 80vh;
+    margin-top: var(--am-cover-text-gap);
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;

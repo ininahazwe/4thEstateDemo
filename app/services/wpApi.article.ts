@@ -31,17 +31,24 @@ export interface WpArticle {
     // IDs bruts pour les requêtes de recommandation
     tagIds: number[];
     categoryIds: number[];
-    // Template "storytelling" (ACF is_storytelling, cf. functions.php du thème)
+    // Template "storytelling" (case ACF is_storytelling)
     isStorytelling: boolean;
     // Arbre de blocs Gutenberg brut (register_rest_field 'blocks', null si !isStorytelling)
     blocks: WpBlock[] | null;
 }
 
 /**
- * Bloc Gutenberg brut tel que renvoyé par parse_blocks() côté WP
- * (register_rest_field 'blocks' dans functions.php). Seulement présent
- * quand acf.is_storytelling est coché — voir mapWpBlocksToMediaBlocks()
- * dans ./blockMapper.ts pour la conversion en MediaBlock[] (front).
+ * Bloc Gutenberg brut tel que renvoyé par parse_blocks() côté WP.
+ *
+ * Exposé par le mu-plugin `tfe-storytelling.php`
+ * (wp-content/mu-plugins/), PAS par le functions.php du thème : le code y
+ * vivait auparavant, mais Foxiz est un thème commercial mis à jour, et le
+ * champ était calculé même en `context=edit`, ce qui cassait l'éditeur de
+ * blocs sur les posts storytelling.
+ *
+ * Seulement présent quand acf.is_storytelling est coché, et seulement en
+ * contexte `view` — voir mapWpBlocksToMediaBlocks() dans ./blockMapper.ts
+ * pour la conversion en MediaBlock[] (front).
  */
 export interface WpBlock {
     blockName: string;

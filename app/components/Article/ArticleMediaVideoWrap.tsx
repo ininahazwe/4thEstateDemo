@@ -58,7 +58,7 @@ export default function ArticleMediaVideoWrap({ children }: { children: React.Re
                 // Bande centrale du viewport (50% de hauteur) : le fond bascule
                 // quand la vidéo occupe vraiment l'écran, et non dès qu'un
                 // pixel dépasse en bas — ce qui déclencherait beaucoup trop tôt.
-                rootMargin: '-25% 0px -25% 0px',
+                rootMargin: '-45% 0px -45% 0px',
                 threshold: 0,
             }
         );

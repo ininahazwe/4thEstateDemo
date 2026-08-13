@@ -76,10 +76,15 @@ function Block({ block }: { block: MediaBlock }) {
             );
 
         case 'body':
+            // className="wp-block-paragraph" : même classe que celle posée par
+            // WordPress sur les posts standards, pour que les paragraphes du
+            // storytelling héritent des mêmes règles (custom.css). Le mapper
+            // ne renvoie que le CONTENU des <p>, c'est ici qu'on reconstruit
+            // la balise — donc ici qu'on pose la classe.
             return (
                 <div className="am-wrap am-body">
                     {block.paragraphs.map((p, i) => (
-                        <p key={i} dangerouslySetInnerHTML={{ __html: p }} />
+                        <p key={i} className="wp-block-paragraph" dangerouslySetInnerHTML={{ __html: p }} />
                     ))}
                 </div>
             );
@@ -134,7 +139,7 @@ function Block({ block }: { block: MediaBlock }) {
                     <div className="am-media-text-content am-body">
                         <div>
                             {block.paragraphs.map((p, i) => (
-                                <p key={i}>{p}</p>
+                                <p key={i} className="wp-block-paragraph">{p}</p>
                             ))}
                         </div>
                     </div>
