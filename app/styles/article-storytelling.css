@@ -338,51 +338,66 @@ html {
 
 /* ─── 6. Gallery ───────────────────────────────────────────────────────── */
 
-/* Accordéon élastique : la vignette survolée s'élargit, les autres se
-   resserrent pour lui libérer la place, et les DEUX mouvements sont animés.
+/* Accordéon élastique, sur le modèle « flex: 1 → flex: 5 au survol » : toutes
+   les vignettes se partagent la rangée à parts égales, la survolée prend cinq
+   parts et les autres se resserrent d'autant. Rangée UNIQUE, sans retour à la
+   ligne — c'est ce qui rend le partage lisible.
 
-   La hauteur de la rangée est fixe (--am-gallery-h) : c'est elle qui définit le
-   côté du carré au repos, et la largeur seule varie au survol.
-
-   flex-wrap: wrap est conservé pour les galeries de plus de 4 images, qui
-   déborderaient horizontalement en nowrap. Le survol ne provoque pas de saut
-   de ligne : la rangée RÉTRÉCIT au survol (une vignette gagne 0.9× sa largeur,
-   chacune des autres en perd 0.45×), donc le nombre d'éléments par ligne ne
-   peut pas augmenter. */
+   Pourquoi flex-grow et non width : `flex: 1` vaut `flex-grow:1 / flex-shrink:1
+   / flex-basis:0`, donc la largeur d'une vignette n'est plus une longueur mais
+   une PART de l'espace disponible. flex-grow étant un simple nombre, il
+   s'interpole — la vignette survolée s'anime donc elle aussi, ce que l'ancien
+   `width: auto` ne permettait pas (valeur non interpolable, et résolvable à 0
+   en flex-wrap : la vignette survolée disparaissait). Corollaire : la somme des
+   parts est constante, la rangée garde exactement la même largeur totale du
+   début à la fin du mouvement — aucun reflow, aucun saut. */
 .am-gallery {
-    --am-gallery-h: min(34vh, 320px);
-    /* Facteur d'élargissement de la vignette survolée. */
-    --am-gallery-grow: 1.9;
-    /* Facteur de retrait des vignettes non survolées. */
-    --am-gallery-shrink: 0.55;
-    /* Sortie décélérée avec un léger dépassement en fin de course : c'est ce
-       dépassement qui donne le rendu "élastique" plutôt que mécanique. */
-    --am-gallery-ease: cubic-bezier(0.34, 1.28, 0.48, 1);
+    --am-gallery-h: min(34vh, 20rem);
+    /* Nombre de parts prises par la vignette survolée (les autres en gardent
+       une chacune). 5 parts sur 5 images = ~56 % de la rangée. */
+    --am-gallery-grow: 5;
+    --am-gallery-gap: 1rem;
+    /* Le dépassement final (1.4 > 1) est ce qui donne le rebond élastique. */
+    --am-gallery-ease: cubic-bezier(0.25, 0.4, 0.45, 1.4);
 
     width: 80%;
     margin: 0 auto;
     display: flex;
-    flex-wrap: wrap;
     align-items: flex-start;
-    gap: 8px;
-    justify-content: center;
+    gap: var(--am-gallery-gap);
 }
 
+/* min-width: 0 indispensable : la taille minimale automatique d'un item flex
+   vaut sa taille de contenu, ce qui empêcherait les vignettes non survolées de
+   se resserrer sous la largeur de leur légende. */
 .am-gallery-item {
-    /* flex: 0 0 auto — la largeur est pilotée explicitement, pas répartie :
-       sinon flex-grow réattribuerait la place libérée et annulerait l'effet.
-       (--am-cols, posé inline par le composant, n'est plus utilisé.) */
-    flex: 0 0 auto;
-    width: var(--am-gallery-h);
+    flex: 1;
+    min-width: 0;
     margin: 0;
-    transition: width 0.55s var(--am-gallery-ease);
+    transition: flex-grow 0.8s var(--am-gallery-ease);
+}
 
-    /* NI hauteur fixe NI overflow:hidden sur la <figure> : c'est l'IMAGE qui
-       porte le carré (height + object-fit ci-dessous), la figure doit rester
-       libre de grandir pour afficher son <figcaption>. Une hauteur fixe de
-       302px doublée d'un overflow:hidden rognait complètement les légendes
-       (mesuré : légende à 310px dans une figure de 302px).
-       Le recadrage carré n'a pas besoin d'overflow : object-fit s'en charge. */
+.am-gallery-item:hover {
+    flex-grow: var(--am-gallery-grow);
+}
+
+/* Calque image. Un background et non un <img> : la boîte change de largeur en
+   permanence pendant la transition, et un background n'a aucune géométrie
+   propre à recalculer — il se recadre tout seul autour de son point d'ancrage
+   (background-position: center), au pixel près et sans reflow.
+
+   `cover` et non le `auto 100%` du modèle : les deux donnent EXACTEMENT le même
+   rendu tant que l'image est plus large que sa boîte (mise à l'échelle sur la
+   hauteur, rognage latéral centré) — c'est le cas normal ici. Ils ne divergent
+   que sur les images en portrait ou très étroites, où `auto 100%` laisserait
+   une bande vide de chaque côté ; `cover` les met à l'échelle. Les images
+   viennent de WordPress, leur format n'est pas garanti. */
+.am-gallery-image {
+    height: var(--am-gallery-h);
+    border-radius: 1rem;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 /* Légende sur une seule ligne, tronquée si besoin. Sans ça, elle se
@@ -394,36 +409,23 @@ html {
     white-space: nowrap;
 }
 
-/* height en valeur EXPLICITE et non 100% : en flex-wrap, le navigateur doit
-   calculer la largeur intrinsèque de l'élément pour décider des retours à la
-   ligne, et à ce moment-là un height:100% n'est pas encore résoluble.
-   Une hauteur en dur est résoluble à tout moment.
+/* Sans survol (tactile), l'accordéon n'a aucun déclencheur : les vignettes
+   resteraient des bandes verticales étroites et illisibles. Repli en pile
+   pleine largeur. */
+@media (hover: none), (max-width: 760px) {
+    .am-gallery {
+        flex-wrap: wrap;
+    }
 
-   `object-fit: cover` en permanence, y compris au survol : c'est l'image qui
-   se recadre dans la boîte animée, elle n'a donc aucune géométrie propre à
-   recalculer et suit la largeur au pixel près pendant toute la transition. */
-.am-gallery-item img {
-    width: 100%;
-    height: var(--am-gallery-h);
-    object-fit: cover;
-    display: block;
-}
+    .am-gallery-item,
+    .am-gallery-item:hover {
+        flex: 1 1 100%;
+    }
 
-/* Survol — largeur EXPLICITE (multiple de --am-gallery-h) et non `width: auto`.
-   `auto` donnait bien le format original de l'image, mais au prix de deux
-   défauts rédhibitoires : il n'est pas interpolable (donc aucune animation à
-   l'élargissement, seules les voisines bougeaient), et en flex-wrap sa
-   résolution pouvait tomber à 0 — la vignette survolée disparaissait alors
-   purement et simplement. Un facteur fixe est animable et toujours résoluble ;
-   le recadrage est absorbé par object-fit: cover. */
-.am-gallery-item:hover {
-    width: calc(var(--am-gallery-h) * var(--am-gallery-grow));
-}
-
-/* :has() et non `.am-gallery:hover …` : sans lui, survoler l'espace ENTRE deux
-   vignettes resserrerait tout le monde sans qu'aucune ne s'élargisse. */
-.am-gallery:has(.am-gallery-item:hover) .am-gallery-item:not(:hover) {
-    width: calc(var(--am-gallery-h) * var(--am-gallery-shrink));
+    .am-gallery-image {
+        height: auto;
+        aspect-ratio: 16 / 9;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

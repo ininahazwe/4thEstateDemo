@@ -111,20 +111,28 @@ function Block({ block }: { block: MediaBlock }) {
                 </figure>
             );
 
-        case 'gallery': {
-            const cols = Math.min(block.images.length, 4);
+        case 'gallery':
+            // Accordéon : chaque vignette est une piste flex (flex: 1) qui
+            // s'élargit au survol (flex-grow). L'image est portée par le
+            // BACKGROUND d'un calque interne et non par un <img> — c'est ce qui
+            // permet à la boîte de changer de largeur sans que l'image ait la
+            // moindre géométrie propre à recalculer, donc sans saut pendant la
+            // transition (voir article-storytelling.css § 6).
             return (
-                <div className="am-gallery" style={{ '--am-cols': cols } as React.CSSProperties}>
+                <div className="am-gallery">
                     {block.images.map((img, i) => (
                         <figure key={i} className="am-gallery-item">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={img.src} alt={img.alt} loading="lazy" />
+                            <div
+                                className="am-gallery-image"
+                                style={{ backgroundImage: `url("${img.src}")` }}
+                                role="img"
+                                aria-label={img.alt || undefined}
+                            />
                             {img.caption && <figcaption className="am-figcaption">{img.caption}</figcaption>}
                         </figure>
                     ))}
                 </div>
             );
-        }
 
         case 'mediaText':
             // Image sticky (épinglée sous le header) pendant que le texte

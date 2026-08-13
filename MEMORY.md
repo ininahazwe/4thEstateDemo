@@ -925,3 +925,25 @@ le hero — les deux points ne sont pas indépendants.
 `--am-cover-text-gap` dans app/. `npx tsc --noEmit` non exécuté (timeout de la session
 sur la VM Windows) — modifs TSX limitées au remplacement d'un `<img>` par un `<div>`
 avec `style={{ backgroundImage }}`.
+
+### Correctif galerie — accordéon `flex: 1 → flex: 5` (13/08/2026, même jour)
+
+Le facteur de largeur fixe posé plus haut est remplacé par le modèle fourni par Yv.
+
+- `.am-gallery` : rangée UNIQUE (plus de `flex-wrap`), `gap: 1rem`, `align-items: flex-start`.
+- `.am-gallery-item` : `flex: 1` + `min-width: 0` (sans lui la taille minimale auto d'un
+  item flex vaut sa taille de contenu — la légende empêcherait le resserrement),
+  `transition: flex-grow .8s cubic-bezier(.25,.4,.45,1.4)`. Survol : `flex-grow: 5`.
+  `flex: 1` = `grow:1 / shrink:1 / basis:0` → la largeur devient une PART, et flex-grow
+  étant un nombre il s'interpole : la vignette survolée s'anime elle aussi (ce que
+  `width: auto` ne permettait pas). Somme des parts constante → largeur totale de la
+  rangée invariante, aucun reflow.
+- Markup : `<img>` remplacé par `<div class="am-gallery-image" style={{backgroundImage}}
+  role="img" aria-label={alt}>`. `background-size: cover` (et non le `auto 100%` du
+  modèle) : rendu identique tant que l'image est plus large que sa boîte, mais pas de
+  bande vide sur les portraits — le format des médias WP n'est pas garanti.
+  `border-radius: 1rem`, `height: min(34vh, 20rem)`.
+- Repli `@media (hover: none), (max-width: 760px)` : `flex: 1 1 100%` + `aspect-ratio: 16/9`
+  → pile pleine largeur (sans survol, l'accordéon n'a aucun déclencheur).
+- Supprimés : `--am-gallery-shrink`, la règle `:has(.am-gallery-item:hover) :not(:hover)`
+  (le partage flex s'en charge), `--am-cols` (posé inline, inutilisé).
