@@ -1113,3 +1113,30 @@ supprimée. Le reste (ArticleHeroVideo, poster, CSS) est inchangé.
 
 Vérifs : `php -l` OK sur le mu-plugin, `node --check` OK sur le JS inliné, plus aucune
 référence à `acf.hero_video` dans app/.
+
+### Storytelling — invite au scroll dans le hero (13/08/2026)
+
+Flèche discrète ajoutée dans `.am-hero-title-overlay` (`HeroTitle.tsx` +
+`article-storytelling.css`).
+
+- **Un `<button>`, pas un décor** : `aria-label="Scroll to the story"`, clic → scroll
+  jusqu'au bas réel du hero, mesuré par `closest('.am-hero-media').getBoundingClientRect()`
+  et non par un `90vh` recopié (la hauteur vit dans `--am-hero-height`, une valeur
+  dupliquée divergerait au premier ajustement). `html { scroll-behavior: smooth }` était
+  déjà posé en tête du fichier.
+- **S'efface au scroll** : `useTransform(scrollY, [0, 160], [1, 0])` sur l'opacité —
+  réutilise le `useScroll` déjà présent pour la dérive du titre. `pointerEvents` bascule
+  sur `'none'` au-delà de 150px : une opacité nulle ne retire PAS l'élément du flux des
+  événements, le bouton serait resté cliquable une fois invisible.
+- **Deux nœuds, deux transforms** : framer-motion écrit un `transform` inline sur le
+  bouton, donc (1) le va-et-vient CSS vit sur le `<span>` intérieur et (2) le centrage se
+  fait en `position:absolute; left:0; right:0` + flex, et non en
+  `left:50%; translateX(-50%)` qui serait écrasé.
+- Animation `am-hero-scroll-cue-bob` : amplitude 6px, cycle 2,4s, mouvement terminé à 60%
+  du keyframe → appel intermittent plutôt que balancement continu, envahissant sur une
+  image plein écran. `filter: drop-shadow` car le dégradé de l'overlay est déjà très
+  atténué à cette hauteur. Supprimée sous `prefers-reduced-motion` (la flèche reste
+  affichée et cliquable).
+- La flèche se loge dans la bande libre laissée par le `margin-bottom` de
+  `.am-hero-title-block` : rien n'est pris au titre. `bottom` passe de 18px à 6px sous
+  759px, où cette bande tombe de 100 à 48px.
