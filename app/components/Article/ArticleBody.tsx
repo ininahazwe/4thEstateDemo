@@ -5,7 +5,6 @@ import ArticleIllustration from "@/app/components/Article/Articleillustration";
 import ArticleShareButton from "@/app/components/UI/ArticleShareButton";
 import TTSButton from "@/app/components/UI/TTSButton";
 import BookmarkButton from "@/app/components/UI/BookmarkButton";
-import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 
 interface Author {
     displayName: string;
@@ -115,8 +114,6 @@ export default function ArticleBody({
                         </div>
                     </div>
                 )}
-
-                <SubscriptionBanner />
             </div>
         </div>
     );

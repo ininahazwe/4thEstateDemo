@@ -18,6 +18,7 @@ import { BANNER_CATEGORY_SLUGS } from "@/app/components/SiteBanner/bannerCategor
 import TrackReader from "@/app/components/track-reader";
 import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 import NewsletterSignup from "@/app/components/NewsletterSignup/NewsletterSignup";
+import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 
 
 const WP_API =
@@ -416,6 +417,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
 
             <NewsletterSignup />
+
+            <SubscriptionBanner />
 
             <SiteFooter />
         </>

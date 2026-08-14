@@ -473,6 +473,12 @@ html {
     line-height: 1.6;
 }
 
+@media screen and (max-width: 759px) {
+    .am-media-text-content {
+        padding: 28px;
+    }
+}
+
 .am-media-text--reverse .am-media-text-media {
     order: 2;
 }
