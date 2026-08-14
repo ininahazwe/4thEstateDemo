@@ -14,7 +14,18 @@ export interface WpArticle {
     id: number;
     slug: string;
     title: string;
+    /**
+     * Excerpt tel que renvoyé par WordPress — rédigé ou auto-généré, sans
+     * distinction. Réservé aux usages où il FAUT toujours un texte : meta
+     * description, Open Graph, JSON-LD. Pour l'affichage, utiliser `lede`.
+     */
     excerpt: string;
+    /**
+     * Chapô réellement RÉDIGÉ dans la boîte « Extrait » du back-office, ou
+     * `undefined` si elle est vide. C'est le champ à afficher (hero
+     * storytelling, .article-lede). Voir pickManualExcerpt().
+     */
+    lede?: string;
     content: string;
     strapline?: string;
     source?: string;
@@ -23,6 +34,13 @@ export interface WpArticle {
     publishedAt: string;
     publishedAtISO: string;
     featuredImage?: string;
+    /**
+     * Vidéo de hero, jouée en boucle à la place de l'image mise en avant —
+     * celle-ci reste renseignée et sert de `poster`. Alimentée par le panneau
+     * « Hero video » de l'éditeur (mu-plugin `tfe-hero-video.php`), exposée en
+     * REST sous `hero_video`. Voir pickHeroVideoUrl().
+     */
+    heroVideo?: string;
     imageCaption?: string;
     imageCredit?: string;
     category?: { name: string; slug: string };
@@ -80,6 +98,74 @@ function stripHtml(html: string): string {
     // en caractères réels — sans ça, WordPress renvoie l'entité brute et
     // React l'affiche telle quelle puisque le texte n'est pas injecté en HTML.
     return decode(html.replace(/<[^>]+>/g, "")).trim();
+}
+
+/**
+ * Distingue un chapô RÉDIGÉ d'un chapô AUTO-GÉNÉRÉ par WordPress.
+ *
+ * WordPress renvoie toujours un `excerpt.rendered`, même quand la boîte
+ * « Extrait » du back-office est vide : il en fabrique alors un en tronquant
+ * le DÉBUT DU CONTENU. Le front affichait donc, sur ces posts-là, la première
+ * phrase de l'article en guise de chapô — texte redondant, juste au-dessus de
+ * ce même paragraphe.
+ *
+ * Détection sans authentification : un excerpt auto-généré est, par
+ * construction, le préfixe du contenu dépouillé de son HTML. On compare donc
+ * les deux. (`excerpt.raw`, qui donnerait la valeur stockée directement,
+ * n'existe qu'en `context=edit` — donc seulement pour une requête authentifiée,
+ * ce que le front ne fait pas.)
+ *
+ * La normalisation est indispensable avant comparaison : `excerpt.rendered`
+ * passe par wpautop et par `excerpt_more` (le « […] » final), et les espaces
+ * insécables / retours ligne diffèrent entre les deux champs.
+ */
+function pickManualExcerpt(rawExcerpt: string, rawContent: string): string | undefined {
+    const excerpt = stripHtml(rawExcerpt);
+    if (!excerpt) return undefined;
+
+    // Espaces (y compris insécables) normalisés, marqueur de troncature retiré,
+    // casse ignorée : seule la SUITE DE MOTS compte pour la comparaison.
+    // L'espace insécable (U+00A0) est traité explicitement : \s le couvre en
+    // JS, mais l'écrire en échappement plutôt qu'en caractère littéral évite
+    // qu'un invisible dans le source rende la règle illisible. Le marqueur de
+    // troncature est retiré APRÈS l'aplatissement des espaces, sinon un « … »
+    // précédé d'un insécable échapperait à l'ancrage de fin.
+    const normalize = (s: string) =>
+        s
+            .replace(/\u00a0/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .replace(/\s*(?:\[\s*(?:\u2026|\.\.\.)?\s*\]|\u2026|\.\.\.)$/, "")
+            .trim()
+            .toLowerCase();
+
+    const normalizedExcerpt = normalize(excerpt);
+    if (!normalizedExcerpt) return undefined;
+
+    // Contenu tronqué à un peu plus que la longueur de l'excerpt : inutile de
+    // normaliser un article entier à chaque rendu pour un test de préfixe.
+    const normalizedContent = normalize(stripHtml(rawContent).slice(0, normalizedExcerpt.length * 3 + 200));
+
+    // Préfixe du contenu = WordPress a recopié le début de l'article → la boîte
+    // « Extrait » est vide, on ne renvoie rien.
+    if (normalizedContent.startsWith(normalizedExcerpt)) return undefined;
+
+    return excerpt;
+}
+
+/**
+ * Lit le champ REST `hero_video`, exposé à la RACINE de l'objet post par le
+ * mu-plugin `tfe-hero-video.php` (wp-content/mu-plugins/) — pas dans `acf` :
+ * ce n'est pas un champ ACF mais une meta WordPress native, pilotée par un
+ * panneau maison dans la sidebar de l'éditeur.
+ *
+ * Le mu-plugin renvoie déjà l'URL résolue (ou `null`) plutôt que l'ID de la
+ * pièce jointe : le front n'a donc aucune requête /wp/v2/media supplémentaire
+ * à faire. La valeur stockée en base reste l'ID, pour survivre à un changement
+ * de domaine ou au passage des uploads sur un CDN.
+ */
+function pickHeroVideoUrl(value: unknown): string | undefined {
+    return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 /**
@@ -195,6 +281,10 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
             slug: post.slug as string,
             title: decode((post.title as { rendered: string }).rendered),
             excerpt: stripHtml((post.excerpt as { rendered: string }).rendered),
+            lede: pickManualExcerpt(
+                (post.excerpt as { rendered: string }).rendered,
+                (post.content as { rendered: string }).rendered
+            ),
             content: (post.content as { rendered: string }).rendered,
             strapline: (acf.strapline as string) ?? undefined,
             source: (acf.source as string) ?? undefined,
@@ -209,6 +299,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
             publishedAt: formatDate(post.date as string),
             publishedAtISO: post.date as string,
             featuredImage: pickWpImageUrl(media, HERO_SIZE_PRIORITY),
+            heroVideo: pickHeroVideoUrl(post.hero_video),
             imageCaption: (media?.caption as { rendered: string })?.rendered
                 ? stripHtml((media.caption as { rendered: string }).rendered)
                 : undefined,

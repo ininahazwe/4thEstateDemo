@@ -331,10 +331,23 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                     link: canonicalUrl,
                                     category: article.category?.name,
                                     title: article.title,
+                                    // `lede` et non `excerpt` : ce dernier est
+                                    // fabriqué par WordPress à partir du début
+                                    // de l'article quand la boîte « Extrait »
+                                    // est vide. Voir pickManualExcerpt() dans
+                                    // wpApi.article.ts.
+                                    excerpt: article.lede,
                                     authors: article.authors,
                                     hero: {
                                         src: article.featuredImage ?? "",
                                         alt: article.imageCaption ?? article.title,
+                                        // Panneau « Hero video » de l'éditeur
+                                        // (mu-plugin tfe-hero-video.php).
+                                        // L'image mise en avant reste
+                                        // renseignée : elle sert de poster, et
+                                        // c'est elle qui alimente l'Open Graph
+                                        // et les vignettes.
+                                        video: article.heroVideo,
                                     },
                                     blocks: mediaBlocks,
                                 }}
@@ -370,7 +383,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                         </div>
                                     </div>
 
-                                    <p className="article-lede">{article.excerpt}</p>
+                                    {/* `lede` et non `excerpt` : sans chapô
+                                        rédigé, WordPress renvoie le début de
+                                        l'article, qui se retrouvait recopié
+                                        juste au-dessus de ce même paragraphe.
+                                        Rien ne s'affiche désormais dans ce cas. */}
+                                    {article.lede && <p className="article-lede">{article.lede}</p>}
 
                                     <div className="article-rule" aria-hidden="true" />
 

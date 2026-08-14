@@ -947,3 +947,169 @@ Le facteur de largeur fixe posé plus haut est remplacé par le modèle fourni p
   → pile pleine largeur (sans survol, l'accordéon n'a aucun déclencheur).
 - Supprimés : `--am-gallery-shrink`, la règle `:has(.am-gallery-item:hover) :not(:hover)`
   (le partage flex s'en charge), `--am-cols` (posé inline, inutilisé).
+
+## Newsletter — inscription réparée + modal de consentement (13/08/2026)
+
+Fichiers : `app/api/newsletter/subscribe/route.ts`,
+`app/components/NewsletterSignup/NewsletterSignup.tsx`,
+`app/components/NewsletterSignup/NewsletterConsentModal.tsx` (nouveau),
+`app/styles/newsletter-signup.css`.
+
+Symptôme rapporté : « Something went wrong » à CHAQUE tentative (donc `res.ok === false`,
+l'API répond en erreur — ce n'est pas un faux succès).
+
+**Cause n°1, à vérifier en premier (non testable depuis la session, réseau Mailchimp
+bloqué)** : `.env.local` est couvert par `.gitignore` (`.env*`) et n'est donc jamais
+déployé. Sur cPanel, `MAILCHIMP_API_KEY` / `MAILCHIMP_AUDIENCE_ID` doivent être saisies
+dans « Setup Node.js App > Environment variables » puis l'app redémarrée. Sinon la route
+répond `not_configured` (500) à tous les coups.
+→ **`GET /api/newsletter/subscribe`** ajouté : renvoie `{configured, missing[], datacenter}`,
+booléens uniquement, aucun secret. Ouvrir l'URL dans le navigateur tranche en une requête.
+Supprimable une fois le déploiement stabilisé.
+(Config locale vérifiée conforme : clé 32 car. + suffixe `-us6`, audience ID 10 car.)
+
+**Cause n°2, défaut réel corrigé** : `POST /lists/{id}/members` échoue (400 « Member
+Exists ») dès que l'adresse est connue de l'audience, y compris archivée / désabonnée /
+cleaned. L'ancien code interceptait ce cas et renvoyait `ok:true` → faux succès à l'écran.
+→ remplacé par **`PUT /lists/{id}/members/{md5(email en minuscules)}`** (upsert).
+Minuscules impératives AVANT le hash, sinon doublon. `status_if_new` et non `status` :
+`status` forcerait le statut d'un contact existant, ce que Mailchimp refuse (400) pour un
+désabonné. `STATUS_IF_NEW = "subscribed"` (simple opt-in, consentement recueilli dans le
+modal) — constante à basculer sur `"pending"` pour un double opt-in.
+Tag `privacy-accepted` posé via `POST /members/{hash}/tags` (best-effort, hors chemin
+critique) : le champ `tags` du corps du PUT n'est appliqué qu'à la création.
+`export const runtime = "nodejs"` explicite (`node:crypto` + `Buffer`).
+
+**Erreurs qualifiées** : la route renvoie `error` + `reason` (libellé Mailchimp, sans
+secret) + `missing[]`. Le composant mappe chaque code sur un message et affiche le code
+technique en petit (`.newsletter-signup-error-code`) — diagnostic possible depuis le
+navigateur, cPanel ne donnant pas d'accès commode aux logs.
+
+**Modal de consentement** : le submit du formulaire n'appelle plus l'API, il ouvre
+`NewsletterConsentModal` (état `'consent'`). Rien ne part chez Mailchimp tant que la case
+n'est pas cochée. CTA + lien `/privacy` (nouvel onglet) plutôt que duplication du texte :
+le contenu vient de WordPress, il reste donc toujours à jour et il n'y a qu'un seul
+endroit à maintenir. `consent: true` revalidé côté serveur (route publique). Mécanique
+calquée sur `AuthRequiredModal` (portal document.body, Escape, clic overlay, accent
+#6d2929) ; case décochée à chaque ouverture, focus rendu au champ email à la fermeture.
+
+Message de succès corrigé : il annonçait un email de confirmation alors que le statut
+appliqué est `subscribed` (pas de double opt-in).
+
+### Storytelling — chapô (excerpt) dans le hero (13/08/2026)
+
+`HeroTitle` accepte une prop optionnelle `excerpt`, affichée sous le titre.
+Chaîne : `getArticleBySlug` → `article.excerpt` (déjà dépouillé de son HTML par
+`stripHtml` dans `wpApi.article.ts`) → `ArticleMediaData.excerpt?` → `<HeroTitle>`.
+
+- `page.tsx` : `excerpt: article.excerpt || undefined` — `||` et non `??`, WordPress
+  renvoyant une chaîne VIDE (et non `null`) quand le post n'a pas de chapô.
+  Double garde côté composant : `excerpt?.trim()` avant rendu, pas de `<p>` vide.
+- Markup : le `y` framer-motion passe du `<h1>` à un `<motion.div class="am-hero-title-block">`
+  englobant titre + chapô — sinon les deux dériveraient à des vitesses différentes et
+  le chapô se détacherait du titre au scroll.
+- CSS : `max-width: 900px` et `margin-bottom: 100px` déplacés de `.am-title` vers
+  `.am-hero-title-block` (le titre ne pouvait plus les porter avec un frère à sa suite).
+  `.am-hero-excerpt` en Georgia, casse normale, poids 400 pour contraster avec le titre
+  en capitales ; `text-shadow` en complément du dégradé de `.am-hero-title-overlay`, qui
+  ne suffit pas sur une image claire. Sous 759px : marge réduite à 48px et chapô tronqué
+  à 3 lignes (`-webkit-line-clamp`), le hero ne faisant que 90vh.
+
+### Chapô — champ `lede` distinct de l'`excerpt` WordPress (13/08/2026)
+
+Constat vérifié sur l'API (post 24175) : **il n'existe AUCUN champ ACF `excerpt`**.
+L'objet `acf` de ce post ne contient que `is_storytelling`. Le chapô vient donc de la
+boîte « Extrait » native, déjà lue par `wpApi.article.ts`. Champs ACF réellement exposés
+sur l'install : `strapline`, `source`, `read_time`, `image_credit`, `country_name`,
+`country_slug`, `is_premium`, `is_storytelling`, `tag`.
+
+**Le vrai défaut** : WordPress renvoie TOUJOURS un `excerpt.rendered`. Quand la boîte est
+vide, il le fabrique en tronquant le DÉBUT DU CONTENU — d'où le « début de l'article »
+affiché en guise de chapô, souvent juste au-dessus du même paragraphe.
+
+`pickManualExcerpt(rawExcerpt, rawContent)` ajouté dans `wpApi.article.ts` : un excerpt
+auto-généré est par construction le PRÉFIXE du contenu dépouillé de ses balises → on
+compare et on renvoie `undefined` si ça correspond. (`excerpt.raw`, qui donnerait la
+valeur stockée, n'existe qu'en `context=edit`, donc authentifié — hors de portée du front.)
+Normalisation avant comparaison : nbsp → espace, espaces aplatis, marqueur `[…]` /
+`…` de fin retiré, casse ignorée. Contenu tronqué à `3× longueur excerpt + 200` pour ne
+pas normaliser un article entier à chaque rendu.
+
+**Deux champs distincts sur `WpArticle`** :
+- `excerpt: string` — inchangé, TOUJOURS renseigné. Réservé au SEO : meta description,
+  Open Graph, JSON-LD (lignes 87 / 106 / 128 / 236 de la page article). Sans ça les pages
+  sans chapô perdraient leur description.
+- `lede?: string` — chapô réellement rédigé, ou `undefined`. C'est lui qu'on AFFICHE :
+  `<HeroTitle excerpt>` du storytelling et `<p class="article-lede">` du template standard,
+  ce dernier n'étant plus rendu du tout quand `lede` est absent.
+
+Vérifié par test unitaire (node, hors repo) sur les données réelles du post 24175 :
+chapô rédigé conservé, auto-excerpt fabriqué à la façon de `wp_trim_words` (55 mots +
+`[&hellip;]`) rejeté, variantes nbsp / sans marqueur / boîte vide rejetées, et chapô
+rédigé qui COMMENCE comme l'article mais diverge ensuite correctement conservé.
+
+### Storytelling — vidéo de hero en boucle (champ ACF `hero_video`) (13/08/2026)
+
+Constat API : la vidéo `story.mp4` (média 24203, parent 24175) était bien uploadée, mais
+rattachée à RIEN d'exploitable — `featured_media` valait toujours 23437 (`CABBAGE-.png`)
+et `acf` ne contenait que `is_storytelling`. Le hero rendait donc son `<img>` habituel :
+aucun champ ne portait la vidéo.
+
+**À FAIRE CÔTÉ WORDPRESS** : créer dans ACF un champ nommé `hero_video` (type File ou
+URL) sur le groupe des posts, et y sélectionner la vidéo. L'objet `acf` étant déjà exposé
+en REST, aucune ligne de PHP n'est nécessaire. Return Format : « File URL » ou
+« File Array ». Un Return Format « File ID » est détecté et journalisé en `console.warn`
+(résoudre un ID demanderait une requête /wp/v2/media par article — refusé).
+
+- `wpApi.article.ts` : `pickAcfFileUrl(value, fieldName)` normalise les 3 formats de
+  retour ACF (chaîne / objet `{url}` / entier). Nouveau champ `WpArticle.heroVideo?`.
+- `ArticleHeroVideo.tsx` (nouveau, CLIENT) : `<video autoPlay muted loop playsInline
+  preload="metadata" poster>`. Composant client imposé par l'autoplay, pour trois raisons
+  documentées dans le fichier : (1) React traite `muted` comme une PROPRIÉTÉ et non un
+  attribut, le HTML serveur peut donc arriver sans lui et le navigateur bloque la lecture
+  avant hydratation → forcé par ref ; (2) `play()` appelé explicitement, promesse
+  rattrapée (l'attribut `autoplay` échoue silencieusement en économie d'énergie iOS,
+  onglet en arrière-plan…), le poster tenant lieu de repli ; (3) `prefers-reduced-motion`
+  → pas de lecture auto, `controls` activés.
+- `ArticleMediaLayout` : `hero.video?` ; vidéo SI renseignée, sinon `<img>` comme avant.
+- `page.tsx` : `video: article.heroVideo`. L'image mise en avant reste renseignée — elle
+  sert de `poster` ET continue d'alimenter Open Graph / vignettes / partage.
+- CSS : `.am-hero-media video` partage les règles de `.am-hero-media img`
+  (`object-fit: cover` s'applique aussi bien à une <video>).
+
+### Hero video — panneau natif Gutenberg, ACF abandonné (13/08/2026)
+
+Décision : PAS d'ACF pour la vidéo de hero. Le besoin se réduit à une meta (l'ID de la
+pièce jointe) et un bouton ; le cœur de WordPress fournit déjà les deux
+(`register_post_meta` + `MediaUpload`, le composant même de « Image mise en avant »).
+ACF n'aurait apporté qu'un groupe de champs à maintenir et une dépendance de plus.
+
+**Nouveau fichier versionné** : `wordpress/mu-plugins/tfe-hero-video.php`.
+→ **À DÉPOSER dans `wp-content/mu-plugins/` sur le serveur WP** (le dossier `wordpress/`
+du repo n'est qu'un miroir de référence, il n'est pas déployé). Les mu-plugins sont
+actifs d'office et survivent aux mises à jour de Foxiz — même raison que
+`tfe-storytelling.php`.
+
+Contenu du mu-plugin :
+- Meta `tfe_hero_video_id` (`register_post_meta`, show_in_rest, auth `edit_posts`).
+  On stocke l'**ID** et non l'URL : une URL en dur casserait à la première migration de
+  domaine ou au passage des uploads sur un CDN, et laisserait un lien mort si le fichier
+  est remplacé.
+- `add_post_type_support('post', 'custom-fields')` — **INDISPENSABLE** : sans lui
+  l'éditeur de blocs ne charge pas les meta et `editPost({meta})` est ignoré EN SILENCE
+  (le bouton a l'air de marcher, rien n'est enregistré). Piège classique.
+- `register_rest_field('post', 'hero_video')` → renvoie l'**URL résolue** ou `null`,
+  pour éviter une requête /wp/v2/media par article côté front.
+- Panneau `PluginDocumentSettingPanel` dans la sidebar, `MediaUpload allowedTypes:['video']`,
+  aperçu de la vidéo, boutons Set / Replace / Remove. JS écrit en
+  `wp.element.createElement` (pas de JSX) → aucune chaîne de build côté WP.
+  `PluginDocumentSettingPanel` pris sur `wp.editor` avec repli `wp.editPost` (il a
+  déménagé en WP 6.6). Script chargé uniquement quand `get_current_screen()->post_type`
+  vaut `post`.
+
+Front : `wpApi.article.ts` lit désormais `post.hero_video` (racine de l'objet post) via
+`pickHeroVideoUrl()` — l'ancienne piste `acf.hero_video` / `pickAcfFileUrl()` est
+supprimée. Le reste (ArticleHeroVideo, poster, CSS) est inchangé.
+
+Vérifs : `php -l` OK sur le mu-plugin, `node --check` OK sur le JS inliné, plus aucune
+référence à `acf.hero_video` dans app/.

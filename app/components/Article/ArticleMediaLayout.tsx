@@ -1,3 +1,4 @@
+import ArticleHeroVideo from './ArticleHeroVideo';
 import ArticleMediaPodcast from './ArticleMediaPodcast';
 import ArticleMediaVideoWrap from './ArticleMediaVideoWrap';
 import HeroTitle from './HeroTitle';
@@ -36,8 +37,18 @@ export interface ArticleMediaData {
     link: string;
     category?: string;
     title: string;
+    /** Chapô (excerpt WordPress). Optionnel : affiché sous le titre du hero
+     *  seulement s'il est renseigné sur le post. */
+    excerpt?: string;
     authors: ArticleMediaAuthor[];
-    hero: { src: string; alt: string };
+    /**
+     * `src` : image mise en avant. `video` : panneau « Hero video » de
+     * l'éditeur, optionnel — s'il est renseigné, la vidéo joue en boucle à la
+     * place de l'image, qui
+     * reste utilisée comme `poster` (et pour l'Open Graph et les vignettes,
+     * côté page).
+     */
+    hero: { src: string; alt: string; video?: string };
     blocks: MediaBlock[];
 }
 
@@ -255,9 +266,17 @@ export default function ArticleMediaLayout({ article }: { article: ArticleMediaD
                 animation propre), titre en overlay qui dérive doucement au
                 scroll (HeroTitle). */}
             <div className="am-hero-media">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={article.hero.src} alt={article.hero.alt} />
-                <HeroTitle title={article.title} />
+                {article.hero.video ? (
+                    <ArticleHeroVideo
+                        src={article.hero.video}
+                        poster={article.hero.src || undefined}
+                        label={article.hero.alt}
+                    />
+                ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={article.hero.src} alt={article.hero.alt} />
+                )}
+                <HeroTitle title={article.title} excerpt={article.excerpt} />
             </div>
 
             {/* Première plaque blanche : auteur + outils + premiers blocs. */}

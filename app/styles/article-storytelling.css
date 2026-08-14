@@ -96,7 +96,12 @@ html {
     z-index: 0;
 }
 
-.am-hero-media img {
+/* Image ET vidéo : mêmes règles. La vidéo de hero (champ ACF `hero_video`,
+   cf. ArticleHeroVideo.tsx) remplace l'image quand elle est renseignée, et doit
+   remplir le cadre exactement de la même façon — object-fit: cover s'applique
+   à une <video> comme à une <img>. */
+.am-hero-media img,
+.am-hero-media video {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -116,14 +121,57 @@ html {
     background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
 }
 
+/* Bloc titre + chapô, porteur de la dérive au scroll (framer-motion pose un
+   `transform` inline dessus, cf. HeroTitle.tsx). C'est lui qui porte désormais
+   la largeur de lecture et le décollement du bas de l'image — auparavant sur
+   .am-title, qui ne pouvait plus les assumer une fois le chapô ajouté à sa
+   suite. */
+.am-hero-title-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 900px;
+    margin-bottom: 100px;
+}
+
 .am-title {
     color: #fff;
     font-size: clamp(2.75rem, 5vw, 5rem);
     font-weight: 600;
     line-height: 1.15;
-    max-width: 900px;
-    margin-bottom: 100px;
+    margin: 0;
     text-transform: uppercase !important;
+}
+
+/* Chapô : volontairement en casse normale et en poids léger, pour contraster
+   avec le titre en capitales et rester lisible sur l'image. Le
+   text-shadow duplique le rôle du dégradé de .am-hero-title-overlay là où
+   l'image est claire : le dégradé seul ne suffit pas sur un ciel blanc. */
+.am-hero-excerpt {
+    color: #fff;
+    font-family: var(--serifGeorgia), serif;
+    font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+    line-height: 1.55;
+    font-weight: 400;
+    max-width: 680px;
+    margin: 20px 0 0;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
+}
+
+/* Sur mobile, le hero fait 90vh et le titre occupe déjà l'essentiel de la
+   place : le chapô est tronqué à 3 lignes plutôt que de repousser le titre
+   hors de l'écran. */
+@media screen and (max-width: 759px) {
+    .am-hero-title-block {
+        margin-bottom: 48px;
+    }
+
+    .am-hero-excerpt {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 }
 
 /* ─── Sections blanches (plaques de contenu) ──────────────────────────── */
@@ -471,12 +519,6 @@ html {
     max-width: 760px;
     font-size: 1.25rem;
     line-height: 1.6;
-}
-
-@media screen and (max-width: 759px) {
-    .am-media-text-content {
-        padding: 28px;
-    }
 }
 
 .am-media-text--reverse .am-media-text-media {

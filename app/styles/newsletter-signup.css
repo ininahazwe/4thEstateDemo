@@ -112,3 +112,11 @@
     color: #cf1212;
     font-size: 14px;
 }
+
+/* Code technique de l'erreur (ex. « not_configured », « upstream_error — API
+   Key Invalid ») : visible mais discret. Il sert au diagnostic en production,
+   l'hébergement cPanel ne donnant pas d'accès commode aux logs du serveur. */
+.newsletter-signup-error-code {
+    opacity: 0.6;
+    font-size: 12px;
+}
