@@ -8,7 +8,7 @@ export default function ArticleAsideSkeleton() {
         <aside className="article-aside" data-column="right" aria-busy="true">
             <section className="forecast-top-articles">
                 <div className="section-title" id="most-read-title">
-                    Most Read Stories
+                    Latest Stories
                 </div>
                 <div className="wrap">
                     {Array.from({ length: 4 }).map((_, i) => (

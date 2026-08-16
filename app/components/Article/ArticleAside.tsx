@@ -12,11 +12,17 @@ export default async function ArticleAside({ mostRead, showPodcast = true }: Art
 
     const latestPodcast = showPodcast ? await getLatestPodcastEpisode() : null;
 
+    // getMostReadArticles() renvoie [] en cas d'échec API (fallback silencieux).
+    // Sans cette garde, on affichait un titre de section au-dessus du vide.
+    const hasStories = mostRead.length > 0;
+    if (!hasStories && !latestPodcast) return null;
+
     return (
         <aside className="article-aside" data-column="right">
+            {hasStories && (
             <section className="forecast-top-articles">
                 <div className="section-title" id="most-read-title">
-                    Most Read Stories
+                    Latest Stories
                 </div>
                 <div className="wrap">
                     {mostRead.map((item, i) => (
@@ -34,6 +40,7 @@ export default async function ArticleAside({ mostRead, showPodcast = true }: Art
                     ))}
                 </div>
             </section>
+            )}
 
             {showPodcast && latestPodcast && <LatestPodcastWidget episode={latestPodcast} />}
         </aside>

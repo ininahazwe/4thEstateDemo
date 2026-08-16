@@ -396,12 +396,21 @@ export async function getReadMoreArticles(
 }
 
 /**
- * Récupère les articles les plus lus pour la sidebar.
+ * Articles de la sidebar : les N derniers PUBLIÉS, du plus récent au plus ancien.
+ *
+ * ⚠️ Ce n'est PAS un classement d'audience malgré le nom historique de la
+ * fonction — aucun compteur de lecture n'est lu ici. Les événements collectés
+ * par /api/track-read (membres connectés uniquement) ne sont pas exploités.
+ * Affiché sous le titre « Latest Stories ».
+ *
+ * `status=publish` est explicite : c'est déjà le défaut de l'API REST pour un
+ * appel non authentifié, mais on ne veut dépendre d'aucun plugin ni réglage WP
+ * qui élargirait ce défaut (brouillons, privés, contenu programmé).
  */
 export async function getMostReadArticles(count = 4): Promise<WpArticleCard[]> {
     try {
         const res = await fetch(
-            `${WP_API}/posts?per_page=${count}&orderby=date&order=desc&_embed=1`,
+            `${WP_API}/posts?per_page=${count}&status=publish&orderby=date&order=desc&_embed=1`,
             { next: { revalidate: 300 } }
         );
         if (!res.ok) return [];
