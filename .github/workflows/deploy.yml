@@ -108,13 +108,22 @@ jobs:
             tar xzf "$TMP/deploy.tar.gz" -C .deploy-new
             rm -f "$TMP/deploy.tar.gz"
 
-            # Swap du build
-            rm -rf .next
+            # Purge des swaps precedents (le process Passenger a lache
+            # ses descripteurs depuis le dernier restart).
+            rm -rf .next.old.* public.old.* 2>/dev/null || true
+
+            # Swap du build : on RENOMME, on ne supprime pas.
+            # `rm -rf .next` echoue avec "Directory not empty" tant que
+            # l'app Node tourne : elle garde des fichiers ouverts dans
+            # .next, le fs les recree pendant la suppression.
+            STAMP="$(date +%s)"
+            if [ -d .next ]; then mv .next ".next.old.$STAMP"; fi
             mv .deploy-new/.next .next
-            rm -rf public && mv .deploy-new/public public 2>/dev/null || true
+            if [ -d public ]; then mv public "public.old.$STAMP"; fi
+            mv .deploy-new/public public 2>/dev/null || true
             mv -f .deploy-new/app.js .deploy-new/package.json .deploy-new/package-lock.json .
             mv -f .deploy-new/next.config.* . 2>/dev/null || true
-            rm -rf .deploy-new
+            rm -rf .deploy-new || true
 
             echo "Installation des dependances de production..."
             npm ci --omit=dev --no-audit --no-fund
@@ -122,6 +131,10 @@ jobs:
             echo "Redemarrage Passenger..."
             mkdir -p tmp
             touch tmp/restart.txt
+
+            # Best-effort : ce qui resiste sera purge au prochain deploiement.
+            sleep 5
+            rm -rf .next.old.* public.old.* 2>/dev/null || true
 
             echo "=== Deploiement termine ==="
 
