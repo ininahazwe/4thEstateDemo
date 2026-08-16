@@ -1200,3 +1200,64 @@ sur le nouveau domaine.
   y ressaisir les variables runtime.
 - Table de redirections 301 des anciens permaliens WP → routes Next
   (`/YYYY/MM/slug`) : à construire depuis le sitemap WP actuel. NON FAIT.
+
+### Bascule — diagnostic 403 sur thefourthestategh.com
+
+État constaté (sondes HTTP depuis l'extérieur) :
+- `cms.thefourthestategh.com/wp-json/wp/v2/posts` → **OK**. `siteurl` =
+  `https://cms.thefourthestategh.com`, `home` = `https://thefourthestategh.com`.
+  C'est le bon réglage headless (les champs `link` du REST pointent déjà sur le
+  nouveau front) — ne pas y toucher.
+- `thefourthestategh.com/` → renvoie du contenu d'ANCIENS articles, mais
+  `/sitemap.xml`, `/robots.txt` (format Cloudflare, pas celui de `robots.ts`),
+  `/abonnements` et `/wp-login.php` → **404**. Or `/abonnements` et
+  `/sitemap.xml` existent dans l'app Next, et `/wp-login.php` a un redirect 307
+  dans `next.config.ts`. **Donc Next.js ne sert PAS le domaine.**
+- Le domaine est derrière **Cloudflare** : la home vue de l'extérieur est un
+  cache périmé de l'ancien WP ("Always Online"). Le 403 du navigateur est la
+  vraie réponse de l'origine.
+
+**Cause probable** : `/home/dxtrmfwa/public_html/` ne contient plus d'index (WP
+déplacé) et son `.htaccess` ne contient pas les directives Passenger
+(`PassengerAppRoot` / `PassengerBaseURI "/"` / `PassengerStartupFile app.js`).
+Apache tombe sur un docroot sans index → 403 + échec de l'ErrorDocument.
+
+**Aggravant structurel** : l'app root est DANS le docroot
+(`public_html/TFE`). cPanel écrit les directives Passenger dans le `.htaccess`
+du docroot du domaine (= `public_html`), pas dans celui de l'app. Recommandé :
+sortir l'app de `public_html` → `/home/dxtrmfwa/TFE`, laisser `public_html` vide
+sauf le `.htaccess` Passenger. Ça règle aussi l'exposition des sources.
+
+### Cause racine du 403 — TROUVÉE
+
+`uapi DomainInfo single_domain_data` : le **docroot** de thefourthestategh.com
+(addon domain) est `/home/dxtrmfwa/public_html/TFE`. Donc `APP_PATH` =
+`/home/dxtrmfwa/public_html/TFE` faisait **app root == docroot**.
+
+Ce dossier contenait encore le **`.htaccess` WordPress de 34 Ko** (iThemes
+Security + WP Rocket + règles WP), avec :
+```
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+```
++ `Options -Indexes`. Tout est réécrit vers un `index.php` disparu → 403 +
+échec ErrorDocument. Passenger jamais atteint.
+
+**Le bon montage, confirmé par l'ancien demo qui marchait :**
+- docroot `~/public_html/TFEDemo` → quasi vide (juste `.htaccess` php + `.well-known`)
+- app root `~/TFEDemo` → **hors** du docroot
+- cPanel Application Manager configure Passenger au niveau **vhost**
+  (`/etc/apache2/conf.d/userdata/`), PAS via un `.htaccess` dans le docroot —
+  d'où l'absence de directives Passenger dans `public_html/TFEDemo/.htaccess`.
+
+**Fuite de secrets** : `.env` (AUTH_SECRET + toutes les clés API) se trouvait
+dans le docroot, protégé uniquement par le `.htaccess` WP. À déplacer vers
+`~/TFE`, pas seulement supprimer le `.htaccess`.
+
+**Correctif appliqué au code** : `deploy.yml` → `APP_PATH="/home/dxtrmfwa/TFE"`.
+
+**Correctif serveur (à faire par Yv) :** sortir le `.htaccess` WP du docroot,
+`mkdir ~/TFE` + y déplacer le build, ne laisser que `.well-known` dans le
+docroot, puis Unregister/Register l'app avec Path `TFE` et Base URI `/`.
+Enfin purge Cloudflare.

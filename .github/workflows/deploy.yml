@@ -91,8 +91,12 @@ jobs:
             set -e
             echo "=== Deploiement 4estate-front (prod) ==="
 
-            # Doit correspondre au Path de l'app dans Application Manager
-            APP_PATH="/home/dxtrmfwa/public_html/TFE"
+            # Doit correspondre au Path de l'app dans Application Manager.
+            # IMPORTANT : hors du docroot. Le docroot de thefourthestategh.com
+            # est /home/dxtrmfwa/public_html/TFE ; y deployer le build exposait
+            # .env / package.json / node_modules au web et entrait en conflit
+            # avec le .htaccess WordPress residuel (403).
+            APP_PATH="/home/dxtrmfwa/TFE"
             TMP="/home/dxtrmfwa/deploy-tmp"
 
             mkdir -p "$APP_PATH"
