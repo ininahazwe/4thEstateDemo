@@ -1140,3 +1140,63 @@ Flèche discrète ajoutée dans `.am-hero-title-overlay` (`HeroTitle.tsx` +
 - La flèche se loge dans la bande libre laissée par le `margin-bottom` de
   `.am-hero-title-block` : rien n'est pris au titre. `bottom` passe de 18px à 6px sous
   759px, où cette bande tombe de 100 à 48px.
+
+## 2026-08-16 — Bascule demo.thefourthestategh.com → thefourthestategh.com
+
+**Fait :** `deploy.yml` — `APP_PATH` passé de `/home/dxtrmfwa/TFEDemo` à
+`/home/dxtrmfwa/public_html/TFE` (doit correspondre au Path de l'app dans
+cPanel Application Manager).
+
+**Audit du code (aucune URL `demo.` en dur) :** tous les fallbacks
+(`NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_WP_API_URL`) pointent déjà sur
+`https://thefourthestategh.com`. Seule occurrence de `demo.` = un commentaire
+dans `lib/auth.config.ts`. `trustHost: true` déjà posé → callbacks Auth.js OK
+sur le nouveau domaine.
+
+**Points bloquants identifiés :**
+1. Secret GitHub `NEXT_PUBLIC_WP_API_URL` → doit devenir l'URL du WP déplacé
+   (ex. `https://cms.thefourthestategh.com/wp-json/wp/v2`). Inliné au build →
+   redeploy obligatoire après changement.
+2. `NEXT_PUBLIC_BASE_URL` n'est défini NULLE PART (ni `.env.local`, ni le bloc
+   `env:` du step "Build Next.js"). Ça marchait par accident via le fallback.
+   À ajouter explicitement au build.
+3. Images des anciens articles : le contenu en base référence
+   `https://thefourthestategh.com/wp-content/uploads/...` — ce host servira
+   Next.js après bascule → 404 sur tout l'historique. Solution : `rewrite`
+   `/wp-content/uploads/:path*` → cms, ou search-replace en base.
+4. Aucun `redirects()` dans `next.config.ts` — 301 des anciennes URLs WP
+   (feed, ?p=, structure de permaliens) à écrire.
+5. Variables runtime à ressaisir dans Application Manager pour le nouveau path :
+   `TFE_MEMBERSHIP_API_URL`, `AUTH_SECRET`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`,
+   `CONTACT_TO`, `WHISTLEBLOWER_TO`, `MAILCHIMP_API_KEY`,
+   `MAILCHIMP_AUDIENCE_ID`, `TFE_MEMBERSHIP_API_KEY`, `TRANSLATE_PROVIDER`,
+   `GEMINI_API_KEY` / `GROQ_API_KEY`.
+6. `APP_PATH` sous `public_html/` → les sources (`package.json`, `.next`) sont
+   exposées au web sauf `.htaccess` de blocage.
+
+**Correctifs appliqués (même jour) — CMS confirmé sur `cms.thefourthestategh.com` :**
+- `next.config.ts` : `WP_MEDIA_HOSTNAME` remplacé par `WP_ORIGIN` (dérivé de
+  `NEXT_PUBLIC_WP_API_URL`, fallback `https://cms.thefourthestategh.com`),
+  `WP_MEDIA_HOSTNAME` en découle.
+- `next.config.ts` : `rewrites()` en `beforeFiles` —
+  `/wp-content/uploads/:path*` → `${WP_ORIGIN}/wp-content/uploads/:path*`.
+  Résout les 404 images de l'historique sans toucher à la base. Marche pour
+  next/image (l'optimizer refetch l'URL absolue → interceptée) comme pour les
+  `<img>` bruts du `dangerouslySetInnerHTML`.
+- `next.config.ts` : `redirects()` — `/wp-admin/:path*` et `/wp-login.php` vers
+  le CMS, en **307 (permanent: false)** volontairement : un 301 resterait gravé
+  dans les navigateurs si le WP redéménage.
+- `deploy.yml` : ajout de `NEXT_PUBLIC_BASE_URL` au bloc `env:` du build,
+  workflow renommé `(demo)` → `(prod)`.
+- `npx tsc --noEmit` : OK (next.config.ts bien dans le programme).
+
+**Reste à faire côté ops (hors code) :**
+- Secrets GitHub : `NEXT_PUBLIC_WP_API_URL` =
+  `https://cms.thefourthestategh.com/wp-json/wp/v2`, `NEXT_PUBLIC_BASE_URL` =
+  `https://thefourthestategh.com`.
+- Déplacer le WP sur `cms.` + search-replace `siteurl`/`home`, valider
+  `/wp-json/wp/v2/posts` AVANT de libérer la racine.
+- Repointer l'app dans cPanel Application Manager sur le nouvel `APP_PATH` et
+  y ressaisir les variables runtime.
+- Table de redirections 301 des anciens permaliens WP → routes Next
+  (`/YYYY/MM/slug`) : à construire depuis le sitemap WP actuel. NON FAIT.

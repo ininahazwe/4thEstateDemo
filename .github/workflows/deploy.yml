@@ -1,4 +1,4 @@
-name: 🚀 Deploy 4estate-front to cPanel (demo)
+name: 🚀 Deploy 4estate-front to cPanel (prod)
 
 on:
   push:
@@ -33,7 +33,10 @@ jobs:
       - name: Build Next.js
         run: npm run build
         env:
+          # Inlinés dans le bundle au build : les changer côté cPanel
+          # (Application Manager) n'a AUCUN effet, il faut redéployer.
           NEXT_PUBLIC_WP_API_URL: ${{ secrets.NEXT_PUBLIC_WP_API_URL }}
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
@@ -86,10 +89,10 @@ jobs:
           command_timeout: 300s
           script: |
             set -e
-            echo "=== Deploiement 4estate-front (demo) ==="
+            echo "=== Deploiement 4estate-front (prod) ==="
 
             # Doit correspondre au Path de l'app dans Application Manager
-            APP_PATH="/home/dxtrmfwa/TFEDemo"
+            APP_PATH="/home/dxtrmfwa/public_html/TFE"
             TMP="/home/dxtrmfwa/deploy-tmp"
 
             mkdir -p "$APP_PATH"
