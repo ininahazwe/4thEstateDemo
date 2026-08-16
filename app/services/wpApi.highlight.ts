@@ -34,7 +34,7 @@ export interface HighlightItem {
     thumbnail?: string;
 }
 
-const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
+const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL || 'https://cms.thefourthestategh.com/wp-json/wp/v2';
 
 interface WPHighlightPost {
     id: number;

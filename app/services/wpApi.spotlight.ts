@@ -23,7 +23,7 @@
 
 import { decode } from 'html-entities';
 
-const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
+const WP_BASE = process.env.NEXT_PUBLIC_WP_API_URL || 'https://cms.thefourthestategh.com/wp-json/wp/v2';
 
 /** Clé de zone dans `zones` — doit correspondre à tfe_composition_zones() côté PHP. */
 const SPOTLIGHT_ZONE = 'spotlight';

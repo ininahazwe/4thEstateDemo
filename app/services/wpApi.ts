@@ -71,7 +71,7 @@ export interface FooterCategory {
 // .env : en production la variable DOIT être fournie au build (les
 // NEXT_PUBLIC_* sont inlinées à la compilation, pas lues au runtime).
 const WP_BASE =
-    process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
+    process.env.NEXT_PUBLIC_WP_API_URL || 'https://cms.thefourthestategh.com/wp-json/wp/v2';
 
 /**
  * IDs de catégories WordPress.

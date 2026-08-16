@@ -1261,3 +1261,191 @@ dans le docroot, protégé uniquement par le `.htaccess` WP. À déplacer vers
 `mkdir ~/TFE` + y déplacer le build, ne laisser que `.well-known` dans le
 docroot, puis Unregister/Register l'app avec Path `TFE` et Base URI `/`.
 Enfin purge Cloudflare.
+
+### 403 → 404 → include SSL manquant (suite du même incident)
+
+Après nettoyage (`.htaccess` WP sorti du docroot, build déplacé dans `~/TFE`,
+app ré-enregistrée avec Path `TFE`), le symptôme est passé de 403 à 404.
+
+**Cause finale** : cPanel n'a généré l'include Passenger que pour le vhost
+HTTP. `conf.d/userdata/std/2_4/dxtrmfwa/thefourthestategh.com/TFE.conf` existe,
+mais **rien** dans le répertoire `ssl/` équivalent. Cloudflare parle à l'origine
+en HTTPS → vhost 443 sans Passenger → docroot vide → 404.
+
+Preuve : `curl -H 'Host: thefourthestategh.com' http://92.205.29.244/abonnements`
+→ **200 OK**. L'app tourne, seul le routage HTTPS manque.
+
+⚠️ Ne PAS tester l'origine via `127.0.0.1` : les vhosts cPanel sont bindés sur
+l'IP publique, on tombe sinon sur le vhost par défaut (faux positif).
+
+**Correctifs possibles** :
+- A (propre, root) : `/scripts/ensure_vhost_includes --user=dxtrmfwa` +
+  `/scripts/restartsrv_httpd`. Essayer d'abord le toggle Enabled off/on dans
+  Application Manager.
+- B (sans root) : recréer `~/public_html/TFE/.htaccess` avec les blocs
+  `SetEnv` ET `IfModule mod_passenger.c` recopiés du `TFE.conf` std — le
+  `.htaccess` s'applique aux deux vhosts. Garder le même
+  `PassengerAppGroupName` pour un seul process partagé. Risque de 500 selon
+  `AllowOverride`.
+
+**Deux anomalies repérées dans `TFE.conf`** :
+- `AUTH_SECRET` contient un **espace en fin de valeur**
+  (`"...PHsqE= "`). Si le `.env` de `~/TFE` porte le même secret sans l'espace,
+  JWT incohérents → sessions qui cassent par intermittence. À nettoyer.
+- Les env vars runtime sont stockées en `SetEnv` dans le vhost (root-owned,
+  non lisibles par le web) — c'est le mécanisme d'Application Manager, OK.
+
+### CAUSE RACINE FINALE : pas de certificat SSL sur le domaine apex
+
+`uapi SSL installed_hosts` liste `cms.`, `test.`, `membership.`, `demo.` et
+`thefourthestategh.com.mfwaserver.org` — mais **PAS `thefourthestategh.com`**.
+
+Sans certificat → pas de vhost HTTPS → cPanel n'a nulle part où écrire
+`ssl/.../TFE.conf`. Ni Passenger ni Application Manager ne sont en cause.
+
+Preuve : `curl -k -H 'Host: thefourthestategh.com' https://<IP>/...` → **421
+Misdirected Request** (le handshake TLS ne trouve aucun cert pour ce SNI et
+retombe sur le vhost d'un autre domaine). En HTTP : 200.
+
+Pourquoi jamais vu avant : l'ancien WP tournait derrière **Cloudflare en mode
+Flexible** — Cloudflare terminait le TLS et parlait à l'origine en HTTP clair,
+donc aucun certificat d'origine n'a jamais été nécessaire sur l'apex.
+Mediascape, lui, a son certificat → conf SSL présente → fonctionne.
+
+**Correctif** : installer un cert sur l'apex, soit via AutoSSL (SSL/TLS Status
+→ Run AutoSSL), soit via un **certificat d'origine Cloudflare** (SSL/TLS →
+Origin Server → Create Certificate, `thefourthestategh.com` +
+`*.thefourthestategh.com`, 15 ans) installé dans cPanel → Manage SSL sites.
+Puis toggle Enabled off/on dans Application Manager pour générer
+`ssl/.../TFE.conf`, puis `touch ~/TFE/tmp/restart.txt`.
+Enfin Cloudflare → SSL/TLS → Overview → **Full (strict)**.
+
+⚠️ NE PAS passer Cloudflare en Flexible pour se débloquer : le réglage est
+valable pour toute la zone, donc `cms.` et `membership.` (WordPress en
+`siteurl` https) partiraient en boucle de redirection.
+
+⚠️ L'option B (.htaccess avec directives Passenger) était vouée à l'échec :
+sans vhost SSL, aucun `.htaccess` ne peut être lu sur le port 443. À retirer
+si présent.
+
+### 2026-08-16 (session déploiement pas-à-pas) — le 500 est réglé
+
+Corrections d'analyse par rapport aux notes précédentes :
+
+- **Le cert apex EXISTE désormais** : Cloudflare Origin Certificate installé le
+  16/08 à 18:50 UTC, valide jusqu'en 2041, bien servi en SNI sur l'apex
+  (vérifié `openssl s_client -servername thefourthestategh.com`). La "cause
+  racine finale" notée plus haut (absence de cert) n'est plus d'actualité.
+- **Le 421 était un artefact de test.** `curl -H 'Host: …' https://<IP>/` ne
+  peut pas envoyer de SNI (une IP n'est pas un nom d'hôte) → Apache sert le
+  vhost SSL par défaut, le Host ne matche pas → 421 mécanique. Test correct :
+  `curl -k --resolve thefourthestategh.com:443:92.205.29.244 https://thefourthestategh.com/...`
+- **Structure du domaine** : `thefourthestategh.com` est un **addon domain**
+  dont le `ServerName` réel est `thefourthestategh.com.mfwaserver.org` ; l'apex
+  n'est qu'un `ServerAlias`. Docroot = `/home/dxtrmfwa/public_html/TFE`,
+  docroot du CMS = `/home/dxtrmfwa/public_html/TFEcms`. Piste probable pour
+  expliquer que cPanel n'écrive pas l'include SSL.
+
+**Cause réelle du 500 sur le port 80 : le `.htaccess` résiduel du docroot.**
+Le docroot ne contenait plus que `.htaccess` + `.well-known` (les fatals PHP
+WordPress du `error_log` dataient de 14:32 et étaient périmés). Déplacé vers
+`~/wp-residue-20260816-1929/` → **HTTP80 = 200 sur /abonnements**. C'était
+vraisemblablement l'option B (directives Passenger en `.htaccess`) dont les
+notes précédentes disaient qu'elle était à retirer.
+
+État à ce point :
+- port 80 : **200 OK**, Passenger sert bien Next.js
+- port 443 : include `ssl/2_4/dxtrmfwa/thefourthestategh.com/TFE.conf` toujours
+  **absent** (seul `std/` a son `TFE.conf`, réécrit le 16/08 à 19:06)
+- `AUTH_SECRET` dans `TFE.conf` : plus d'espace parasite, OK
+- app déployée dans `/home/dxtrmfwa/TFE` (hors docroot), conforme
+
+**Étape 3 — cPanel refuse d'écrire l'include SSL.** `uapi PassengerApps
+disable_application` + `enable_application` sur `TFE` : aucun effet. Un seul
+`TFE.conf` existe dans tout `/etc/apache2/conf.d/userdata` :
+`std/2_4/dxtrmfwa/thefourthestategh.com/TFE.conf`. Le dossier `ssl/2_4/
+dxtrmfwa/thefourthestategh.com/` existe (tous les domaines du compte ont leurs
+deux dossiers std + ssl) mais ne contient que `wp-toolkit.conf`.
+
+**Plan B (.htaccess avec garde `<If "%{HTTPS} == 'on'">`) : ÉCHEC → 500 sur
+les DEUX ports.** Donc ce n'est pas un doublon de config : `AllowOverride`
+rejette les directives Passenger en `.htaccess`, et l'erreur se produit au
+parsing, indépendamment de la condition `<If>`. Rollback automatique joué,
+port 80 revenu à 200. **Conclusion : la voie `.htaccess` est définitivement
+morte, ne plus la retenter.**
+
+État vérifié : 80 → 200 sur `/`, `/abonnements`, `/sitemap.xml` ;
+443 → 403 sur `/` et 404 sur les routes (Apache sert le docroot en statique).
+Cloudflare renvoie les mêmes codes que l'origine (donc plus de cache périmé,
+et CF parle déjà en HTTPS à l'origine).
+
+Reste : faire écrire `ssl/2_4/dxtrmfwa/thefourthestategh.com/TFE.conf`.
+Hypothèse de travail : bug/limite cPanel sur les **addon domains** (les autres
+apps Node du compte — Mediascape, Red list, tracker — sont toutes sur des
+sous-domaines, pas des addon domains). Nécessite root :
+`cp` du std vers ssl + `/scripts/ensure_vhost_includes --user=dxtrmfwa` +
+`/scripts/restartsrv_httpd`.
+
+**Hypothèse addon domain CONFIRMÉE.** Les 4 autres apps Node du compte ont bien
+leur include dans `ssl/` (Mediascape, Activity Tracker Pro API, Red list,
+MFWA MTI API) et répondent 200 en HTTPS — toutes sur des **sous-domaines**.
+`TFE` est la seule app sur un **addon domain**, et la seule sans include SSL.
+(`assets.conf` est aussi absent de `ssl/`, mais ce n'est pas une app Node.)
+
+→ Ticket support rédigé (cp std→ssl + `ensure_vhost_includes` + `restartsrv_httpd`).
+
+**Contournement immédiat sans root : Cloudflare Configuration Rule.**
+Une Configuration Rule permet de surcharger le réglage **SSL** pour un seul
+hostname (disponible sur TOUS les plans, 10 règles en Free). Règle :
+`hostname eq "thefourthestategh.com"` → SSL = **Flexible**. Cloudflare parle
+alors en HTTP à l'origine (où Passenger fonctionne, 200) uniquement pour
+l'apex, pendant que `cms.` et `membership.` restent en Full/Full(strict).
+C'est ce qui évitait le piège du réglage Flexible zone-wide.
+Réversible en un clic, à retirer dès que l'include SSL est en place.
+⚠️ À surveiller : en Flexible, CF envoie `X-Forwarded-Proto: http` — vérifier
+que NextAuth (AUTH_URL déjà forcé en https) ne génère pas de callback en http.
+
+### ✅ SITE EN LIGNE (16/08/2026, ~19:35)
+
+La Configuration Rule Cloudflare (`http.host in {"thefourthestategh.com"
+"www.thefourthestategh.com"}` → SSL = Flexible) débloque la situation :
+Cloudflare tape l'origine en HTTP, où Passenger répond 200.
+
+Validé : `/`, `/abonnements`, `/sitemap.xml`, `/about-us`, `/contact-us`,
+`/tv`, `/podcasts`, `/archives`, `/search`, `/connexion` → **200**.
+`sitemap.xml` et `robots.txt` proviennent bien de l'app Next (plus du robots
+managé Cloudflare). HTML servi = Next.js (`/_next/image`).
+
+Points ouverts :
+1. `www.thefourthestategh.com` → 403 : la règle CF ne couvrait que l'apex,
+   étendre l'expression aux deux hostnames.
+2. `/wp-login.php` → 404 au lieu du 307 attendu. Le `redirects()` de
+   `next.config.ts` fonctionne pourtant (`/wp-admin` redirige bien). Cause
+   probable : Apache route les `*.php` vers le handler PHP avant Passenger,
+   le docroot ne contient pas `wp-login.php` → 404 Apache. Cosmétique.
+3. `/wp-admin` → redirige bien vers le CMS, qui répond
+   `cms.thefourthestategh.com/not_found`. C'est le "Hide Backend" d'iThemes
+   Security côté WP, pas un bug de la bascule. Les rédacteurs ont une URL
+   de login dédiée.
+4. Test des médias non concluant : le JSON WP échappe les slashes (`https:\/\/`),
+   le script de test n'a pas déséchappé → curl 000. À refaire.
+5. **Dette à résorber** : le contournement laisse le trafic CF↔origine en clair.
+   Ticket support à envoyer (cp std→ssl + ensure_vhost_includes +
+   restartsrv_httpd), puis retirer la règle CF et repasser en Full (strict).
+
+**Validation finale OK (16/08/2026) :**
+- Article réel : `…/republic-vs-duffour…/` → 308 (retrait du slash final par
+  Next) → **200**. Chaîne saine.
+- Images historiques : `/wp-content/uploads/2026/08/AG-1.png` → **200** via
+  `cms.` ET via l'apex → le rewrite proxy de `next.config.ts` fonctionne.
+- `www.thefourthestategh.com` → **200** après extension de la règle CF aux
+  deux hostnames.
+
+**Note SEO** : WordPress publie ses `link` AVEC slash final, Next.js le retire
+(308). Chaîne propre mais un saut sur chaque URL indexée. Option si on veut
+l'éliminer : `trailingSlash: true` dans `next.config.ts`. Non urgent, non fait.
+
+**RESTE À FAIRE (seule dette) :** ticket support cPanel pour l'include SSL
+(`cp` std→ssl + `/scripts/ensure_vhost_includes --user=dxtrmfwa` +
+`/scripts/restartsrv_httpd`). Une fois posé : supprimer la Configuration Rule
+Cloudflare et repasser la zone en **Full (strict)**, puis revalider.

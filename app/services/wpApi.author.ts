@@ -25,7 +25,7 @@ import { type AuthorData, type AuthorArticle } from '../components/Author/Types'
 // ---------------------------------------------------------------------------
 
 const WP_BASE =
-    process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
+    process.env.NEXT_PUBLIC_WP_API_URL || 'https://cms.thefourthestategh.com/wp-json/wp/v2';
 
 const AUTHOR_PER_PAGE = 13; // même convention que la page catégorie (2 highlight + 11 standard)
 

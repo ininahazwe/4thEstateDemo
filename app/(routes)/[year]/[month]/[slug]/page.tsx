@@ -22,7 +22,7 @@ import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 
 
 const WP_API =
-    process.env.NEXT_PUBLIC_WP_API_URL || "https://thefourthestategh.com/wp-json/wp/v2";
+    process.env.NEXT_PUBLIC_WP_API_URL || "https://cms.thefourthestategh.com/wp-json/wp/v2";
 
 interface ArticlePageProps {
     params: Promise<{ year: string; month: string; slug: string }>;

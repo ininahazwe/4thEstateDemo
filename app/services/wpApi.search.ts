@@ -20,7 +20,7 @@ import { type SearchData, type SearchArticle } from '../components/Search/Types'
 // ---------------------------------------------------------------------------
 
 const WP_BASE =
-    process.env.NEXT_PUBLIC_WP_API_URL || 'https://thefourthestategh.com/wp-json/wp/v2';
+    process.env.NEXT_PUBLIC_WP_API_URL || 'https://cms.thefourthestategh.com/wp-json/wp/v2';
 
 const SEARCH_PER_PAGE = 13; // même convention que catégorie/auteur (2 highlight + 11 standard)
 
