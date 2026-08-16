@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {X} from "lucide-react";
 import { useSession } from "next-auth/react";
+import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
 
 export default function SubscriptionBanner() {
     const { status } = useSession();
@@ -43,7 +44,7 @@ export default function SubscriptionBanner() {
         >
             <Link
                 className="banner-wrap ithalc"
-                href="https://membership.thefourthestategh.com"
+                href={MEMBERSHIP_JOIN_URL}
                 data-ithalc="[cta_abo]"
                 data-ithal="footer_bandeau"
             >

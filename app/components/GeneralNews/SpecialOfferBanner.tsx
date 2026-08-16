@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
 import { useSession } from "next-auth/react";
+import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
 
 // Variants : chaque élément apparaît en fondu + léger décalage vertical.
 // viewport={{ once: false }} => l'animation se rejoue à chaque entrée/sortie du viewport.
@@ -70,7 +71,7 @@ export default function SpecialOfferBanner() {
 
             <Link
                 className="wrap"
-                href="https://membership.thefourthestategh.com/"
+                href={MEMBERSHIP_JOIN_URL}
                 data-ithalc="[cta_abo]"
                 data-ithal="home_bandeau_offre_spe"
             >

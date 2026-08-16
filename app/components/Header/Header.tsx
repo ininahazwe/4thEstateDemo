@@ -7,11 +7,11 @@ import { navItems } from './navigationData';
 import { ArrowBigRight, ArrowRight, Mail, Moon, Search, Sun } from "lucide-react";
 import Image from 'next/image';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
+import { MEMBERSHIP_JOIN_URL } from '@/lib/site-links';
 
 // Membership site handles registration and paid subscriptions; Next.js frontend
 // only handles authentication. "Join Us" / "Renew" buttons link there.
-// ⚠️ Must point to actual membership subscribe/registration page.
-const MEMBERSHIP_JOIN_URL = 'https://membership.thefourthestategh.com';
+// URL centralisée dans lib/site-links.ts (redirection temporaire vers mfwa.org/donate).
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
