@@ -436,10 +436,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                         {/* Commentaires — placés ici, donc communs aux deux
                             templates (standard et storytelling). Dans un
                             <Suspense> : l'article s'affiche sans attendre la
-                            requête commentaires, qui arrive en streaming. */}
-                        <Suspense fallback={null}>
-                            <CommentsSection postId={article.id} />
-                        </Suspense>
+                            requête commentaires, qui arrive en streaming.
+
+                            `hideComments` (case « Hide comments on the
+                            front-end », mu-plugin tfe-comments.php) court-circuite
+                            le composant entier : on évite ainsi la requête
+                            commentaires au lieu de la faire pour rien. */}
+                        {!article.hideComments && (
+                            <Suspense fallback={null}>
+                                <CommentsSection
+                                    postId={article.id}
+                                    commentsOpen={article.commentsOpen}
+                                />
+                            </Suspense>
+                        )}
                     </main>
                 </div>
             </div>

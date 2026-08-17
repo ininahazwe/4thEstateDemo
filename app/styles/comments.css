@@ -16,6 +16,14 @@
     margin: 0 0 24px;
 }
 
+.comments-closed {
+    margin: 24px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color, #e5e5e5);
+    color: #666;
+    font-size: 0.9375rem;
+}
+
 /* ─── Liste ──────────────────────────────────────────────────────────────── */
 
 .comment-list,
@@ -207,6 +215,7 @@
    Ne pas utiliser [data-theme] ni .dark, qui n'existent pas ici. */
 
 [data-user-color-scheme='dark'] .comments-empty,
+[data-user-color-scheme='dark'] .comments-closed,
 [data-user-color-scheme='dark'] .comment-date,
 [data-user-color-scheme='dark'] .comment-form-intro {
     color: #aaa;
@@ -218,6 +227,7 @@
 }
 
 [data-user-color-scheme='dark'] .comment-list > .comment-item + .comment-item,
+[data-user-color-scheme='dark'] .comments-closed,
 [data-user-color-scheme='dark'] .comment-form,
 [data-user-color-scheme='dark'] .comment-replies,
 [data-user-color-scheme='dark'] .comment-form-done {

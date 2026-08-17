@@ -49,6 +49,17 @@ export interface WpArticle {
     // IDs bruts pour les requêtes de recommandation
     tagIds: number[];
     categoryIds: number[];
+    /**
+     * Case native « Allow comments » (panneau Discussion de l'éditeur), exposée
+     * en REST sous `comment_status`. À false, le formulaire disparaît du front
+     * mais les commentaires déjà publiés restent affichés.
+     */
+    commentsOpen: boolean;
+    /**
+     * Case « Hide comments on the front-end » (mu-plugin tfe-comments.php) :
+     * masque TOUT le bloc, formulaire et commentaires existants compris.
+     */
+    hideComments: boolean;
     // Template "storytelling" (case ACF is_storytelling)
     isStorytelling: boolean;
     // Arbre de blocs Gutenberg brut (register_rest_field 'blocks', null si !isStorytelling)
@@ -324,6 +335,8 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
             // IDs bruts pour les requêtes getReadMoreArticles
             tagIds: (post.tags as number[]) ?? [],
             categoryIds: (post.categories as number[]) ?? [],
+            commentsOpen: post.comment_status === "open",
+            hideComments: (post.hide_comments as boolean) ?? false,
             isStorytelling: (acf.is_storytelling as boolean) ?? false,
             blocks: (post.blocks as WpBlock[] | null) ?? null,
         };

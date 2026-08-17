@@ -4,6 +4,8 @@
  * Description: Expose POST /wp-json/tfe/v1/comment, protégé par clé API, pour
  *              que le formulaire du front puisse déposer un commentaire sans
  *              qu'on ait à ouvrir l'écriture anonyme de /wp/v2/comments.
+ *              Ajoute aussi, dans la sidebar de l'éditeur, une case « Hide
+ *              comments on the front-end » qui masque tout le bloc côté Next.
  * Author: The Fourth Estate
  * Version: 1.0.0
  *
@@ -236,6 +238,181 @@ function tfe_comments_create( WP_REST_Request $request ) {
 		201
 	);
 }
+
+/* ===========================================================================
+ * MASQUAGE DU BLOC COMMENTAIRES, ARTICLE PAR ARTICLE
+ *
+ * Deux niveaux, volontairement distincts :
+ *
+ * 1. La case NATIVE de WordPress (panneau « Discussion » → « Allow comments »),
+ *    exposée en REST sous `comment_status`. Décochée : le formulaire disparaît
+ *    du front, **les commentaires déjà publiés restent visibles**. C'est le
+ *    comportement standard de WordPress, et l'endpoint d'écriture ci-dessus le
+ *    respecte déjà via comments_open().
+ *
+ * 2. La case ajoutée ici, `tfe_hide_comments` : masque **tout le bloc** côté
+ *    front — formulaire ET commentaires existants. Pour un article sensible où
+ *    l'on ne veut afficher aucune discussion, sans pour autant supprimer en
+ *    base ce qui a déjà été écrit.
+ *
+ * Le front lit les deux (cf. WpArticle.commentsOpen / hideComments).
+ * ======================================================================== */
+
+const TFE_HIDE_COMMENTS_META = 'tfe_hide_comments';
+
+/**
+ * Stockage de la case.
+ */
+function tfe_comments_register_meta() {
+	register_post_meta(
+		'post',
+		TFE_HIDE_COMMENTS_META,
+		array(
+			'show_in_rest'  => true,
+			'single'        => true,
+			'type'          => 'boolean',
+			'default'       => false,
+			'auth_callback' => function () {
+				return current_user_can( 'edit_posts' );
+			},
+		)
+	);
+
+	/**
+	 * INDISPENSABLE : sans le support 'custom-fields', l'éditeur de blocs ne
+	 * charge pas les meta du post et `editPost({ meta: … })` est ignoré en
+	 * silence — la case semble se cocher, mais rien n'est enregistré. Même
+	 * piège que dans tfe-hero-video.php.
+	 */
+	add_post_type_support( 'post', 'custom-fields' );
+}
+add_action( 'init', 'tfe_comments_register_meta' );
+
+/**
+ * Champ REST `hide_comments` à la racine du post.
+ *
+ * La meta brute est déjà exposée sous `meta.tfe_hide_comments`, mais un champ
+ * racine évite au front de dépendre du nom interne de la meta, et reste lisible
+ * quand une requête restreint les champs avec `_fields`.
+ */
+function tfe_comments_register_rest_field() {
+	register_rest_field(
+		'post',
+		'hide_comments',
+		array(
+			'get_callback' => function ( $post ) {
+				return (bool) get_post_meta( $post['id'], TFE_HIDE_COMMENTS_META, true );
+			},
+			'schema'       => array(
+				'description' => 'Masque tout le bloc commentaires sur le front.',
+				'type'        => 'boolean',
+				'context'     => array( 'view', 'edit' ),
+			),
+		)
+	);
+}
+add_action( 'rest_api_init', 'tfe_comments_register_rest_field' );
+
+/**
+ * Panneau dans la sidebar de l'éditeur.
+ *
+ * JS écrit avec wp.element.createElement plutôt qu'en JSX : pas d'étape de
+ * build côté WordPress, le fichier se dépose et fonctionne. Même montage que
+ * tfe-hero-video.php.
+ */
+function tfe_comments_editor_panel() {
+	$screen = get_current_screen();
+
+	// registerPlugin monte le panneau sur tous les types de contenu : on ne
+	// charge le script que sur les posts plutôt que de filtrer côté JS.
+	if ( ! $screen || 'post' !== $screen->post_type ) {
+		return;
+	}
+
+	$handle = 'tfe-comments-editor';
+
+	wp_register_script(
+		$handle,
+		false, // pas de fichier : tout passe par wp_add_inline_script.
+		array( 'wp-plugins', 'wp-editor', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-i18n' ),
+		'1.0.0',
+		true
+	);
+	wp_enqueue_script( $handle );
+
+	$meta_key = TFE_HIDE_COMMENTS_META;
+
+	$js = <<<JS
+( function ( wp ) {
+	if ( ! wp || ! wp.plugins || ! wp.element ) {
+		return;
+	}
+
+	var el = wp.element.createElement;
+	var __ = wp.i18n.__;
+
+	// PluginDocumentSettingPanel a déménagé de wp.editPost vers wp.editor en
+	// WordPress 6.6 ; l'ancien emplacement reste en alias mais émet un avis de
+	// dépréciation. On prend le nouveau quand il existe.
+	var PluginDocumentSettingPanel =
+		( wp.editor && wp.editor.PluginDocumentSettingPanel ) ||
+		( wp.editPost && wp.editPost.PluginDocumentSettingPanel );
+
+	if ( ! PluginDocumentSettingPanel ) {
+		return;
+	}
+
+	var ToggleControl = wp.components.ToggleControl;
+	var META_KEY      = '{$meta_key}';
+
+	function CommentsPanel() {
+		var meta = wp.data.useSelect( function ( select ) {
+			return select( 'core/editor' ).getEditedPostAttribute( 'meta' ) || {};
+		}, [] );
+
+		var commentStatus = wp.data.useSelect( function ( select ) {
+			return select( 'core/editor' ).getEditedPostAttribute( 'comment_status' );
+		}, [] );
+
+		var editPost = wp.data.useDispatch( 'core/editor' ).editPost;
+		var hidden   = !! meta[ META_KEY ];
+
+		return el(
+			PluginDocumentSettingPanel,
+			{
+				name: 'tfe-comments',
+				title: __( 'Comments (front-end)', 'tfe' ),
+				className: 'tfe-comments-panel'
+			},
+			el( ToggleControl, {
+				label: __( 'Hide comments on the front-end', 'tfe' ),
+				help: hidden
+					? __( 'Nothing is shown under this article: neither the form nor the existing comments. They stay in the database.', 'tfe' )
+					: __( 'The comments block is shown under this article.', 'tfe' ),
+				checked: hidden,
+				onChange: function ( next ) {
+					var payload = {};
+					payload[ META_KEY ] = !! next;
+					editPost( { meta: payload } );
+				}
+			} ),
+			el(
+				'p',
+				{ style: { marginBottom: 0, fontSize: '12px', color: '#757575' } },
+				'open' === commentStatus
+					? __( 'To keep published comments visible but stop new ones, uncheck "Allow comments" in the Discussion panel instead.', 'tfe' )
+					: __( 'New comments are already closed on this article (Discussion panel): the form is hidden, published comments remain visible.', 'tfe' )
+			)
+		);
+	}
+
+	wp.plugins.registerPlugin( 'tfe-comments', { render: CommentsPanel } );
+} )( window.wp );
+JS;
+
+	wp_add_inline_script( $handle, $js );
+}
+add_action( 'enqueue_block_editor_assets', 'tfe_comments_editor_panel' );
 
 /**
  * Revalide la page de l'article quand un commentaire devient visible (ou cesse
