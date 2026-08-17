@@ -1,0 +1,240 @@
+/* Bloc commentaires (app/components/Comments/*) — natif WordPress côté back. */
+
+.comments {
+    margin: 48px auto 0;
+    max-width: 720px;
+    padding: 0 var(--mainPadding, 16px);
+}
+
+.comments .section-title {
+    margin-bottom: 16px;
+}
+
+.comments-empty {
+    color: #666;
+    font-size: 0.95rem;
+    margin: 0 0 24px;
+}
+
+/* ─── Liste ──────────────────────────────────────────────────────────────── */
+
+.comment-list,
+.comment-replies {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.comment-list > .comment-item + .comment-item {
+    border-top: 1px solid var(--border-color, #e5e5e5);
+}
+
+.comment-item {
+    padding: 16px 0 0;
+}
+
+.comment-replies {
+    /* Un seul cran d'indentation, quelle que soit la profondeur : au-delà, la
+       colonne de texte devient trop étroite sur mobile. Le lien de filiation
+       reste lisible grâce au trait vertical. */
+    margin-left: 16px;
+    padding-left: 16px;
+    border-left: 2px solid var(--border-color, #e5e5e5);
+}
+
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.875rem;
+}
+
+.comment-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #f0f0f0;
+    color: #444;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.comment-author {
+    font-weight: 700;
+}
+
+.comment-date {
+    color: #777;
+}
+
+.comment-content {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.comment-content p {
+    margin: 0 0 8px;
+}
+
+.comment-content a {
+    text-decoration: underline;
+    /* Les liens des commentaires ne sont pas de la recommandation éditoriale. */
+    word-break: break-word;
+}
+
+/* ─── Formulaire ─────────────────────────────────────────────────────────── */
+
+.comment-form {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color, #e5e5e5);
+}
+
+.comment-form-intro {
+    color: #666;
+    font-size: 0.875rem;
+    margin: 0 0 16px;
+}
+
+.comment-form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.comment-form-row .comment-field {
+    flex: 1 1 220px;
+}
+
+.comment-field {
+    display: block;
+    margin-bottom: 12px;
+}
+
+.comment-field > span {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.comment-field input,
+.comment-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 6px;
+    background: var(--siteBackground, #fff);
+    color: inherit;
+    /* 16px minimum : en dessous, iOS Safari zoome sur le champ au focus. */
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.comment-field textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.comment-field input:focus-visible,
+.comment-field textarea:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}
+
+/* Honeypot : hors écran plutôt que display:none — certains bots ignorent les
+   champs non affichés, mais remplissent ceux qui existent dans le DOM. */
+.comment-honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.comment-form-submit {
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 6px;
+    background: #111;
+    color: #fff;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.comment-form-submit:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+.comment-form-error {
+    color: #b00020;
+    font-size: 0.875rem;
+    margin: 0 0 12px;
+}
+
+.comment-form-done {
+    margin-top: 32px;
+    padding: 16px;
+    border: 1px solid var(--border-color, #e5e5e5);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.comment-form-done p {
+    margin: 0 0 8px;
+}
+
+.comment-form-again {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+/* ─── Dark mode ──────────────────────────────────────────────────────────────
+   Sélecteur du projet : data-user-color-scheme sur <html> (cf. dark.css).
+   Ne pas utiliser [data-theme] ni .dark, qui n'existent pas ici. */
+
+[data-user-color-scheme='dark'] .comments-empty,
+[data-user-color-scheme='dark'] .comment-date,
+[data-user-color-scheme='dark'] .comment-form-intro {
+    color: #aaa;
+}
+
+[data-user-color-scheme='dark'] .comment-avatar {
+    background: #2a2a2a;
+    color: #ddd;
+}
+
+[data-user-color-scheme='dark'] .comment-list > .comment-item + .comment-item,
+[data-user-color-scheme='dark'] .comment-form,
+[data-user-color-scheme='dark'] .comment-replies,
+[data-user-color-scheme='dark'] .comment-form-done {
+    border-color: #333;
+}
+
+[data-user-color-scheme='dark'] .comment-field input,
+[data-user-color-scheme='dark'] .comment-field textarea {
+    background: #1a1a1a;
+    border-color: #333;
+}
+
+[data-user-color-scheme='dark'] .comment-form-submit {
+    background: #f0f0f0;
+    color: #111;
+}
+
+[data-user-color-scheme='dark'] .comment-form-done {
+    background: rgba(255, 255, 255, 0.04);
+}

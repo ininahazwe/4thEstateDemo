@@ -276,7 +276,7 @@ export default function ArticleShareButton({ title }: ArticleShareButtonProps) {
                         ) : (
                             <Link2 size={18} strokeWidth={2} aria-hidden="true" />
                         )}
-                        <span>{copied ? 'Copié !' : 'Copier le lien'}</span>
+                        <span>{copied ? 'Copied!' : 'Copy link'}</span>
                     </button>
                 </div>
             )}

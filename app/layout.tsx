@@ -30,6 +30,7 @@ import "./styles/footer-accordion.css";
 import "./styles/whistleblower.css";
 import "./styles/contact.css";
 import "./styles/aside-skeleton.css";
+import "./styles/comments.css";
 import "./styles/dark.css";
 import "./styles/article-storytelling.css";
 import "./globals.css";

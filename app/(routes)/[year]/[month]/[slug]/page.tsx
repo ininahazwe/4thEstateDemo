@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import Script from "next/script";
 import Header from "@/app/components/Header/Header";
@@ -19,6 +20,7 @@ import TrackReader from "@/app/components/track-reader";
 import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 import NewsletterSignup from "@/app/components/NewsletterSignup/NewsletterSignup";
 import SubscriptionBanner from "@/app/components/SubscriptionBanner";
+import CommentsSection from "@/app/components/Comments/CommentsSection";
 
 
 const WP_API =
@@ -430,6 +432,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                             côté client). Rend null — n'affecte ni le rendu ni le
                             SSG de la page. */}
                         <TrackReader articleId={article.id} slug={slug} />
+
+                        {/* Commentaires — placés ici, donc communs aux deux
+                            templates (standard et storytelling). Dans un
+                            <Suspense> : l'article s'affiche sans attendre la
+                            requête commentaires, qui arrive en streaming. */}
+                        <Suspense fallback={null}>
+                            <CommentsSection postId={article.id} />
+                        </Suspense>
                     </main>
                 </div>
             </div>
