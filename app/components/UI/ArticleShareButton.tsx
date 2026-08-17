@@ -49,16 +49,21 @@ export default function ArticleShareButton({ title }: ArticleShareButtonProps) {
         setPos({ top: r.bottom + margin, left });
     }
 
-    // Partage natif (feuille système iOS/Android) quand il est disponible sur
-    // petit écran : plus fiable et plus familier que le popup maison, et il
-    // couvre les apps que la liste ci-dessous ne connaît pas.
+    // Partage natif (feuille système) dès qu'il est disponible — mobile ET
+    // desktop, plus seulement sous 759px.
+    //
+    // ⚠️ C'est le SEUL chemin fiable sur mobile. Les URL « web intent » de
+    // Facebook / X / LinkedIn sont interceptées par les apps installées via
+    // App Links : l'app s'ouvre, ne sait pas traiter /sharer ou /intent, et
+    // affiche à la place l'URL passée en paramètre — donc l'article lui-même,
+    // dans une nouvelle vue. Symptôme observé en prod le 16/08/2026 : seuls
+    // WhatsApp (son deep link `api.whatsapp.com/send` est officiellement
+    // supporté) et « Copier le lien » fonctionnaient.
     async function handleShareClick() {
         const link = canonicalUrl();
         setUrl(link);
 
-        const isSmallScreen = window.matchMedia('(max-width: 759px)').matches;
-
-        if (isSmallScreen && navigator.share) {
+        if (navigator.share) {
             try {
                 await navigator.share({ title, url: link });
                 return;
@@ -70,6 +75,29 @@ export default function ArticleShareButton({ title }: ArticleShareButtonProps) {
 
         if (!isOpen) place();
         setIsOpen((prev) => !prev);
+    }
+
+    /**
+     * Ouvre un partage dans une fenêtre dédiée et dimensionnée.
+     *
+     * Sur desktop, une fenêtre nommée n'est pas capturée par un handler de
+     * protocole ou une app : c'est le comportement « dialogue de partage »
+     * attendu. Le `href` reste posé sur le lien pour le clic-droit, le
+     * middle-click et les lecteurs d'écran.
+     *
+     * Pas d'`await` avant `window.open` : l'appel doit rester dans
+     * l'activation utilisateur, sinon le navigateur le bloque comme popup.
+     *
+     * Pas de `noopener` dans les features : la spec impose alors un retour
+     * `null`, ce qui rendrait indétectable un blocage réel par le navigateur
+     * et provoquerait une navigation parasite dans l'onglet courant.
+     */
+    function openShareWindow(event: React.MouseEvent<HTMLAnchorElement>, href: string) {
+        event.preventDefault();
+        setIsOpen(false);
+        const w = window.open(href, 'tfe-share', 'popup,width=600,height=650');
+        // Popup bloquée par le navigateur : on suit le lien normalement.
+        if (!w) window.location.assign(href);
     }
 
     // Ferme au clic en dehors (bouton ET popup, ce dernier n'étant plus un
@@ -117,10 +145,15 @@ export default function ArticleShareButton({ title }: ArticleShareButtonProps) {
     const encodedUrl = encodeURIComponent(url);
     const encodedTitle = encodeURIComponent(title);
 
-    const shareLinks = [
+    const shareLinks: Array<{
+        name: string;
+        href: string;
+        icon: React.ReactNode;
+        nativeDeepLink?: boolean;
+    }> = [
         {
             name: 'Facebook',
-            href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+            href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&display=popup`,
             icon: (
                 <svg xmlns={SVG_NS} width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
@@ -129,7 +162,7 @@ export default function ArticleShareButton({ title }: ArticleShareButtonProps) {
         },
         {
             name: 'X',
-            href: `https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+            href: `https://x.com/intent/post?url=${encodedUrl}&text=${encodedTitle}`,
             icon: (
                 <svg xmlns={SVG_NS} width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.26 10.99h-6.466l-5.06-6.616-5.79 6.617H1.96l7.73-8.835L1.5 2.25h6.617l4.573 6.045L18.243 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z" />
@@ -138,6 +171,9 @@ export default function ArticleShareButton({ title }: ArticleShareButtonProps) {
         },
         {
             name: 'WhatsApp',
+            // Seul deep link officiellement supporté par l'app : on le laisse
+            // suivre son cours normal au lieu de le forcer dans une fenêtre.
+            nativeDeepLink: true,
             href: `https://api.whatsapp.com/send?text=${encodedTitle}%20${encodedUrl}`,
             icon: (
                 <svg xmlns={SVG_NS} width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
@@ -219,7 +255,11 @@ export default function ArticleShareButton({ title }: ArticleShareButtonProps) {
                             rel="noopener noreferrer"
                             className="share-popup-item"
                             role="menuitem"
-                            onClick={() => setIsOpen(false)}
+                            onClick={
+                                link.nativeDeepLink
+                                    ? () => setIsOpen(false)
+                                    : (e) => openShareWindow(e, link.href)
+                            }
                         >
                             {link.icon}
                             <span>{link.name}</span>
