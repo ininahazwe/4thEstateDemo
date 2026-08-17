@@ -1449,3 +1449,138 @@ l'éliminer : `trailingSlash: true` dans `next.config.ts`. Non urgent, non fait.
 (`cp` std→ssl + `/scripts/ensure_vhost_includes --user=dxtrmfwa` +
 `/scripts/restartsrv_httpd`). Une fois posé : supprimer la Configuration Rule
 Cloudflare et repasser la zone en **Full (strict)**, puis revalider.
+
+### Gutenberg « Publishing failed » sur cms.thefourthestategh.com — RÉSOLU
+
+**Symptôme** : depuis le nouvel emplacement, on peut changer le statut d'un
+article mais pas enregistrer une modification → « Publishing failed. Could not
+get a valid response from the server. »
+
+**Cause** : `rest_url()` se construit sur l'option **`home`**, pas sur
+`siteurl`. Avec `home = https://thefourthestategh.com`, l'éditeur de blocs
+envoyait ses `POST /wp-json/wp/v2/posts/<id>` au **Next.js**, qui n'a aucun
+endpoint REST WordPress.
+
+Preuve : dans `cms.thefourthestategh.com/wp-json/`, tous les liens `self`
+étaient bâtis sur `thefourthestategh.com`
+(ex. `https://thefourthestategh.com/wp-json/ithemes-security/rpc`).
+
+Pourquoi le changement de statut passait quand même : depuis la liste des
+articles WordPress utilise `admin-ajax.php` (chemin relatif → bon host). Seul
+l'éditeur de blocs passe par l'API REST.
+
+**Correctif appliqué** :
+`wp --skip-plugins --skip-themes option update home 'https://cms.thefourthestategh.com'`
+→ vérifié, `url` et `home` sont désormais tous deux sur `cms.`.
+
+⚠️ **Contrairement à ce que j'avais noté le 16/08**, `home` sur le domaine du
+front n'était PAS le bon réglage headless : ça casse l'admin. La note
+précédente (« ne pas y toucher ») est erronée.
+
+Sans risque pour le front : Next.js n'utilise jamais le champ `link` de l'API,
+il reconstruit ses URLs via `buildHref(post)` (date + slug).
+
+**Astuce WP-CLI** : sur ce WP, `wp` tombe en OOM (memory_limit 128 Mo, fixé dans
+le `.htaccess`, `everest-forms` l'épuise). Toujours ajouter
+`--skip-plugins --skip-themes` pour lire/écrire une option. Alternative :
+`WP_CLI_PHP_ARGS='-d memory_limit=1024M' wp ...`, ou les constantes `WP_HOME` /
+`WP_SITEURL` dans `wp-config.php` (immunes à l'OOM, et grisent les champs
+correspondants dans Réglages → Général).
+
+**Reste à faire (confort rédacteurs)** : mu-plugin avec filtre `post_link` pour
+que « Voir l'article » / l'aperçu pointent sur
+`thefourthestategh.com/YYYY/MM/slug` au lieu du thème Foxiz sur `cms.`.
+
+**Dette signalée** : `memory_limit` à 128 Mo → à monter à 256 Mo via cPanel
+MultiPHP INI Editor. Probablement la cause des timeouts/500 du WP observés
+pendant les builds Next.js (237 pages statiques).
+
+### 2026-08-16 — mu-plugin `tfe-headless.php` (NOUVEAU, versionné)
+
+`wordpress/mu-plugins/tfe-headless.php`. `php -l` OK. À déposer dans
+`wp-content/mu-plugins/` du WP de cms.thefourthestategh.com.
+
+**Deux responsabilités :**
+
+1. **`post_link`** → réécrit les permaliens d'articles vers
+   `https://thefourthestategh.com/YYYY/MM/slug`. Miroir exact de `buildHref()`
+   (`app/services/wpApi.ts`) : `get_post_time('Y'|'m', false, $post)` — le
+   `false` (heure locale) correspond au champ `date` de l'API REST que lit le
+   front, et le site tourne en UTC (`gmt_offset: 0`).
+   - Ne touche que le post type `post` ; pages, archives et CPT gardent leurs
+     permaliens (seuls les articles ont une route équivalente côté Next).
+   - Sort tôt sur `auto-draft`/`draft`/`pending` et slug vide → l'**aperçu reste
+     sur le CMS**, volontairement : le front n'a pas de route de prévisualisation
+     des brouillons.
+   - Garde-fou date invalide → renvoie le permalien d'origine plutôt que
+     `/0/00/slug`.
+   - Le champ REST `link` change aussi (il dérive de `get_permalink`) : sans
+     conséquence, le front ne le lit jamais.
+
+2. **Redirection de la racine** du CMS → `/mfwa-studio` (slug « Hide Backend »
+   d'iThemes Security), via `template_redirect`.
+   - Constante `TFE_STUDIO_PATH` ; la mettre à `''` pour retomber sur
+     `wp_login_url()`, qui suit automatiquement le slug iThemes.
+   - Gardes : `is_admin`, `wp_doing_ajax`, `wp_doing_cron`, `REST_REQUEST`,
+     `is_feed`/`is_robots`/`is_trackback`, + anti-boucle par comparaison de
+     chemin.
+   - Utilisateur connecté → redirigé vers `admin_url()` plutôt que vers un
+     écran de login.
+   - **302 et non 301** : Cloudflare est devant ce domaine, un 301 se graverait
+     dans son cache et dans les navigateurs.
+   - N'intercepte QUE la racine : les articles restent consultables sur le CMS
+     (nécessaire pour l'aperçu).
+
+Constantes à ajuster en tête de fichier : `TFE_FRONT_ORIGIN`, `TFE_STUDIO_PATH`.
+
+Après dépôt : purger WP Rocket + le cache Cloudflare du host `cms.`.
+
+### 2026-08-17 — Revalidation à la demande (ISR on-demand)
+
+**Constat préalable** : le slider vidéos N'ÉTAIT PAS périmé. Les 5 IDs TikTok
+servis publiquement correspondaient exactement aux 5 de
+`/wp-json/wp/v2/video-story`. Le `curl --resolve` sur l'origine renvoyait du
+vide (requête HTTPS directe en échec), pas la page — faux négatif de la sonde.
+`cache-control: s-maxage=300, stale-while-revalidate=31535700` +
+`cf-cache-status: DYNAMIC` → Cloudflare ne cache pas la home, c'est l'ISR de
+Next qui sert du périmé pendant la régénération (d'où l'effet « il faut deux
+visites »).
+
+**Deux nouveaux fichiers :**
+
+1. `app/api/revalidate/route.ts` — `tsc --noEmit` OK.
+   - POST uniquement. Auth par en-tête `x-tfe-revalidate-secret` comparé à
+     `process.env.REVALIDATE_SECRET`. **Pas de secret en query string** (les
+     query strings finissent dans les access logs Apache et Cloudflare).
+   - Comparaison à temps constant : sha256 des deux valeurs puis
+     `timingSafeEqual` (qui exige des buffers de même longueur).
+   - `sanitizePaths()` : n'accepte que des chemins commençant par `/`, refuse
+     `//` et `..`. Plafond `MAX_ITEMS = 20`.
+   - Corps vide / JSON invalide → retombe sur `['/']`.
+   - 503 explicite si `REVALIDATE_SECRET` absente (distinct du 401), pour que
+     la misconfig se diagnostique tout de suite.
+   - GET renvoie seulement `{ok, configured}` — jamais d'invalidation (sinon
+     déclenchable par n'importe quel crawler, et cachable par Cloudflare).
+   - **Pas de `revalidateTag`** : aucun fetch du projet ne pose de `tags`, et
+     en Next 16 la signature est `revalidateTag(tag, profile)`.
+
+2. `wordpress/mu-plugins/tfe-revalidate.php` — `php -l` OK.
+   - Secret et URL via constantes `TFE_REVALIDATE_URL` /
+     `TFE_REVALIDATE_SECRET` dans **wp-config.php** (le dossier `wordpress/` du
+     repo est versionné sur GitHub → jamais de secret dedans).
+   - ⚠️ **Ping sur `shutdown`, pas sur `transition_post_status`** :
+     `transition_post_status` se déclenche AVANT l'écriture des champs ACF
+     (ACF sauvegarde sur `save_post` priorité 20). Pinger là régénérerait la
+     page avec l'ANCIENNE valeur des champs → impression que la revalidation
+     ne marche pas. On accumule les chemins puis on envoie un seul appel une
+     fois tout écrit.
+   - Types couverts : `post`, `page`, `video-story`, `highlight`,
+     `composition`. Ne réagit que si `publish` est l'ancien OU le nouveau
+     statut. Skip autosave/révision.
+   - Chemin des articles recalculé localement (`/Y/m/slug`) et non dérivé de
+     `get_permalink()` → autonome si `tfe-headless.php` n'est pas déployé.
+   - `blocking => false` par défaut (une publication ne doit jamais échouer
+     parce que le front est down) ; bloquant + `error_log` sous `WP_DEBUG`.
+
+**Reste à faire** : `REVALIDATE_SECRET` dans cPanel Application Manager, les
+deux constantes dans wp-config.php, déployer les mu-plugins, push pour la route.
