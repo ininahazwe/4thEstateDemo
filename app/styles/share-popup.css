@@ -1,4 +1,8 @@
-/* Popup de partage social — ancré sous le bouton Share dans ArticleBody */
+/* Popup de partage social — ancré sous le bouton Share (ArticleShareButton).
+   `position: fixed` et coordonnées calculées en JS : le conteneur
+   .tools-list passe en overflow:auto sous 759px, ce qui clippait un popup
+   en position:absolute (invisible sur mobile). Ne pas remettre d'absolute
+   sans vérifier ce cas. */
 
 .share-button-container {
     position: relative;
@@ -6,11 +10,10 @@
 }
 
 .share-popup {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    z-index: 50;
-    min-width: 200px;
+    position: fixed;
+    z-index: 500;
+    min-width: 220px;
+    font-size: 14px;
     background: var(--background, #fff);
     border: 1px solid var(--border-color, #e5e5e5);
     border-radius: 10px;
@@ -59,14 +62,20 @@
     flex-shrink: 0;
 }
 
-/* Variante dark mode si le thème est géré par une classe/attribute */
-[data-theme='dark'] .share-popup,
-.dark .share-popup {
+/* Dark mode — le thème est piloté par data-user-color-scheme sur <html>
+   (cf. app/styles/dark.css et Header.tsx). Les sélecteurs [data-theme] /
+   .dark utilisés auparavant n'existent pas dans ce projet : le popup
+   restait blanc en mode sombre. */
+[data-user-color-scheme='dark'] .share-popup {
     background: #1e1e1e;
     border-color: #333;
 }
 
-[data-theme='dark'] .share-popup-item:hover,
-.dark .share-popup-item:hover {
+[data-user-color-scheme='dark'] .share-popup-item {
+    color: #dddddd;
+}
+
+[data-user-color-scheme='dark'] .share-popup-item:hover,
+[data-user-color-scheme='dark'] .share-popup-item:focus-visible {
     background-color: rgba(255, 255, 255, 0.08);
 }
