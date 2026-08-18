@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import ArticleHeroVideo from './ArticleHeroVideo';
 import ArticleMediaPodcast from './ArticleMediaPodcast';
 import ArticleMediaVideoWrap from './ArticleMediaVideoWrap';
@@ -24,6 +25,23 @@ import type { MediaBlock } from '@/app/services/blockMapper';
 //   bougeant jamais. Rien n'est peint hors du panneau.
 // - le flux de blocs est donc DÉCOUPÉ à chaque bloc 'cover' : les blocs entre
 //   deux covers forment une section blanche, le cover est émis entre elles.
+//
+// OPTIMISATION DES IMAGES — état et limite
+//
+// hero, 'image' et 'mediaText' passent par next/image : conversion AVIF/WebP et
+// redimensionnement à la largeur réellement affichée (cf. images.formats et
+// images.deviceSizes dans next.config.ts). Ces trois blocs représentent
+// l'essentiel du poids d'un article storytelling.
+//
+// 'cover' et 'gallery' NE PEUVENT PAS en bénéficier : leur image est portée par
+// un `background-image` CSS, et next/image n'optimise que les <img> qu'il
+// génère. Ce choix de background n'est pas un oubli — il est ce qui permet
+// l'image immobile confinée au panneau (background-attachment: fixed) et
+// l'accordéon sans recalcul de géométrie. Les convertir en <Image> casserait
+// ces deux effets (voir la note en tête de la section 5 et 6 de
+// article-storytelling.css). Ces deux blocs restent donc servis en JPEG à la
+// taille insérée par la rédaction ; leur poids se maîtrise en amont, via le
+// seuil de redimensionnement de WordPress (tfe-media-guardrails.php).
 // ---------------------------------------------------------------------------
 
 export interface ArticleMediaAuthor {
@@ -51,6 +69,13 @@ export interface ArticleMediaData {
     hero: { src: string; alt: string; video?: string };
     blocks: MediaBlock[];
 }
+
+/**
+ * Largeur annoncée quand WordPress n'a pas écrit les dimensions sur son <img>.
+ * Sert uniquement à réserver la place (ratio 3:2) — le ratio réel du fichier
+ * reprend la main au chargement grâce à `height: auto`.
+ */
+const FALLBACK_IMAGE_WIDTH = 2048;
 
 type CoverBlock = Extract<MediaBlock, { type: 'cover' }>;
 type Segment =
@@ -113,16 +138,39 @@ function Block({ block }: { block: MediaBlock }) {
                 </div>
             );
 
-        case 'image':
+        case 'image': {
+            // .am-media-full n'a pas de max-width : l'image occupe toute la
+            // largeur de la plaque, elle-même en 100vw — d'où sizes="100vw".
+            //
+            // Dimensions réelles quand WordPress les a écrites sur son <img>
+            // (cf. extractDimensions dans blockMapper.ts), sinon un 3:2 par
+            // défaut. Elles ne servent qu'à réserver la place : le CSS
+            // `.am-media-full img { width: 100% }` et `height: auto` laissent
+            // le ratio intrinsèque du fichier gouverner l'affichage, donc
+            // aucune déformation même si le ratio annoncé est faux.
+            const width = block.width ?? FALLBACK_IMAGE_WIDTH;
+            const height = block.height ?? Math.round(width / 1.5);
+
             return (
                 <figure className="am-media-full">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={block.src} alt={block.alt} loading="lazy" />
+                    <Image
+                        src={block.src}
+                        alt={block.alt}
+                        width={width}
+                        height={height}
+                        sizes="100vw"
+                        style={{ width: '100%', height: 'auto' }}
+                    />
                     {block.caption && <figcaption className="am-figcaption">{block.caption}</figcaption>}
                 </figure>
             );
+        }
 
         case 'gallery':
+            // ⚠️ Pas de next/image ici : l'image est un background, cf. la note
+            // « OPTIMISATION DES IMAGES » en tête de fichier. Ne pas convertir
+            // sans avoir résolu le problème du recalcul de géométrie.
+            //
             // Accordéon : chaque vignette est une piste flex (flex: 1) qui
             // s'élargit au survol (flex-grow). L'image est portée par le
             // BACKGROUND d'un calque interne et non par un <img> — c'est ce qui
@@ -154,8 +202,21 @@ function Block({ block }: { block: MediaBlock }) {
             return (
                 <div className={`am-media-text${block.position === 'right' ? ' am-media-text--reverse' : ''}`}>
                     <div className="am-media-text-media">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={block.src} alt={block.alt} loading="lazy" />
+                        {/* `fill` et non width/height : le conteneur a une
+                            hauteur imposée (100vh moins le header) et le CSS
+                            recadre en object-fit: cover. Le parent est en
+                            position: sticky, ce qui satisfait l'exigence de
+                            next/image d'un ancêtre positionné.
+
+                            sizes : la grille fait 80vw en deux colonnes égales
+                            au-dessus de 860px, soit 40vw par colonne ; en
+                            dessous elle passe sur une seule colonne. */}
+                        <Image
+                            src={block.src}
+                            alt={block.alt}
+                            fill
+                            sizes="(max-width: 860px) 100vw, 40vw"
+                        />
                     </div>
                     <div className="am-media-text-content am-body">
                         <div>
@@ -234,6 +295,9 @@ function Block({ block }: { block: MediaBlock }) {
 // confinée à son bloc — un <img> en position:fixed serait peint sur toute la
 // fenêtre pendant tout l'article, et `overflow:hidden` sur le parent ne clippe
 // pas un descendant fixed.
+// ⚠️ Pas de next/image dans ce panneau : l'image est un background, condition
+// de l'effet « immobile et confinée ». Voir la note « OPTIMISATION DES IMAGES »
+// en tête de fichier.
 function Cover({ block }: { block: CoverBlock }) {
     return (
         <section className="am-cover-media">
@@ -273,8 +337,26 @@ export default function ArticleMediaLayout({ article }: { article: ArticleMediaD
                         label={article.hero.alt}
                     />
                 ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={article.hero.src} alt={article.hero.alt} />
+                    /* `fill` : .am-hero-media impose sa hauteur (--am-hero-height)
+                       et le CSS partage déjà les mêmes règles pour <img> et
+                       <video> (width/height 100%, object-fit: cover) — inutile
+                       de les redéclarer ici. Le parent est en position: sticky,
+                       donc positionné : `fill` est valide.
+
+                       `priority` : le hero est l'élément LCP de la page. Il
+                       désactive le lazy loading, ce qui est le comportement
+                       voulu pour une image plein écran au-dessus de la ligne de
+                       flottaison.
+
+                       sizes="100vw" : le hero est en pleine largeur de fenêtre
+                       (width: 100vw dans le CSS). */
+                    <Image
+                        src={article.hero.src}
+                        alt={article.hero.alt}
+                        fill
+                        priority
+                        sizes="100vw"
+                    />
                 )}
                 <HeroTitle title={article.title} excerpt={article.excerpt} />
             </div>

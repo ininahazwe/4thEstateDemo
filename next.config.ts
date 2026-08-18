@@ -6,13 +6,13 @@ import type { NextConfig } from "next";
 // second endroit à modifier. Sans ça, next/image bloque les images du
 // nouveau host et toute la home casse.
 const WP_ORIGIN = (() => {
-    try {
-        return new URL(
-            process.env.NEXT_PUBLIC_WP_API_URL || "https://cms.thefourthestategh.com/wp-json/wp/v2"
-        ).origin;
-    } catch {
-        return "https://cms.thefourthestategh.com";
-    }
+  try {
+    return new URL(
+        process.env.NEXT_PUBLIC_WP_API_URL || "https://cms.thefourthestategh.com/wp-json/wp/v2"
+    ).origin;
+  } catch {
+    return "https://cms.thefourthestategh.com";
+  }
 })();
 
 const WP_MEDIA_HOSTNAME = new URL(WP_ORIGIN).hostname;
@@ -33,6 +33,54 @@ const nextConfig: NextConfig = {
     cpus: 1,
   },
   images: {
+    // ─── Formats servis ──────────────────────────────────────────────────
+    // Par défaut Next ne produit que du WebP. AVIF pèse ~25 à 30 % de moins
+    // à qualité perçue égale : c'est le plus gros gain disponible sur le
+    // poids des pages, et il ne coûte rien au lecteur (le navigateur
+    // annonce ce qu'il sait lire via l'en-tête Accept ; les anciens
+    // navigateurs reçoivent le WebP, puis le JPEG d'origine).
+    //
+    // L'ordre compte : Next prend le PREMIER format accepté par le
+    // navigateur. AVIF doit donc précéder WebP.
+    //
+    // ⚠️ Contrepartie assumée : encoder de l'AVIF est nettement plus lent
+    // que du WebP, et cette app tourne avec `cpus: 1`. La PREMIÈRE requête
+    // sur une image donnée peut prendre 1 à 3 s. C'est précisément ce que
+    // `minimumCacheTTL` ci-dessous rend indolore : on ne paie l'encodage
+    // qu'une seule fois par image et par taille.
+    formats: ['image/avif', 'image/webp'],
+
+    // ─── Largeurs générées ───────────────────────────────────────────────
+    // Défaut Next : [640, 750, 828, 1080, 1200, 1920, 2048, 3840].
+    // Le 3840 est retiré : il ne sert que les écrans 4K en densité 2×, ne
+    // change rien à la netteté perçue sur le reste du parc, et coûte le
+    // plus cher — en CPU d'encodage comme en octets envoyés.
+    //
+    // Repère utile : exposure.co, cité en référence pour ses grandes
+    // images nettes, ne sert jamais plus de 1200 px de large. La netteté
+    // vient du cadrage et du taux de compression, pas de la résolution.
+    //
+    // Ce plafond est aussi un garde-fou : si un composant oublie son
+    // attribut `sizes`, Next retombe sur `100vw` et demande la plus grande
+    // largeur disponible. Sans ce réglage, ce serait 3840 px.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+
+    // ─── Cache des images optimisées ─────────────────────────────────────
+    // Durée minimale de conservation d'une variante déjà encodée.
+    //
+    // Une image de la médiathèque WordPress ne change JAMAIS après
+    // publication : si un rédacteur veut une autre photo, il téléverse un
+    // nouveau fichier, donc une nouvelle URL. Garder les variantes 30 jours
+    // est donc sans risque, et c'est ce qui évite de re-encoder de l'AVIF
+    // à chaque expiration — le poste de dépense le plus lourd pour un
+    // serveur à 1 CPU.
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 jours
+
+    // Note : si un jour on veut passer `quality={…}` sur un <Image>, Next 16
+    // exige de déclarer les valeurs autorisées ici via `qualities: [...]`.
+    // Non ajouté pour l'instant : la qualité par défaut (75) est le bon
+    // compromis, et une valeur non déclarée provoquerait une erreur au build.
+
     remotePatterns: [
       {
         protocol: 'https',

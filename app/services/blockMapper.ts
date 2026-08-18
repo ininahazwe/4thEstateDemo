@@ -14,22 +14,33 @@ export type MediaBlock =
     | { type: "quote"; text: string }
     | { type: "body"; paragraphs: string[] } // HTML inline assaini (cf. sanitizeInlineHtml)
     | { type: "list"; items: string[] }
-    | { type: "image"; src: string; alt: string; caption?: string }
-    | { type: "gallery"; images: { src: string; alt: string; caption?: string }[] }
-    | { type: "mediaText"; src: string; alt: string; paragraphs: string[]; position: "left" | "right" }
+    | { type: "image"; src: string; alt: string; caption?: string; width?: number; height?: number }
+    | {
+    type: "gallery";
+    images: { src: string; alt: string; caption?: string; width?: number; height?: number }[];
+}
+    | {
+    type: "mediaText";
+    src: string;
+    alt: string;
+    paragraphs: string[];
+    position: "left" | "right";
+    width?: number;
+    height?: number;
+}
     | { type: "cover"; src: string; alt: string; text?: string; overlayColor?: string; dimRatio?: number }
     | { type: "audio"; src: string }
     | { type: "video"; src: string; poster?: string }
     | { type: "embed"; provider: "spotify" | "youtube" | "vimeo"; src: string }
     | {
-          type: "podcast";
-          episodeId: string;
-          title: string;
-          show: string;
-          description: string;
-          cover: string;
-          duration?: string;
-      };
+    type: "podcast";
+    episodeId: string;
+    title: string;
+    show: string;
+    description: string;
+    cover: string;
+    duration?: string;
+};
 
 // ─── Helpers privés ───────────────────────────────────────────────────────────
 
@@ -100,6 +111,27 @@ function sanitizeInlineHtml(html: string): string {
 function extractAttr(html: string, tag: string, attr: string): string | undefined {
     const re = new RegExp(`<${tag}[^>]*\\s${attr}=["']([^"']+)["']`, "i");
     return re.exec(html)?.[1];
+}
+
+/**
+ * Dimensions intrinsèques de l'image d'un bloc.
+ *
+ * WordPress écrit `width` et `height` sur les <img> qu'il génère dans le HTML
+ * des blocs. Les remonter permet de passer les VRAIES dimensions à next/image :
+ * sans elles, il faut annoncer un ratio arbitraire, et un ratio faux provoque un
+ * saut de mise en page au chargement (l'espace réservé n'est pas celui occupé).
+ *
+ * Retourne undefined quand les attributs sont absents (image insérée à la main,
+ * bloc ancien) — le composant retombe alors sur un ratio par défaut.
+ */
+function extractDimensions(html: string): { width?: number; height?: number } {
+    const width = Number(extractAttr(html, "img", "width"));
+    const height = Number(extractAttr(html, "img", "height"));
+
+    return {
+        width: Number.isFinite(width) && width > 0 ? width : undefined,
+        height: Number.isFinite(height) && height > 0 ? height : undefined,
+    };
 }
 
 function extractFigcaption(html: string): string | undefined {
@@ -202,7 +234,8 @@ export function mapWpBlocksToMediaBlocks(blocks: WpBlock[]): MediaBlock[] {
                 const src = extractAttr(block.innerHTML, "img", "src");
                 const alt = extractAttr(block.innerHTML, "img", "alt") ?? "";
                 const caption = extractFigcaption(block.innerHTML);
-                if (src) result.push({ type: "image", src, alt, caption });
+                const { width, height } = extractDimensions(block.innerHTML);
+                if (src) result.push({ type: "image", src, alt, caption, width, height });
                 break;
             }
 
@@ -213,6 +246,7 @@ export function mapWpBlocksToMediaBlocks(blocks: WpBlock[]): MediaBlock[] {
                         src: extractAttr(b.innerHTML, "img", "src") ?? "",
                         alt: extractAttr(b.innerHTML, "img", "alt") ?? "",
                         caption: extractFigcaption(b.innerHTML),
+                        ...extractDimensions(b.innerHTML),
                     }))
                     .filter((img) => img.src);
                 if (images.length) result.push({ type: "gallery", images });
@@ -234,6 +268,7 @@ export function mapWpBlocksToMediaBlocks(blocks: WpBlock[]): MediaBlock[] {
                         alt,
                         paragraphs,
                         position: block.attrs.mediaPosition === "right" ? "right" : "left",
+                        ...extractDimensions(block.innerHTML),
                     });
                 }
                 break;

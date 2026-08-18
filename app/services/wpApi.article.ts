@@ -185,10 +185,28 @@ function pickHeroVideoUrl(value: unknown): string | undefined {
  * Les foxiz_crop_* sont des crops à ratio fixe — ignorées, on garde le ratio
  * original de l'image.
  *
- * 'hero' (featuredImage, ~3/4 écran desktop) → large (1024px), suffisant en
- * netteté pour cet usage et nettement plus léger que le full-size (souvent
- * 2500px / plusieurs Mo).
- * 'card' (vignettes ReadMore/Related/MostRead) → medium_large (768px).
+ * 'hero' (featuredImage) → 1536x1536, avec large (1024) en repli.
+ *
+ * ⚠️ CHANGEMENT DE LOGIQUE (18/08/2026), à ne pas défaire par réflexe
+ * d'économie. Ce choix était auparavant `large` (1024px), pour servir un
+ * fichier léger. C'était juste tant que le front livrait l'image TELLE QUELLE.
+ * Depuis que l'illustration passe par next/image (cf. Articleillustration.tsx),
+ * ce n'est plus le fichier WordPress qui part au navigateur : Next le
+ * redimensionne à la largeur réellement affichée et le ré-encode en AVIF/WebP.
+ *
+ * Conséquence : la taille choisie ici n'est plus ce que le lecteur télécharge,
+ * c'est la MATIÈRE PREMIÈRE de l'optimisation. En rester à 1024px plafonnait
+ * la netteté (une source de 1024 affichée sur 1200 px CSS, et pire sur un écran
+ * en densité 2×) sans plus rien économiser côté poids. 1536 donne à Next de
+ * quoi produire une variante nette, pour un poids final identique.
+ *
+ * Pas 2048x2048 ni full : au-delà de 1536, le gain de netteté n'est plus
+ * perceptible aux largeurs d'affichage réelles (deviceSizes plafonné à 2048,
+ * sizes à 1200), alors que le coût d'encodage — payé par un serveur à 1 CPU —
+ * continue de croître.
+ *
+ * 'card' (vignettes ReadMore/Related/MostRead) → medium_large (768px). Inchangé :
+ * ces composants n'utilisent pas encore next/image.
  */
 function pickWpImageUrl(
     media: Record<string, unknown> | undefined,
@@ -208,7 +226,7 @@ function pickWpImageUrl(
     return (media.source_url as string) ?? undefined;
 }
 
-const HERO_SIZE_PRIORITY = ['large', 'medium_large', '1536x1536'];
+const HERO_SIZE_PRIORITY = ['1536x1536', 'large', 'medium_large'];
 const CARD_SIZE_PRIORITY = ['medium_large', 'large', 'medium'];
 
 function formatDate(iso: string): string {
