@@ -31,10 +31,13 @@ import "./styles/whistleblower.css";
 import "./styles/contact.css";
 import "./styles/aside-skeleton.css";
 import "./styles/comments.css";
+import "./styles/cookie-consent.css";
 import "./styles/dark.css";
 import "./styles/article-storytelling.css";
 import "./globals.css";
 import Providers from "@/app/providers";
+import GoogleAnalytics from "@/app/components/Analytics/GoogleAnalytics";
+import CookieConsent from "@/app/components/Analytics/CookieConsent";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
 
@@ -156,6 +159,39 @@ export default function RootLayout({
             `,
                 }}
             />
+
+            {/* Google Consent Mode v2 — DOIT s'executer avant gtag.js.
+                Tout est refuse par defaut ; on ne repasse en "granted" que si
+                le visiteur avait deja accepte lors d'une visite precedente.
+                Inline dans le <head> et non via next/script : c'est le seul
+                moyen de garantir l'ordre d'execution vis-a-vis de gtag.js.
+                La cle localStorage doit rester alignee sur CONSENT_STORAGE_KEY
+                (app/components/Analytics/consent.ts). */}
+            <script
+                dangerouslySetInnerHTML={{
+                    __html: `
+              (function() {
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+
+                var stored = null;
+                try { stored = localStorage.getItem('tfe-cookie-consent'); } catch (e) {}
+                var granted = stored === 'granted' ? 'granted' : 'denied';
+
+                gtag('consent', 'default', {
+                  ad_storage: granted,
+                  ad_user_data: granted,
+                  ad_personalization: granted,
+                  analytics_storage: granted,
+                  functionality_storage: 'granted',
+                  security_storage: 'granted',
+                  wait_for_update: 500
+                });
+              })();
+            `,
+                }}
+            />
         </head>
         <body className="ci-phalcon not-logged special-abo variantB page-home v-web {maPoliceConfiguration.className}">
             <Providers>
@@ -175,6 +211,9 @@ export default function RootLayout({
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
                 strategy="afterInteractive"
             />
+
+            <GoogleAnalytics />
+            <CookieConsent />
         </body>
         </html>
     );

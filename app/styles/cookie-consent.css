@@ -1,0 +1,118 @@
+/* Bandeau de consentement cookies — voir app/components/Analytics/ */
+
+.cookie-consent {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: #fff;
+    border-top: 3px solid #6D2929;
+    box-shadow: 0 -8px 30px -12px rgba(0, 0, 0, .45);
+    animation: cookie-consent-in .28s ease-out both;
+}
+
+@keyframes cookie-consent-in {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+/* Respecte les utilisateurs qui ont demande moins d'animation. */
+@media (prefers-reduced-motion: reduce) {
+    .cookie-consent { animation: none; }
+}
+
+.cookie-consent__inner {
+    max-width: 1000px;              /* aligne sur le conteneur du site */
+    margin: 0 auto;
+    padding: 18px var(--mainPadding, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+@media screen and (min-width: 760px) {
+    .cookie-consent__inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 28px;
+    }
+}
+
+.cookie-consent__text {
+    margin: 0;
+    font-size: .9rem;
+    line-height: 1.5;
+    color: #222;
+}
+
+.cookie-consent__link {
+    color: #6D2929;
+    text-decoration: underline;
+}
+
+.cookie-consent__actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.cookie-consent__btn {
+    cursor: pointer;
+    border: 1px solid #6D2929;
+    border-radius: 4px;
+    padding: 10px 22px;
+    font: inherit;
+    font-size: .875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.cookie-consent__btn--solid {
+    background: #6D2929;
+    color: #fff;
+}
+
+.cookie-consent__btn--solid:hover {
+    background: #571f1f;
+}
+
+.cookie-consent__btn--ghost {
+    background: transparent;
+    color: #6D2929;
+}
+
+.cookie-consent__btn--ghost:hover {
+    background: rgba(109, 41, 41, .08);
+}
+
+/* Le focus clavier doit rester visible : le bandeau est un dialogue. */
+.cookie-consent__btn:focus-visible {
+    outline: 2px solid #6D2929;
+    outline-offset: 2px;
+}
+
+:root[data-user-color-scheme="dark"] .cookie-consent {
+    background: #1b1b1b;
+    border-top-color: #b05252;
+}
+
+:root[data-user-color-scheme="dark"] .cookie-consent__text {
+    color: #e8e8e8;
+}
+
+:root[data-user-color-scheme="dark"] .cookie-consent__link,
+:root[data-user-color-scheme="dark"] .cookie-consent__btn--ghost {
+    color: #d98a8a;
+}
+
+:root[data-user-color-scheme="dark"] .cookie-consent__btn {
+    border-color: #b05252;
+}
+
+:root[data-user-color-scheme="dark"] .cookie-consent__btn--solid {
+    background: #b05252;
+    color: #fff;
+}
