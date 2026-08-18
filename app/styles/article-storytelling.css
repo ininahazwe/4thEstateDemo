@@ -614,16 +614,53 @@ html {
     .am-media-text {
         grid-template-columns: 1fr;
         min-height: 0;
+        /* Pleine largeur de fenetre. Le 80vw du desktop, conserve tel quel en
+           mobile, laissait deux bandes laterales inutiles et surtout ecrasait
+           la colonne de lecture : 300px de conteneur moins 2x48px de padding
+           = 204px de texte utile sur un ecran de 375px. */
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
     }
 
     .am-media-text-media {
-        position: static;
+        /* `relative` et NON `static` : sur desktop c'est le `position: sticky`
+           qui faisait office d'ancetre positionne pour le <Image fill> de
+           next/image (rendu en position:absolute; inset:0). En repassant en
+           `static` ici, l'image absolue remontait au premier ancetre positionne
+           trouve — elle debordait sur toute la page et recouvrait le texte.
+           On abandonne le sticky en mobile, mais on garde un bloc conteneur. */
+        position: relative;
+        /* `top: auto` est INDISPENSABLE avec `relative`. La regle de base pose
+           `top: var(--headerHeight)` pour le decalage sticky du desktop ; en
+           `static` cette valeur etait simplement ignoree, mais `relative`
+           l'honore et decale l'image de 70px vers le bas SANS modifier la
+           place qu'elle occupe dans la grille. Elle debordait donc de 70px sur
+           la colonne de texte et, etant positionnee, la recouvrait. */
+        top: auto;
         height: 60vh;
+    }
+
+    .am-media-text-content {
+        /* 24px horizontaux : meme gouttiere que .am-wrap (max-width 720px,
+           padding 0 24px), la colonne de lecture du reste de l'article — le
+           bloc media-text s'aligne ainsi sur le corps de texte au lieu d'avoir
+           sa propre marge. 32px verticaux pour respirer sous l'image.
+           `max-width: none` : le 760px de la regle de base n'a plus de sens
+           une fois le bloc en pleine largeur. */
+        padding: 32px 24px;
+        max-width: none;
     }
 
     .am-media-text--reverse .am-media-text-media,
     .am-media-text--reverse .am-media-text-content {
         order: initial;
+    }
+
+    /* Le `justify-self: end` du mode reverse n'a plus lieu d'etre sur une
+       colonne unique : il collerait le texte au bord droit. */
+    .am-media-text--reverse .am-media-text-content {
+        justify-self: stretch;
     }
 }
 

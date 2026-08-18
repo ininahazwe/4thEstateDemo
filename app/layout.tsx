@@ -44,7 +44,7 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.c
 export const metadata: Metadata = {
     metadataBase: new URL(baseUrl),
     title: {
-        default: "The Fourth Estate - Independent Investigation",
+        default: "The Fourth Estate — Investigative Journalism and Public Interest News",
         template: "%s — The Fourth Estate",
     },
     description: "Independent journalistic investigation platform. In-depth reporting, exclusive interviews, and critical analysis.",
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
         locale: "en_GH",
         url: baseUrl,
         siteName: "The Fourth Estate",
-        title: "The Fourth Estate - Independent Investigation",
+        title: "The Fourth Estate — Investigative Journalism and Public Interest News",
         description: "Independent journalistic investigation platform.",
         images: [
             {
