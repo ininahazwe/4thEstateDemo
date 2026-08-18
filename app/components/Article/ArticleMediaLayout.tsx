@@ -307,7 +307,7 @@ function Cover({ block }: { block: CoverBlock }) {
             <div
                 className="am-cover-overlay"
                 style={{
-                    backgroundColor: block.overlayColor ?? '',
+                    backgroundColor: block.overlayColor ?? '#00000080',
                     opacity: (block.dimRatio ?? 50) / 100,
                 }}
             />
