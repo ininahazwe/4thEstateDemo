@@ -7,6 +7,16 @@ interface NewsZoneProps {
     zone2Articles: ArticleData[];
 }
 
+/**
+ * Largeurs d'affichage reelles des 2 colonnes de `.zone-actu-v2` (custom.css) :
+ * flex 2 / flex 1 dans un conteneur de 1000px avec 20px de gap, soit ~653px et
+ * ~327px a partir de 760px. Transmis a next/image via `sizes`.
+ */
+const ZONE1_SIZES = [
+    '(max-width: 759px) 100vw, 653px',
+    '(max-width: 759px) 100vw, 327px',
+] as const;
+
 export default function NewsZoneV2({ zone1Articles, zone2Articles }: NewsZoneProps) {
 
     // Fonction utilitaire pour découper un tableau d'articles en sous-groupes d'affichage (areas)
@@ -42,6 +52,7 @@ export default function NewsZoneV2({ zone1Articles, zone2Articles }: NewsZonePro
                             <ArticleCard
                                 key={article.id}
                                 article={article}
+                                sizes={ZONE1_SIZES[Math.min(areaIdx, 1)]}
                                 // Si c'est le tout premier article de la zone 1, c'est un H1 (Modèle Vertical), sinon H2
                                 headingLevel={article.model === 'article-vertical' ? 'h1' : 'h2'}
                             />

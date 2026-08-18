@@ -7,6 +7,18 @@ interface HealthZoneProps {
 }
 
 /**
+ * Largeurs d'affichage reelles des 3 colonnes de `.zone-tag` (cf.
+ * home-critical.css) : 420px / 200px / 300px a partir de 760px, pleine
+ * largeur en dessous. Transmis a next/image via `sizes` pour qu'il cesse
+ * de servir le `medium_large` (768px) dans un slot de 200px.
+ */
+const ZONE_TAG_SIZES = [
+    '(max-width: 759px) 100vw, 420px',
+    '(max-width: 759px) 100vw, 200px',
+    '(max-width: 759px) 100vw, 300px',
+] as const;
+
+/**
  * Zone Health — copie de HumanRightsZone, branchée sur la catégorie WP
  * "health" (term id 105).
  *
@@ -38,6 +50,7 @@ export default function HealthZone({ articles }: HealthZoneProps) {
                             <HealthCard
                                 key={article.id}
                                 article={article}
+                                sizes={ZONE_TAG_SIZES[Math.min(areaIdx, 2)]}
                             />
                         ))}
                     </div>

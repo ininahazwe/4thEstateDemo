@@ -8,9 +8,11 @@ import BookmarkButton from "@/app/components/UI/BookmarkButton";
 interface EnvironmentCardProps {
     article: EnvironmentArticle;
     index: number;
+    /** Largeur d'affichage reelle du slot, pour le srcset next/image. */
+    sizes?: string;
 }
 
-export default function EnvironmentCard({ article, index }: EnvironmentCardProps) {
+export default function EnvironmentCard({ article, index, sizes = '(max-width: 759px) 200px, 320px' }: EnvironmentCardProps) {
     const titleId = `title-${article.id}-${index}`;
     const slug = article.href.split("/").filter(Boolean).pop() ?? String(article.id);
 
@@ -35,6 +37,7 @@ export default function EnvironmentCard({ article, index }: EnvironmentCardProps
                                 src={article.image.src}
                                 width={article.image.width}
                                 height={article.image.height}
+                                sizes={sizes}
                                 placeholder="blur"
                                 blurDataURL={article.image.blurDataURL}
                                 fetchPriority={article.image.fetchPriority as 'high' | 'auto' | 'low'}

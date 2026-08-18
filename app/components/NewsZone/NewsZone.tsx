@@ -8,6 +8,17 @@ interface NewsZoneProps {
     zone2Articles: ArticleData[];
 }
 
+/**
+ * `.zone-actu .zone-2` = `[data-column=left]`, large de 640px a partir de
+ * 1000px et pleine largeur en dessous (base.css). area 0 : 2 cartes cote a
+ * cote (~310px chacune) ; area 1 : cartes pleine largeur (les items 3+ ont
+ * leur image masquee en CSS). Transmis a next/image via `sizes`.
+ */
+const ZONE2_SIZES = [
+    '(max-width: 759px) 100vw, (max-width: 999px) 50vw, 310px',
+    '(max-width: 999px) 100vw, 640px',
+] as const;
+
 export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps) {
 
     // Fonction utilitaire pour découper un tableau d'articles en sous-groupes d'affichage (areas)
@@ -54,6 +65,7 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                             <ArticleCard
                                 key={article.id}
                                 article={article}
+                                sizes={ZONE2_SIZES[Math.min(areaIdx, 1)]}
                                 headingLevel="h3" // Tous les titres de la colonne latérale utilisent H3
                             />
                         ))}

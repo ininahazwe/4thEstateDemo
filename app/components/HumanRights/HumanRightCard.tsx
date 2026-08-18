@@ -8,9 +8,11 @@ import BookmarkButton from "@/app/components/UI/BookmarkButton";
 
 interface HumanRightsCardProps {
     article: HumanRightsArticle;
+    /** Largeur d'affichage reelle du slot, pour le srcset next/image. */
+    sizes?: string;
 }
 
-export default function HumanRightsCard({ article }: HumanRightsCardProps) {
+export default function HumanRightsCard({ article, sizes = '(max-width: 759px) 100vw, 420px' }: HumanRightsCardProps) {
     const titleId = `title-${article.id}-${article.index}`;
     const slug = article.href.split("/").filter(Boolean).pop() ?? String(article.id);
 
@@ -35,6 +37,7 @@ export default function HumanRightsCard({ article }: HumanRightsCardProps) {
                                 src={article.image.src}
                                 width={article.image.width}
                                 height={article.image.height}
+                                sizes={sizes}
                                 placeholder="blur"
                                 blurDataURL={article.image.blurDataURL}
                                 fetchPriority={article.image.fetchPriority as 'high' | 'auto' | 'low'}

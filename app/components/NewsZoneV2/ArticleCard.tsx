@@ -7,6 +7,8 @@ import Image from "next/image";
 interface ArticleCardProps {
     article: ArticleData;
     headingLevel: 'h1' | 'h2' | 'h3';
+    /** Largeur d'affichage reelle du slot, pour le srcset next/image. */
+    sizes?: string;
 }
 
 const handlePlayAudio = () => {
@@ -27,7 +29,7 @@ const handlePlayAudio = () => {
     window.speechSynthesis.speak(utterance);
 };
 
-export default function ArticleCard({ article, headingLevel: Heading }: ArticleCardProps) {
+export default function ArticleCard({ article, headingLevel: Heading, sizes = '(max-width: 759px) 100vw, 653px' }: ArticleCardProps) {
     const isLive = article.type === 'sirius-live';
 
     // Handle image error (React-native version of HTML onerror attribute)
@@ -53,6 +55,7 @@ export default function ArticleCard({ article, headingLevel: Heading }: ArticleC
                                 src={article.image.src}
                                 width={article.image.width}
                                 height={article.image.height}
+                                sizes={sizes}
                                 placeholder="blur"
                                 blurDataURL={article.image.blurDataURL}
                                 fetchPriority={article.image.fetchPriority}

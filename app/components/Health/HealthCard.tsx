@@ -7,6 +7,8 @@ import BookmarkButton from '@/app/components/UI/BookmarkButton';
 
 interface HealthCardProps {
     article: HealthArticle;
+    /** Largeur d'affichage reelle du slot, pour le srcset next/image. */
+    sizes?: string;
 }
 
 /**
@@ -16,7 +18,7 @@ interface HealthCardProps {
  * (Globe, Headphones, Bookmark) qui n'étaient plus utilisés, et les blocs
  * JSX commentés (strapline, source) qu'ils servaient. Le rendu est identique.
  */
-export default function HealthCard({ article }: HealthCardProps) {
+export default function HealthCard({ article, sizes = '(max-width: 759px) 100vw, 420px' }: HealthCardProps) {
     const titleId = `title-${article.id}-${article.index}`;
     const slug = article.href.split('/').filter(Boolean).pop() ?? String(article.id);
 
@@ -41,6 +43,7 @@ export default function HealthCard({ article }: HealthCardProps) {
                                 src={article.image.src}
                                 width={article.image.width}
                                 height={article.image.height}
+                                sizes={sizes}
                                 placeholder="blur"
                                 blurDataURL={article.image.blurDataURL}
                                 fetchPriority={article.image.fetchPriority as 'high' | 'auto' | 'low'}

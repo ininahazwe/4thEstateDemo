@@ -9,9 +9,11 @@ import BookmarkButton from "@/app/components/UI/BookmarkButton";
 interface GeneralNewsCardProps {
     article: GeneralNewsArticle;
     index: number;
+    /** Largeur d'affichage reelle du slot, pour le srcset next/image. */
+    sizes?: string;
 }
 
-export default function GeneralNewsCard({ article, index }: GeneralNewsCardProps) {
+export default function GeneralNewsCard({ article, index, sizes = '(max-width: 759px) 200px, 320px' }: GeneralNewsCardProps) {
     const titleId = `title-${article.id}-${index}`;
     const slug = article.href.split("/").filter(Boolean).pop() ?? String(article.id);
 
@@ -35,6 +37,7 @@ export default function GeneralNewsCard({ article, index }: GeneralNewsCardProps
                             src={article.image.src}
                             width={article.image.width}
                             height={article.image.height}
+                            sizes={sizes}
                             placeholder="blur"
                             blurDataURL={article.image.blurDataURL}
                             fetchPriority={article.image.fetchPriority as 'high' | 'auto' | 'low'}
