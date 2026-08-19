@@ -27,6 +27,13 @@ export interface WpArticle {
      */
     lede?: string;
     content: string;
+    /**
+     * Fin du titre a afficher en plus petit dans le hero (champ ACF
+     * `subtitle`, cf. wordpress/mu-plugins/tfe-article-fields.php).
+     * `title` reste TOUJOURS complet : c'est lui qui part en balise <title>,
+     * en JSON-LD et dans toutes les cartes du site.
+     */
+    subtitle?: string;
     strapline?: string;
     source?: string;
     authors: WpArticleAuthor[];
@@ -315,6 +322,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
                 (post.content as { rendered: string }).rendered
             ),
             content: (post.content as { rendered: string }).rendered,
+            subtitle: ((acf.subtitle as string) || '').trim() || undefined,
             strapline: (acf.strapline as string) ?? undefined,
             source: (acf.source as string) ?? undefined,
             authors: rawAuthors.map((a) => ({

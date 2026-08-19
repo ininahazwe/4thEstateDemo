@@ -2,12 +2,13 @@
 
 import type { MouseEvent } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { splitTitle } from '@/app/services/titleParts';
 
 interface HeroTitleProps {
+    /** Titre WordPress COMPLET — jamais tronqué, cf. titleParts.ts. */
     title: string;
-    /** Chapô de l'article (excerpt WordPress, déjà dépouillé de son HTML par
-     *  wpApi.article). Optionnel : tous les posts n'en ont pas. */
-    excerpt?: string;
+    /** Champ ACF `subtitle` : fin du titre, à rendre plus petite. */
+    subtitle?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -24,7 +25,7 @@ interface HeroTitleProps {
 // du scroll.
 // ---------------------------------------------------------------------------
 
-export default function HeroTitle({ title, excerpt }: HeroTitleProps) {
+export default function HeroTitle({ title, subtitle }: HeroTitleProps) {
     const { scrollY } = useScroll();
     const y = useTransform(scrollY, [0, 600], [0, -70]);
 
@@ -36,9 +37,11 @@ export default function HeroTitle({ title, excerpt }: HeroTitleProps) {
     // ça, le bouton resterait cliquable une fois invisible.
     const cuePointerEvents = useTransform(scrollY, (v) => (v > 150 ? 'none' : 'auto'));
 
-    // Un excerpt vide ou réduit à des espaces ne doit pas produire un <p> vide,
-    // qui ouvrirait une gouttière sous le titre pour rien.
-    const lede = excerpt?.trim();
+    // Le chapô n'est plus rendu dans le hero : titre et sous-titre suffisent
+    // par-dessus l'image, et empiler un troisième niveau de texte devenait
+    // illisible sur mobile. `excerpt` reste disponible ailleurs (partages,
+    // cartes, meta description).
+    const { lead, rest } = splitTitle(title, subtitle);
 
     // On vise le bas réel du hero plutôt qu'un 90vh en dur : la hauteur est
     // pilotée par --am-hero-height côté CSS, et une valeur recopiée ici
@@ -55,8 +58,15 @@ export default function HeroTitle({ title, excerpt }: HeroTitleProps) {
     return (
         <div className="am-hero-title-overlay">
             <motion.div className="am-hero-title-block" style={{ y }}>
-                <h1 className="am-title">{title}</h1>
-                {lede && <p className="am-hero-excerpt">{lede}</p>}
+                {/* Un SEUL <h1>, deux <span> : le contenu textuel du titre
+                    reste identique caractère pour caractère, donc aucun signal
+                    perdu pour l'indexation ni pour les lecteurs d'écran. Un
+                    <h2> ou un <p> pour la seconde partie fracturerait le plan
+                    du document. */}
+                <h1 className="am-title">
+                    <span className="am-title-lead">{lead}</span>
+                    {rest && <span className="am-title-rest">{rest}</span>}
+                </h1>
             </motion.div>
 
             {/* Bouton et non simple décor : l'invite est utile au clavier et au

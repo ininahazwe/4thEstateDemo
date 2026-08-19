@@ -339,6 +339,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                     // est vide. Voir pickManualExcerpt() dans
                                     // wpApi.article.ts.
                                     excerpt: article.lede,
+                                    subtitle: article.subtitle,
                                     authors: article.authors,
                                     hero: {
                                         src: article.featuredImage ?? "",

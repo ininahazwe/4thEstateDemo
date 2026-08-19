@@ -54,9 +54,12 @@ export interface ArticleMediaData {
     slug: string;
     link: string;
     category?: string;
+    /** Titre WordPress COMPLET — jamais tronqué. */
     title: string;
-    /** Chapô (excerpt WordPress). Optionnel : affiché sous le titre du hero
-     *  seulement s'il est renseigné sur le post. */
+    /** Champ ACF `subtitle` : fin du titre, rendue plus petite dans le hero. */
+    subtitle?: string;
+    /** Chapô (excerpt WordPress). N'est plus affiché dans le hero, mais reste
+     *  utilisé ailleurs (partages, cartes, meta description). */
     excerpt?: string;
     authors: ArticleMediaAuthor[];
     /**
@@ -358,7 +361,7 @@ export default function ArticleMediaLayout({ article }: { article: ArticleMediaD
                         sizes="100vw"
                     />
                 )}
-                <HeroTitle title={article.title} excerpt={article.excerpt} />
+                <HeroTitle title={article.title} subtitle={article.subtitle} />
             </div>
 
             {/* Première plaque blanche : auteur + outils + premiers blocs. */}

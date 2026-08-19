@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { getSpotlightArticles } from '@/app/services/wpApi.spotlight';
+import { splitTitle } from '@/app/services/titleParts';
 
 /**
  * Hero — galerie de 3 articles en grandes cartes verticales, image plein
@@ -20,7 +21,9 @@ export default async function Hero() {
 
     return (
         <section className="hero-gallery">
-            {articles.map((article, index) => (
+            {articles.map((article, index) => {
+                const { lead, rest } = splitTitle(article.title, article.subtitle);
+                return (
                 <a
                     href={article.href}
                     className="hero-gallery-card"
@@ -40,10 +43,17 @@ export default async function Hero() {
                     <div className="hero-gallery-scrim" aria-hidden="true" />
 
                     <div className="hero-gallery-caption">
-                        <span className="hero-gallery-title">{article.title}</span>
+                        {/* Un seul bloc de titre, coupe en deux uniquement a
+                            l'affichage : le texte complet reste present et dans
+                            l'ordre, rien n'est perdu pour l'indexation. */}
+                        <span className="hero-gallery-title">
+                            {lead}
+                            {rest && <span className="hero-gallery-subtitle">{rest}</span>}
+                        </span>
                     </div>
                 </a>
-            ))}
+                );
+            })}
         </section>
     );
 }

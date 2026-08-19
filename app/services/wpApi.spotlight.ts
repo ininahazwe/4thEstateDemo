@@ -36,7 +36,10 @@ const SPOTLIGHT_ZONE = 'spotlight';
 export interface SpotlightArticle {
     id: string;
     href: string;
+    /** Titre complet, jamais tronque. */
     title: string;
+    /** Fin du titre a afficher en plus petit sur la carte. Voir titleParts.ts. */
+    subtitle?: string;
     /** Date de publication brute (ISO, post.date) — formatage laissé au composant. */
     publishedAtISO: string;
     /** Rang dans la composition, 1 = première position choisie en admin. */
@@ -76,6 +79,7 @@ interface WPSpotlightPost {
     date: string;
     title: { rendered: string };
     featured_media: number;
+    acf?: { subtitle?: string };
 }
 
 /** Même placeholder LQIP que wpApi.ts (SVG gris 640×426) — dupliqué, fichier autonome. */
@@ -186,7 +190,7 @@ export async function getSpotlightArticles(limit: number = 3): Promise<Spotlight
         // (date décroissante) écraserait le choix éditorial.
         const res = await fetch(
             `${WP_BASE}/posts?include=${ids.join(',')}&orderby=include&per_page=${ids.length}` +
-                `&status=publish&_fields=id,slug,date,title,featured_media`,
+                `&status=publish&_fields=id,slug,date,title,featured_media,acf`,
             { next: { revalidate: 600 } }
         );
 
@@ -210,6 +214,7 @@ export async function getSpotlightArticles(limit: number = 3): Promise<Spotlight
                 id: `wp-post-${post.id}`,
                 href: buildHref(post),
                 title: cleanHtmlTitle(post.title.rendered),
+                subtitle: (post.acf?.subtitle || '').trim() || undefined,
                 publishedAtISO: post.date,
                 position: index + 1,
             };

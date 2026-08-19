@@ -143,6 +143,29 @@ html {
     text-transform: uppercase !important;
 }
 
+/* Titre en deux temps — portee limitee au hero d'article (.am-hero-media).
+   Le <h1> reste unique et son contenu textuel est inchange ; seul l'habillage
+   des deux <span> differe. Voir app/services/titleParts.ts. */
+.am-hero-media .am-title-lead,
+.am-hero-media .am-title-rest {
+    display: block;
+}
+
+/* font-size en `em` et non en `rem` : .am-title est en clamp(2.75rem, 5vw,
+   5rem), la seconde partie suit donc automatiquement a tous les viewports.
+   Un second clamp aurait fallu maintenir en coherence avec le premier. */
+.am-hero-media .am-title-rest {
+    font-size: 0.5em;
+    font-weight: 400;
+    line-height: 1.25;
+    margin-top: 0.4em;
+    /* Le point qui fait vraiment la hierarchie : une question longue en petites
+       capitales se lit MOINS bien qu'en grandes capitales. Le retour a la casse
+       normale distingue le sous-titre plus surement que la taille.
+       `!important` obligatoire, .am-title en porte un. */
+    text-transform: none !important;
+}
+
 /* Chapô : volontairement en casse normale et en poids léger, pour contraster
    avec le titre en capitales et rester lisible sur l'image. Le
    text-shadow duplique le rôle du dégradé de .am-hero-title-overlay là où
