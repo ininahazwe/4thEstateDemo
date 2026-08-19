@@ -140,7 +140,6 @@ html {
     font-weight: 600;
     line-height: 1.15;
     margin: 0;
-    text-transform: uppercase !important;
 }
 
 /* Titre en deux temps — portee limitee au hero d'article (.am-hero-media).

@@ -20,6 +20,6 @@ export const navItems: NavItem[] = [
     // Groupes de types / fonctionnalités secondaires
     { label: "The Fourth Estate TV", href: "/tv", type: "type", ithal: "fourth-estate-tv", icon: "reveil", target: "" },
     { label: "Podcasts", href: "/podcasts", type: "type", ithal: "fourth-estate-postcasts", icon: "reveil", target: "" },
-    { label: "MFWA", href: "https://mfwa.org", type: "section", ithal: "mfwa", icon: "reveil", target: "_blank" },
-    { label: "Fact Check Ghana", href: "https://www.fact-checkghana.com/", type: "section", ithal: "Fact Check Ghana", icon: "reveil", target: "_blank" },
+    { label: "About Us", href: "/about-us", type: "section", ithal: "About us", icon: "reveil", target: "" },
+    //{ label: "Fact Check Ghana", href: "https://www.fact-checkghana.com/", type: "section", ithal: "Fact Check Ghana", icon: "reveil", target: "_blank" },
 ];
