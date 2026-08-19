@@ -87,6 +87,10 @@ const CATEGORY_IDS = {
     humanRight:     121  as number,
     // Vérifié le 2026-08-11 : GET /wp-json/wp/v2/categories?slug=health → id 105.
     health:         105  as number,
+    // Catégorie WP standard depuis le 19/08/2026 : la zone "Our Impact" de la
+    // home et la page /category/our-impact lisent cette catégorie, plus la
+    // taxonomie custom "impact-category".
+    ourImpact:      229  as number,
 };
 
 /**
@@ -201,34 +205,11 @@ async function fetchTagBatch(tagIds: number[], revalidate = 600): Promise<Map<nu
     return map;
 }
 
-/**
- * Taxonomie custom "impact-category" (menu "Our Impact Categories" en admin).
- * rest_base = "impact-category" — vérifié via GET /wp-json/wp/v2/impact-category.
- */
-async function fetchImpactCategoryBatch(termIds: number[], revalidate = 600): Promise<Map<number, string>> {
-    const map = new Map<number, string>();
-    if (!termIds.length) return map;
-    const res = await fetch(
-        `${WP_BASE}/impact-category?include=${termIds.join(',')}&per_page=100`,
-        { next: { revalidate } }
-    );
-    if (!res.ok) return map;
-    const terms: WPTerm[] = await res.json();
-    terms.forEach(t => map.set(t.id, decode(t.name)));
-    return map;
-}
-
-/**
- * Récupère tous les IDs de termes de la taxonomie "impact-category"
- * (Accountability, Government Action, Honours, Policy Change, Public Awareness…).
- * Dynamique : toute sous-catégorie ajoutée en admin est automatiquement incluse.
- */
-async function getImpactCategoryIds(revalidate = 3600): Promise<number[]> {
-    const res = await fetch(`${WP_BASE}/impact-category?per_page=100`, { next: { revalidate } });
-    if (!res.ok) return [];
-    const terms: WPTerm[] = await res.json();
-    return terms.map(t => t.id);
-}
+// fetchImpactCategoryBatch / getImpactCategoryIds ont été retirés le 19/08/2026 :
+// plus aucun appelant depuis que la home et /category/our-impact lisent la
+// catégorie WP 229. La taxonomie custom "impact-category" reste servie par les
+// pages /impact-category/[slug], qui ont leurs propres helpers plus bas
+// (getImpactCategorySlugMap / resolveImpactCategory).
 
 function extractIds(posts: WPPost[]) {
     return {
@@ -720,26 +701,32 @@ export async function getHealthArticles(): Promise<HealthArticle[]> {
 
 export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
     try {
-        const impactCategoryIds = await getImpactCategoryIds();
-        const url = impactCategoryIds.length
-            ? `${WP_BASE}/posts?per_page=6&impact-category=${impactCategoryIds.join(',')}&status=publish`
-            : `${WP_BASE}/posts?per_page=6&status=publish`;
+        // Catégorie WP "our-impact" (id 229), comme les autres zones de la home
+        // (cf. getHealthArticles). La taxonomie custom "impact-category" n'est
+        // plus lue ici : la zone et la page /category/our-impact doivent montrer
+        // le même contenu, sinon un clic sur "Our Impact" affiche autre chose.
+        const categoryId = await resolveCategoryId(CATEGORY_IDS.ourImpact, 'our-impact');
+        // Pas de repli sur "tous les derniers posts du site" : mieux vaut une
+        // zone absente qu'une zone qui étiquette "Our Impact" du contenu qui ne
+        // l'est pas. Le composant renvoie null sur une liste vide.
+        if (!categoryId) return [];
 
-        const posts = await fetchPosts(url);
+        const posts = await fetchPosts(
+            `${WP_BASE}/posts?per_page=6&categories=${categoryId}&status=publish`
+        );
         if (!posts.length) return [];
 
-        const impactTermIds = Array.from(
-            new Set(posts.flatMap(p => p['impact-category'] ?? []).filter(id => id > 0))
-        );
-        const impactCategoryMap = await fetchImpactCategoryBatch(impactTermIds);
+        const { categoryIds } = extractIds(posts);
+        const categoryMap = await fetchCategoryBatch(categoryIds);
 
         return posts.map((post, index) => {
-            let tagOrCategory = 'Our Impact';
-            const postTermId = post['impact-category']?.[0];
-            if (postTermId) {
-                const term = impactCategoryMap.get(postTermId);
-                if (term) tagOrCategory = term;
-            }
+            // Étiquette = catégorie thématique du post (Anti-Corruption,
+            // Environment…), en ignorant "our-impact" lui-même : afficher six
+            // fois "Our Impact" sous le titre "Our Impact" n'apporte rien.
+            // Repli sur "Our Impact" si le post n'a pas d'autre catégorie.
+            const otherId = post.categories.find((id) => id !== categoryId);
+            const tagOrCategory =
+                (otherId !== undefined ? categoryMap.get(otherId) : undefined) ?? 'Our Impact';
 
             return {
                 id:            `oi-post-${post.id}`,
@@ -935,6 +922,145 @@ export async function getAllCategorySlugs(): Promise<string[]> {
 const CATEGORY_PER_PAGE = 13;
 
 /**
+ * Les listes "river" (catégorie, tag, impact-category) n'affichent pas les
+ * contenus vidéo — décision produit, ils ont leurs propres zones. Le filtre est
+ * appliqué APRÈS la requête (l'API REST ne sait pas filtrer sur `format`), d'où
+ * la nécessité de compter séparément les posts consommés et les posts affichés.
+ */
+function isVideoPost(post: WPPost): boolean {
+    return (post as WPPost & { format?: string }).format === 'video';
+}
+
+/**
+ * Tranche "Load more" : renvoie jusqu'à `limit` posts AFFICHABLES à partir de
+ * l'offset WP `offset`, et surtout le `nextOffset` exact à réutiliser au clic
+ * suivant.
+ *
+ * Pourquoi ce n'est pas un simple `fetch(?offset=…&per_page=limit+1)` :
+ *
+ * 1. **Décalage.** Le filtre vidéo retire des posts après coup. Si le client
+ *    recalcule l'offset depuis le nombre d'articles affichés, chaque vidéo
+ *    écartée décale la fenêtre vers l'arrière et re-sert des posts déjà vus.
+ *    On renvoie donc `nextOffset = offset + posts consommés`.
+ * 2. **Lot court.** Avec `per_page = limit + 1`, trois vidéos dans le lot
+ *    donnaient 2 articles au lieu de 5, et un `hasMore` faux (`length > limit`
+ *    devenait faux alors que WP avait encore du contenu) : le bouton
+ *    disparaissait au milieu de la liste. On re-requête donc jusqu'à remplir le
+ *    lot.
+ *
+ * `MAX_ROUNDS` borne le coût d'un clic (au pire 4 requêtes). Si le lot n'est pas
+ * plein au bout des 4 tours, `hasMore` reste vrai tant que WP n'est pas épuisé :
+ * le clic suivant repart de `nextOffset`, donc la liste progresse toujours.
+ *
+ * @param buildUrl (wpOffset, perPage) -> URL REST complète
+ */
+async function fetchDisplayableSlice(
+    buildUrl: (wpOffset: number, perPage: number) => string,
+    offset: number,
+    limit: number,
+    revalidate = 600,
+): Promise<{ posts: WPPost[]; nextOffset: number; hasMore: boolean }> {
+    const MAX_ROUNDS = 4;
+    const perPage = limit + 1; // le +1 sert de sentinelle "il reste des posts"
+
+    const kept: WPPost[] = [];
+    let consumed = 0;
+    let exhausted = false;
+
+    for (let round = 0; round < MAX_ROUNDS && !exhausted; round++) {
+        const res = await fetch(buildUrl(offset + consumed, perPage), { next: { revalidate } });
+
+        if (!res.ok) {
+            // 400 = offset au-delà du dernier post, c'est la fin normale de liste.
+            if (res.status !== 400) {
+                console.error(`Erreur wpApi [fetchDisplayableSlice]: ${res.status}`);
+            }
+            exhausted = true;
+            break;
+        }
+
+        const raw: WPPost[] = await res.json();
+        if (!raw.length) {
+            exhausted = true;
+            break;
+        }
+
+        for (const post of raw) {
+            if (kept.length === limit) {
+                // Lot plein et un post de plus existe : on s'arrête sans le
+                // consommer, il ouvrira le prochain lot.
+                return { posts: kept, nextOffset: offset + consumed, hasMore: true };
+            }
+            consumed++;
+            if (!isVideoPost(post)) kept.push(post);
+        }
+
+        // Moins de posts que demandé = on a touché le fond de la liste.
+        if (raw.length < perPage) exhausted = true;
+    }
+
+    return { posts: kept, nextOffset: offset + consumed, hasMore: !exhausted };
+}
+
+/** Retour commun des trois endpoints "Load more". */
+interface OffsetSlice {
+    articles: CategoryArticle[];
+    hasMore: boolean;
+    /** Offset WP à renvoyer au clic suivant — voir CategoryData.nextOffset. */
+    nextOffset: number;
+}
+
+/**
+ * Corps commun des trois "Load more" (catégorie, tag, impact-category) : seules
+ * l'URL construite et l'étiquette `source` changeaient d'une version à l'autre,
+ * le reste était dupliqué à trois exemplaires — donc corrigé à trois endroits,
+ * ou oublié dans deux.
+ *
+ * @param sourceLabel étiquette fixe (page impact-category = nom du terme). Si
+ *                    absente, on résout la première catégorie WP du post.
+ */
+async function loadMoreSlice(
+    buildUrl: (wpOffset: number, perPage: number) => string,
+    offset: number,
+    limit: number,
+    sourceLabel?: string,
+): Promise<OffsetSlice> {
+    const { posts, nextOffset, hasMore } = await fetchDisplayableSlice(buildUrl, offset, limit);
+    if (!posts.length) return { articles: [], hasMore, nextOffset };
+
+    const { mediaIds, categoryIds } = extractIds(posts);
+    const [mediaMap, categoryMap] = await Promise.all([
+        fetchMediaBatch(mediaIds),
+        sourceLabel ? Promise.resolve(new Map<number, string>()) : fetchCategoryBatch(categoryIds),
+    ]);
+
+    const articles: CategoryArticle[] = posts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+
+        let source = sourceLabel ?? 'The Fourth Estate';
+        if (!sourceLabel && post.categories.length > 0) {
+            const cat = categoryMap.get(post.categories[0]);
+            if (cat) source = cat;
+        }
+
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(offset + index),
+        };
+
+        if (media) article.image = buildImage(media, offset + index);
+
+        return article;
+    });
+
+    return { articles, hasMore, nextOffset };
+}
+
+/**
  * Tags "section-tags" d'une catégorie = vrais tags WP les plus fréquents parmi
  * ses posts récents, ordonnés par fréquence décroissante. Deux requêtes cachées
  * 1h : (1) tags des 50 derniers posts de la catégorie, (2) résolution id ->
@@ -980,48 +1106,37 @@ export const getCategoryPageData = cache(async (
     slug: string,
     page: number = 1
 ): Promise<CategoryData | null> => {
-    // "our-impact" est piloté par la taxonomie custom "impact-category"
-    // (menu "Our Impact Categories" en admin), pas par la catégorie WP standard.
-    const isOurImpact = slug === 'our-impact';
-
+    // Aucun slug n'a de traitement particulier ici : "our-impact" est une
+    // catégorie WP standard (id 229) comme les autres. La taxonomie custom
+    // "impact-category" reste utilisée ailleurs (ImpactZone de la home et pages
+    // /impact-category/[slug]), mais plus par cette route.
+    //
+    // Slug -> id via le map catégories caché 24h (1 requête partagée) plutôt
+    // qu'un resolveCategory par slug. Fallback resolveCategory si le slug n'est
+    // pas encore dans le map (catégorie récente, ou catégorie sans post — le
+    // map est construit avec hide_empty=true).
+    let categoryId: number;
     let categoryName: string;
-    let url: string;
-    let categoryId: number | null = null;
 
-    if (isOurImpact) {
-        const impactCategoryIds = await getImpactCategoryIds();
-        if (!impactCategoryIds.length) return null;
-        categoryName = 'Our Impact';
-        url =
-            `${WP_BASE}/posts` +
-            `?impact-category=${impactCategoryIds.join(',')}` +
-            `&page=${page}` +
-            `&per_page=${CATEGORY_PER_PAGE}` +
-            `&status=publish` +
-            `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link,impact-category`;
+    const slugMap = await getCategorySlugMap();
+    const mapped = slugMap.get(slug);
+    if (mapped) {
+        categoryId = mapped.id;
+        categoryName = mapped.name;
     } else {
-        // Slug -> id via le map catégories caché 24h (1 requête partagée) plutôt
-        // qu'un resolveCategory par slug. Fallback resolveCategory si le slug
-        // n'est pas encore dans le map (catégorie récente).
-        const slugMap = await getCategorySlugMap();
-        const mapped = slugMap.get(slug);
-        if (mapped) {
-            categoryId = mapped.id;
-            categoryName = mapped.name;
-        } else {
-            const category = await resolveCategory(slug);
-            if (!category) return null;
-            categoryId = category.id;
-            categoryName = category.name;
-        }
-        url =
-            `${WP_BASE}/posts` +
-            `?categories=${categoryId}` +
-            `&page=${page}` +
-            `&per_page=${CATEGORY_PER_PAGE}` +
-            `&status=publish` +
-            `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
+        const category = await resolveCategory(slug);
+        if (!category) return null;
+        categoryId = category.id;
+        categoryName = category.name;
     }
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?categories=${categoryId}` +
+        `&page=${page}` +
+        `&per_page=${CATEGORY_PER_PAGE}` +
+        `&status=publish` +
+        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
 
     const config = getCategoryConfig(slug);
     const title = config.title ?? categoryName;
@@ -1033,9 +1148,7 @@ export const getCategoryPageData = cache(async (
         fetch(url, { next: { revalidate: 600 } }),
         config.tags
             ? Promise.resolve<CategoryTag[]>(config.tags)
-            : (!isOurImpact && categoryId != null
-                ? getCategoryTags(categoryId)
-                : Promise.resolve<CategoryTag[]>([])),
+            : getCategoryTags(categoryId),
     ]);
 
     if (!res.ok) {
@@ -1048,6 +1161,7 @@ export const getCategoryPageData = cache(async (
                 tags: sectionTags,
                 articles: [],
                 hasMore: false,
+                nextOffset: 0,
                 pagination: { currentPage: page, totalPages: 0, basePath: `/category/${slug}` },
             };
         }
@@ -1058,8 +1172,12 @@ export const getCategoryPageData = cache(async (
     const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '1');
     const rawPosts: WPPost[] = await res.json();
 
+    // Offset de reprise pour le "Load more" : posts consommés côté WP, pas
+    // articles affichés (voir CategoryData.nextOffset et fetchDisplayableSlice).
+    const nextOffset = (page - 1) * CATEGORY_PER_PAGE + rawPosts.length;
+
     // Exclut les contenus "stories"/vidéo de cette liste (décision produit).
-    const posts = rawPosts.filter((p) => (p as WPPost & { format?: string }).format !== 'video');
+    const posts = rawPosts.filter((p) => !isVideoPost(p));
     if (!posts.length) {
         return {
             title,
@@ -1068,32 +1186,23 @@ export const getCategoryPageData = cache(async (
             tags: sectionTags,
             articles: [],
             hasMore: page < totalPages,
+            nextOffset,
             pagination: { currentPage: page, totalPages, basePath: `/category/${slug}` },
         };
     }
 
     const { mediaIds, categoryIds } = extractIds(posts);
-    const impactTermIds = isOurImpact
-        ? Array.from(new Set(posts.flatMap(p => p['impact-category'] ?? []).filter(id => id > 0)))
-        : [];
 
-    const [mediaMap, categoryMap, impactCategoryMap] = await Promise.all([
+    const [mediaMap, categoryMap] = await Promise.all([
         fetchMediaBatch(mediaIds),
         fetchCategoryBatch(categoryIds),
-        isOurImpact ? fetchImpactCategoryBatch(impactTermIds) : Promise.resolve(new Map<number, string>()),
     ]);
 
     const articles: CategoryArticle[] = posts.map((post, index) => {
         const media = mediaMap.get(post.featured_media);
 
         let source = 'The Fourth Estate';
-        if (isOurImpact) {
-            const termId = post['impact-category']?.[0];
-            if (termId) {
-                const term = impactCategoryMap.get(termId);
-                if (term) source = term;
-            }
-        } else if (post.categories.length > 0) {
+        if (post.categories.length > 0) {
             const cat = categoryMap.get(post.categories[0]);
             if (cat) source = cat;
         }
@@ -1119,6 +1228,7 @@ export const getCategoryPageData = cache(async (
         tags: sectionTags,
         articles,
         hasMore: page < totalPages,
+        nextOffset,
         pagination: {
             currentPage: page,
             totalPages,
@@ -1129,71 +1239,32 @@ export const getCategoryPageData = cache(async (
 
 /**
  * Batch supplémentaire pour le bouton "Load more" de la page catégorie
- * (remplace la pagination classique). Utilise `offset` plutôt que `page`
- * pour permettre des tranches de taille arbitraire (5 par clic) qui ne
- * correspondent pas forcément aux limites de page WP.
+ * (remplace la pagination classique). Utilise `offset` plutôt que `page` pour
+ * permettre des tranches de taille arbitraire (5 par clic) qui ne correspondent
+ * pas forcément aux limites de page WP.
  *
- * On demande `limit + 1` articles pour savoir avec certitude s'il en reste
- * au-delà du batch retourné, sans dépendre d'un header de comptage séparé.
+ * `offset` doit être le `nextOffset` renvoyé par l'appel précédent, PAS le
+ * nombre d'articles déjà affichés — voir fetchDisplayableSlice.
  */
 export const getCategoryArticlesOffset = cache(async (
     slug: string,
     offset: number,
     limit: number = 5
-): Promise<{ articles: CategoryArticle[]; hasMore: boolean }> => {
+): Promise<OffsetSlice> => {
     const category = await resolveCategory(slug);
-    if (!category) return { articles: [], hasMore: false };
+    if (!category) return { articles: [], hasMore: false, nextOffset: offset };
 
-    const url =
-        `${WP_BASE}/posts` +
-        `?categories=${category.id}` +
-        `&offset=${offset}` +
-        `&per_page=${limit + 1}` +
-        `&status=publish` +
-        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
-
-    const res = await fetch(url, { next: { revalidate: 600 } });
-    if (!res.ok) return { articles: [], hasMore: false };
-
-    const rawPosts: WPPost[] = await res.json();
-    const posts = rawPosts
-        .filter((p) => (p as WPPost & { format?: string }).format !== 'video')
-        .slice(0, limit + 1);
-
-    const hasMore = posts.length > limit;
-    const pagePosts = posts.slice(0, limit);
-    if (!pagePosts.length) return { articles: [], hasMore: false };
-
-    const { mediaIds, categoryIds } = extractIds(pagePosts);
-    const [mediaMap, categoryMap] = await Promise.all([
-        fetchMediaBatch(mediaIds),
-        fetchCategoryBatch(categoryIds),
-    ]);
-
-    const articles: CategoryArticle[] = pagePosts.map((post, index) => {
-        const media = mediaMap.get(post.featured_media);
-
-        let source = 'The Fourth Estate';
-        if (post.categories.length > 0) {
-            const cat = categoryMap.get(post.categories[0]);
-            if (cat) source = cat;
-        }
-
-        const article: CategoryArticle = {
-            id: `post-${post.id}`,
-            href: buildHref(post),
-            title: cleanHtmlTitle(post.title.rendered),
-            source,
-            publishedAt: formatWpDate(post.date),
-            imagePriority: imagePriority(offset + index),
-        };
-
-        if (media) article.image = buildImage(media, offset + index);
-
-        return article;
-    });
-
-    return { articles, hasMore };
+    return loadMoreSlice(
+        (wpOffset, perPage) =>
+            `${WP_BASE}/posts` +
+            `?categories=${category.id}` +
+            `&offset=${wpOffset}` +
+            `&per_page=${perPage}` +
+            `&status=publish` +
+            `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`,
+        offset,
+        limit,
+    );
 });
 
 // ---------------------------------------------------------------------------
@@ -1265,7 +1336,7 @@ export const getImpactCategoryPageData = cache(async (slug: string): Promise<Cat
 
     if (!res.ok) {
         if (res.status === 400) {
-            return { ...emptyBase, hasMore: false, pagination: { currentPage: 1, totalPages: 0, basePath } };
+            return { ...emptyBase, hasMore: false, nextOffset: 0, pagination: { currentPage: 1, totalPages: 0, basePath } };
         }
         console.error(`Erreur wpApi [getImpactCategoryPageData]: ${res.status}`);
         return null;
@@ -1273,10 +1344,12 @@ export const getImpactCategoryPageData = cache(async (slug: string): Promise<Cat
 
     const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '1');
     const rawPosts: WPPost[] = await res.json();
-    const posts = rawPosts.filter((p) => (p as WPPost & { format?: string }).format !== 'video');
+    // Posts consommés côté WP, pas articles affichés (voir CategoryData.nextOffset).
+    const nextOffset = rawPosts.length;
+    const posts = rawPosts.filter((p) => !isVideoPost(p));
 
     if (!posts.length) {
-        return { ...emptyBase, hasMore: false, pagination: { currentPage: 1, totalPages, basePath } };
+        return { ...emptyBase, hasMore: false, nextOffset, pagination: { currentPage: 1, totalPages, basePath } };
     }
 
     const { mediaIds } = extractIds(posts);
@@ -1300,6 +1373,7 @@ export const getImpactCategoryPageData = cache(async (slug: string): Promise<Cat
         ...emptyBase,
         articles,
         hasMore: 1 < totalPages,
+        nextOffset,
         pagination: { currentPage: 1, totalPages, basePath },
     };
 });
@@ -1308,48 +1382,22 @@ export const getImpactCategoryArticlesOffset = cache(async (
     slug: string,
     offset: number,
     limit: number = 5
-): Promise<{ articles: CategoryArticle[]; hasMore: boolean }> => {
+): Promise<OffsetSlice> => {
     const term = await resolveImpactCategory(slug);
-    if (!term) return { articles: [], hasMore: false };
+    if (!term) return { articles: [], hasMore: false, nextOffset: offset };
 
-    const url =
-        `${WP_BASE}/posts` +
-        `?impact-category=${term.id}` +
-        `&offset=${offset}` +
-        `&per_page=${limit + 1}` +
-        `&status=publish` +
-        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
-
-    const res = await fetch(url, { next: { revalidate: 600 } });
-    if (!res.ok) return { articles: [], hasMore: false };
-
-    const rawPosts: WPPost[] = await res.json();
-    const posts = rawPosts
-        .filter((p) => (p as WPPost & { format?: string }).format !== 'video')
-        .slice(0, limit + 1);
-
-    const hasMore = posts.length > limit;
-    const pagePosts = posts.slice(0, limit);
-    if (!pagePosts.length) return { articles: [], hasMore: false };
-
-    const { mediaIds } = extractIds(pagePosts);
-    const mediaMap = await fetchMediaBatch(mediaIds);
-
-    const articles: CategoryArticle[] = pagePosts.map((post, index) => {
-        const media = mediaMap.get(post.featured_media);
-        const article: CategoryArticle = {
-            id: `post-${post.id}`,
-            href: buildHref(post),
-            title: cleanHtmlTitle(post.title.rendered),
-            source: term.name,
-            publishedAt: formatWpDate(post.date),
-            imagePriority: imagePriority(offset + index),
-        };
-        if (media) article.image = buildImage(media, offset + index);
-        return article;
-    });
-
-    return { articles, hasMore };
+    return loadMoreSlice(
+        (wpOffset, perPage) =>
+            `${WP_BASE}/posts` +
+            `?impact-category=${term.id}` +
+            `&offset=${wpOffset}` +
+            `&per_page=${perPage}` +
+            `&status=publish` +
+            `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`,
+        offset,
+        limit,
+        term.name, // toute la page porte le nom du terme, pas la catégorie WP du post
+    );
 });
 
 // ---------------------------------------------------------------------------
@@ -1421,6 +1469,7 @@ export const getTagPageData = cache(async (
                 tags: [],
                 articles: [],
                 hasMore: false,
+                nextOffset: 0,
                 pagination: { currentPage: page, totalPages: 0, basePath: `/tag/${slug}` },
             };
         }
@@ -1430,8 +1479,10 @@ export const getTagPageData = cache(async (
 
     const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '1');
     const rawPosts: WPPost[] = await res.json();
+    // Posts consommés côté WP, pas articles affichés (voir CategoryData.nextOffset).
+    const nextOffset = (page - 1) * TAG_PER_PAGE + rawPosts.length;
 
-    const posts = rawPosts.filter((p) => (p as WPPost & { format?: string }).format !== 'video');
+    const posts = rawPosts.filter((p) => !isVideoPost(p));
     if (!posts.length) {
         return {
             title,
@@ -1439,6 +1490,7 @@ export const getTagPageData = cache(async (
             tags: [],
             articles: [],
             hasMore: page < totalPages,
+            nextOffset,
             pagination: { currentPage: page, totalPages, basePath: `/tag/${slug}` },
         };
     }
@@ -1478,6 +1530,7 @@ export const getTagPageData = cache(async (
         tags: [],
         articles,
         hasMore: page < totalPages,
+        nextOffset,
         pagination: {
             currentPage: page,
             totalPages,
@@ -1490,60 +1543,21 @@ export const getTagArticlesOffset = cache(async (
     slug: string,
     offset: number,
     limit: number = 5
-): Promise<{ articles: CategoryArticle[]; hasMore: boolean }> => {
+): Promise<OffsetSlice> => {
     const tag = await resolveTag(slug);
-    if (!tag) return { articles: [], hasMore: false };
+    if (!tag) return { articles: [], hasMore: false, nextOffset: offset };
 
-    const url =
-        `${WP_BASE}/posts` +
-        `?tags=${tag.id}` +
-        `&offset=${offset}` +
-        `&per_page=${limit + 1}` +
-        `&status=publish` +
-        `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`;
-
-    const res = await fetch(url, { next: { revalidate: 600 } });
-    if (!res.ok) return { articles: [], hasMore: false };
-
-    const rawPosts: WPPost[] = await res.json();
-    const posts = rawPosts
-        .filter((p) => (p as WPPost & { format?: string }).format !== 'video')
-        .slice(0, limit + 1);
-
-    const hasMore = posts.length > limit;
-    const pagePosts = posts.slice(0, limit);
-    if (!pagePosts.length) return { articles: [], hasMore: false };
-
-    const { mediaIds, categoryIds } = extractIds(pagePosts);
-    const [mediaMap, categoryMap] = await Promise.all([
-        fetchMediaBatch(mediaIds),
-        fetchCategoryBatch(categoryIds),
-    ]);
-
-    const articles: CategoryArticle[] = pagePosts.map((post, index) => {
-        const media = mediaMap.get(post.featured_media);
-
-        let source = 'The Fourth Estate';
-        if (post.categories.length > 0) {
-            const cat = categoryMap.get(post.categories[0]);
-            if (cat) source = cat;
-        }
-
-        const article: CategoryArticle = {
-            id: `post-${post.id}`,
-            href: buildHref(post),
-            title: cleanHtmlTitle(post.title.rendered),
-            source,
-            publishedAt: formatWpDate(post.date),
-            imagePriority: imagePriority(offset + index),
-        };
-
-        if (media) article.image = buildImage(media, offset + index);
-
-        return article;
-    });
-
-    return { articles, hasMore };
+    return loadMoreSlice(
+        (wpOffset, perPage) =>
+            `${WP_BASE}/posts` +
+            `?tags=${tag.id}` +
+            `&offset=${wpOffset}` +
+            `&per_page=${perPage}` +
+            `&status=publish` +
+            `&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link`,
+        offset,
+        limit,
+    );
 });
 
 // ---------------------------------------------------------------------------

@@ -26,7 +26,7 @@ export default function OurImpactZone({ articles }: OurImpactZoneProps) {
             {/* Colonne droite : bloc statique — reproduit à l'identique du HTML de référence */}
             <section className="zone zone-puzzle" data-column="right">
                 <Link
-                    href="/category/our-impact/"
+                    href="/category/our-impact"
                     className="item ithalc"
                 >
                     <div className="item-text">

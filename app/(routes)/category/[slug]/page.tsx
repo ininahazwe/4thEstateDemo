@@ -151,6 +151,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                             slug={slug}
                             initialArticles={data.articles}
                             initialHasMore={data.hasMore}
+                            initialNextOffset={data.nextOffset}
                             batchSize={5}
                         />
                     </div>

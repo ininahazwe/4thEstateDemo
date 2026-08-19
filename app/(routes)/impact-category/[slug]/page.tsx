@@ -128,6 +128,7 @@ export default async function ImpactCategoryPage({ params }: ImpactCategoryPageP
                             slug={slug}
                             initialArticles={data.articles}
                             initialHasMore={data.hasMore}
+                            initialNextOffset={data.nextOffset}
                             batchSize={5}
                             apiBasePath="/api/impact-category"
                         />

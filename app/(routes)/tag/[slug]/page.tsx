@@ -133,6 +133,7 @@ export default async function TagPage({ params }: TagPageProps) {
                             slug={slug}
                             initialArticles={data.articles}
                             initialHasMore={data.hasMore}
+                            initialNextOffset={data.nextOffset}
                             batchSize={5}
                             apiBasePath="/api/tag"
                         />

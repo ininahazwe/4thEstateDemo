@@ -8,6 +8,14 @@ interface CategoryRiverLoadMoreProps {
     slug: string;
     initialArticles: CategoryArticle[];
     initialHasMore: boolean;
+    /**
+     * Offset WP de reprise (`data.nextOffset` du fetch serveur).
+     *
+     * ⚠️ Ne PAS le remplacer par `articles.length` : les posts vidéo sont
+     * écartés après la requête, donc le nombre d'articles affichés est inférieur
+     * au nombre de posts consommés côté WP. C'était le bug des doublons.
+     */
+    initialNextOffset: number;
     batchSize?: number;
     /** Préfixe de l'API "load more" — /api/category par défaut, /api/tag pour la page tag. */
     apiBasePath?: string;
@@ -17,11 +25,13 @@ export default function CategoryRiverLoadMore({
                                                    slug,
                                                    initialArticles,
                                                    initialHasMore,
+                                                   initialNextOffset,
                                                    batchSize = 5,
                                                    apiBasePath = '/api/category',
                                                }: CategoryRiverLoadMoreProps) {
     const [articles, setArticles] = useState(initialArticles);
     const [hasMore, setHasMore] = useState(initialHasMore);
+    const [nextOffset, setNextOffset] = useState(initialNextOffset);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(false);
 
@@ -32,13 +42,25 @@ export default function CategoryRiverLoadMore({
 
         try {
             const res = await fetch(
-                `${apiBasePath}/${slug}/more?offset=${articles.length}&limit=${batchSize}`
+                `${apiBasePath}/${slug}/more?offset=${nextOffset}&limit=${batchSize}`
             );
             if (!res.ok) throw new Error('load_more_failed');
 
-            const data: { articles: CategoryArticle[]; hasMore: boolean } = await res.json();
+            const data: {
+                articles: CategoryArticle[];
+                hasMore: boolean;
+                nextOffset: number;
+            } = await res.json();
+
             setArticles((prev) => [...prev, ...data.articles]);
             setHasMore(data.hasMore);
+            // Garde-fou : un offset qui n'avance pas ferait boucler le bouton sur
+            // le même lot. On préfère arrêter la liste.
+            if (data.nextOffset > nextOffset) {
+                setNextOffset(data.nextOffset);
+            } else {
+                setHasMore(false);
+            }
         } catch {
             setError(true);
         } finally {

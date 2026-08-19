@@ -38,6 +38,16 @@ export interface CategoryData {
     articles: CategoryArticle[];
     /** true s'il reste des articles au-delà de ce premier lot (pilote le bouton "Load more") */
     hasMore: boolean;
+    /**
+     * Offset WordPress à envoyer au prochain "Load more" = nombre de posts
+     * RÉELLEMENT consommés côté WP pour produire `articles`.
+     *
+     * ⚠️ Ce n'est pas `articles.length` : les posts `format=video` sont écartés
+     * après la requête, donc WP en sert plus qu'on n'en affiche. Recalculer
+     * l'offset depuis la longueur de la liste affichée re-servait les posts
+     * filtrés au clic suivant (doublons de key React, articles répétés).
+     */
+    nextOffset: number;
     /** Pagination classique (page/totalPages) — plus utilisée côté UI, "Load more" s'appuie sur hasMore. Conservée pour usage interne éventuel. */
     pagination: CategoryPagination;
 }
