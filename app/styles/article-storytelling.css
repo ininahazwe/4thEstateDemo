@@ -503,7 +503,7 @@ html {
    parts est constante, la rangée garde exactement la même largeur totale du
    début à la fin du mouvement — aucun reflow, aucun saut. */
 .am-gallery {
-    --am-gallery-h: min(34vh, 20rem);
+    --am-gallery-h: min(50vh, 35rem);
     /* Nombre de parts prises par la vignette survolée (les autres en gardent
        une chacune). 5 parts sur 5 images = ~56 % de la rangée. */
     --am-gallery-grow: 5;
