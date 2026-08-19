@@ -1,16 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { readStoredConsent, writeConsent, type ConsentChoice } from './consent';
+import {
+    CONSENT_REOPEN_EVENT,
+    readStoredConsent,
+    writeConsent,
+    type ConsentChoice,
+} from './consent';
 
 /**
  * Bandeau de consentement cookies.
  *
- * Ne s'affiche que si le visiteur n'a jamais repondu. Le choix est relu au
- * chargement suivant par le script inline du <head>, qui applique le consent
- * mode avant gtag.js — le bandeau n'a donc aucun role au retour d'un visiteur
- * connu.
+ * Deux modes d'ouverture :
+ *
+ *  - **premiere visite** : s'affiche seul si le visiteur n'a jamais repondu ;
+ *  - **reouverture** : sur l'evenement CONSENT_REOPEN_EVENT, emis par le bouton
+ *    « Cookie settings » du pied de page. Le visiteur peut alors changer d'avis
+ *    a tout moment — exigence de droit de retrait, et sans ca la seule maniere
+ *    de revenir sur son choix etait d'effacer localStorage a la main.
+ *
+ * En reouverture le bandeau rappelle le choix courant et propose une croix de
+ * fermeture : refermer sans cliquer ne doit RIEN changer.
  *
  * Monte apres l'hydratation (`useEffect`) : le rendu serveur ne connait pas
  * localStorage, l'afficher des le HTML provoquerait un mismatch et un
@@ -18,17 +29,33 @@ import { readStoredConsent, writeConsent, type ConsentChoice } from './consent';
  */
 export default function CookieConsent() {
     const [visible, setVisible] = useState(false);
+    const [current, setCurrent] = useState<ConsentChoice | null>(null);
+    const [reopened, setReopened] = useState(false);
 
     useEffect(() => {
-        if (readStoredConsent() === null) setVisible(true);
+        const stored = readStoredConsent();
+        setCurrent(stored);
+        if (stored === null) setVisible(true);
+    }, []);
+
+    useEffect(() => {
+        const onReopen = () => {
+            setCurrent(readStoredConsent());
+            setReopened(true);
+            setVisible(true);
+        };
+        window.addEventListener(CONSENT_REOPEN_EVENT, onReopen);
+        return () => window.removeEventListener(CONSENT_REOPEN_EVENT, onReopen);
+    }, []);
+
+    const decide = useCallback((choice: ConsentChoice) => {
+        writeConsent(choice);
+        setCurrent(choice);
+        setVisible(false);
+        setReopened(false);
     }, []);
 
     if (!visible) return null;
-
-    const decide = (choice: ConsentChoice) => {
-        writeConsent(choice);
-        setVisible(false);
-    };
 
     return (
         <div className="cookie-consent" role="dialog" aria-live="polite" aria-label="Cookie preferences">
@@ -40,6 +67,16 @@ export default function CookieConsent() {
                     <Link href="/privacy" className="cookie-consent__link">
                         Privacy policy
                     </Link>
+                    {reopened && current !== null && (
+                        <>
+                            {' '}
+                            <span className="cookie-consent__status">
+                                {current === 'granted'
+                                    ? 'You currently allow analytics cookies.'
+                                    : 'Analytics cookies are currently switched off.'}
+                            </span>
+                        </>
+                    )}
                 </p>
 
                 <div className="cookie-consent__actions">
@@ -58,6 +95,23 @@ export default function CookieConsent() {
                         Accept
                     </button>
                 </div>
+
+                {/* Fermeture sans changement — uniquement en reouverture : a la
+                    premiere visite, une croix serait un troisieme choix ambigu
+                    (ni accepte, ni refuse) et le bandeau reviendrait a chaque page. */}
+                {reopened && (
+                    <button
+                        type="button"
+                        className="cookie-consent__close"
+                        aria-label="Close without changing my choice"
+                        onClick={() => {
+                            setVisible(false);
+                            setReopened(false);
+                        }}
+                    >
+                        &times;
+                    </button>
+                )}
             </div>
         </div>
     );

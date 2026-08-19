@@ -5,6 +5,7 @@ import {
 } from './footerData';
 import { getTopCategories } from '../../services/wpApi';
 import FooterCollapsibleTitle from './FooterCollapsibleTitle';
+import CookieSettingsButton from '@/app/components/Analytics/CookieSettingsButton';
 import Link from "next/link";
 import Image from "next/image";
 
@@ -129,17 +130,25 @@ export default async function SiteFooter() {
                             <FooterCollapsibleTitle id="footer-collapse-legals">
                                 {sectionsLegals.title}
                             </FooterCollapsibleTitle>
-                            {sectionsLegals.links.map((link, idx) => (
-                                <a
-                                    key={idx}
-                                    href={link.href}
-                                    target={link.target}
-                                    rel={link.rel}
-                                    className={link.className ? link.className : 'item'}
-                                >
-                                    {link.label}
-                                </a>
-                            ))}
+                            {sectionsLegals.links.map((link, idx) =>
+                                link.action === 'cookie-settings' ? (
+                                    <CookieSettingsButton
+                                        key={idx}
+                                        label={link.label}
+                                        className={link.className ? link.className : 'item'}
+                                    />
+                                ) : (
+                                    <a
+                                        key={idx}
+                                        href={link.href}
+                                        target={link.target}
+                                        rel={link.rel}
+                                        className={link.className ? link.className : 'item'}
+                                    >
+                                        {link.label}
+                                    </a>
+                                ),
+                            )}
                         </div>
                     </nav>
 

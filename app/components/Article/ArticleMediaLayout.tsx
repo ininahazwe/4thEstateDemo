@@ -6,7 +6,9 @@ import HeroTitle from './HeroTitle';
 import ArticleShareButton from '@/app/components/UI/ArticleShareButton';
 import TTSButton from '@/app/components/UI/TTSButton';
 import BookmarkButton from '@/app/components/UI/BookmarkButton';
+import RelatedArticleCard from './RelatedArticleCard';
 import type { MediaBlock } from '@/app/services/blockMapper';
+import type { WpArticleCard } from '@/app/services/wpApi.article';
 
 // ---------------------------------------------------------------------------
 // ArticleMediaLayout — template "storytelling" (ACF is_storytelling).
@@ -319,7 +321,16 @@ function Cover({ block }: { block: CoverBlock }) {
     );
 }
 
-export default function ArticleMediaLayout({ article }: { article: ArticleMediaData }) {
+interface ArticleMediaLayoutProps {
+    article: ArticleMediaData;
+    /**
+     * Grille « You might also like » du bas de page — même liste et même
+     * markup que le template standard (ArticleBody.tsx).
+     */
+    relatedArticles: WpArticleCard[];
+}
+
+export default function ArticleMediaLayout({ article, relatedArticles }: ArticleMediaLayoutProps) {
     const segments = splitAtCovers(article.blocks);
 
     // Les blocs de la première section "flow" rejoignent la section d'entête
@@ -423,6 +434,37 @@ export default function ArticleMediaLayout({ article }: { article: ArticleMediaD
                         ))}
                     </div>
                 )
+            )}
+
+            {/* « You might also like » — même liste et même markup que le
+                template standard (ArticleBody.tsx), pour que les deux gabarits
+                proposent la même suite de lecture.
+
+                Deux enveloppes indispensables, et ce n'est pas décoratif :
+
+                - `.container-background` : le dernier segment peut être un
+                  cover (panneau sombre à image épinglée). Sans plaque blanche,
+                  la grille se retrouverait posée sur ce panneau. Deux plaques
+                  consécutives ne créent pas de raccord visible — même fond,
+                  aucune bordure — juste une respiration avant la grille.
+                - `.article-secondary` : TOUTES les règles de mise en page de
+                  `.readmore-list` sont préfixées `.article-secondary` dans
+                  article.css (ligne 934 et suivantes : flex, largeurs de carte,
+                  défilement horizontal sous 760px). Le markup seul, hors de cet
+                  ancêtre, s'afficherait en liste verticale non stylée. */}
+            {relatedArticles.length > 0 && (
+                <div className="container-background">
+                    <div className="am-wrap article-secondary">
+                        <div className="article-readmore no-mobile">
+                            <div className="section-title">You might also like</div>
+                            <div className="readmore-list" data-count="4">
+                                {relatedArticles.map((related) => (
+                                    <RelatedArticleCard key={related.id} {...related} />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </article>
     );

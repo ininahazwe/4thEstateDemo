@@ -116,3 +116,75 @@
     background: #b05252;
     color: #fff;
 }
+
+/* ---------------------------------------------------------------------------
+   Reouverture depuis le pied de page (19/08/2026)
+   --------------------------------------------------------------------------- */
+
+/* `.cookie-consent__inner` est en flex : `position: relative` ancre la croix
+   dessus plutot que sur le viewport. */
+.cookie-consent__inner {
+    position: relative;
+}
+
+/* Rappel du choix courant, affiche uniquement en reouverture. */
+.cookie-consent__status {
+    font-weight: 600;
+}
+
+/* Croix de fermeture — visible seulement quand le bandeau est rouvert. */
+.cookie-consent__close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: #666;
+    cursor: pointer;
+}
+
+.cookie-consent__close:hover {
+    color: #6D2929;
+}
+
+.cookie-consent__close:focus-visible {
+    outline: 2px solid #6D2929;
+    outline-offset: 2px;
+}
+
+/* Au-dessus de 760px l'interieur passe en ligne : la croix ne doit pas
+   chevaucher le texte, on lui reserve la gouttiere de droite. */
+@media screen and (min-width: 760px) {
+    .cookie-consent__inner {
+        padding-right: 44px;
+    }
+    .cookie-consent__close {
+        top: 50%;
+        transform: translateY(-50%);
+        right: 10px;
+    }
+}
+
+/* Bouton « Cookie settings » du pied de page : c'est un <button> parce qu'il ne
+   navigue pas, mais il doit se fondre dans la colonne de liens `.item`. On
+   neutralise donc uniquement l'apparence propre au bouton natif — tout le reste
+   (couleur, taille, espacement) reste herite de `.item`. */
+.cookie-settings-trigger {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+:root[data-user-color-scheme="dark"] .cookie-consent__close {
+    color: #bbb;
+}

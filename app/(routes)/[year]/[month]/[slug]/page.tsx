@@ -354,6 +354,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                                     },
                                     blocks: mediaBlocks,
                                 }}
+                                relatedArticles={relatedArticles}
                             />
                         ) : (
                             <article className="article">
