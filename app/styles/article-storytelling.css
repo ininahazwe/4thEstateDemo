@@ -473,6 +473,7 @@ html {
 
 .am-media-full {
     margin: 0 auto;
+    max-width: 90vw;
 }
 
 .am-media-full img {
