@@ -1331,17 +1331,17 @@ html:not(.v-app) [data-model^=article]:hover {
     position: relative;
     padding-left: 12px;
 }
-[data-model="article-horizontal"] .item-text.impact::before,
+/*[data-model="article-horizontal"] .item-text.impact::before,
 [data-model="article"] .item-text.impact::before {
     content: "";
     position: absolute;
     left: 0;
-    top: 20%; /* Centrer verticalement les 60% (20% + 60% + 20%) */
-    width: 3px; /* Épaisseur de la barre */
+    top: 20%;
+    width: 3px;
     height: 60%;
-    background-color: #ffffff; /* Couleur brand */
-    border-radius: 2px; /* Arrondir légèrement les coins */
-}
+    background-color: #ffffff;
+    border-radius: 2px;
+}*/
 :root[data-user-color-scheme="dark"] .item-text.impact::before{
     background: #0a0a0a;
     text-shadow: none;
@@ -1591,7 +1591,7 @@ body {
 }
 .section-title {
     background-clip: text;
-    background-color: rgba(var(--siteTextRGB), .4);
+    background-color: rgba(var(--siteTextRGB), .6);
     font-size: 24px;
     -webkit-text-fill-color: #0000;
 }

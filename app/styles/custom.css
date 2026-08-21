@@ -265,3 +265,61 @@ li.wp-block-list{
     display: flex;
     gap: 10px;
 }
+
+/* ─── Cartes « Our Impact » : vignette a gauche, titre a droite ───────────
+   La regle de base `[data-model=article] .item-text` empile en colonne ; on
+   la surcharge ici pour ces seules cartes. Specificite suffisante grace au
+   `.impact` supplementaire (0,3,0 contre 0,2,0).
+
+   La barre verticale decorative de `.item-text.impact::before` (base.css) est
+   conservee : elle est en position absolute a left:0, elle ne participe pas au
+   flux et n'est donc pas affectee par le passage en ligne. */
+[data-model="article-horizontal"] .item-text.impact,
+[data-model="article"] .item-text.impact {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    /* Le padding-left de 12px herite laisse la place a la barre ::before. */
+}
+
+.impact-thumb {
+    flex: 0 0 96px;
+    width: 96px;
+    height: 96px;
+    overflow: hidden;
+    border-radius: 4px;
+    /* position: relative — meme si on n'utilise pas `fill` ici, ca garde le
+       conteneur pret et evite le piege documente dans
+       claude/piege-next-image-fill.md si quelqu'un y passe un jour. */
+    position: relative;
+}
+
+.impact-thumb img {
+    width: 100%;
+    height: 100%;
+    /* Recadrage carre : les vignettes WordPress ne sont pas au format 1:1. */
+    object-fit: cover;
+    display: block;
+}
+
+/* Le titre occupe tout l'espace restant a droite de la vignette. */
+[data-model="article-horizontal"] .item-text.impact .heading,
+[data-model="article"] .item-text.impact .heading {
+    flex: 1 1 auto;
+    /* min-width: 0 : sans lui, un item flex refuse de descendre sous la
+       largeur de son contenu (min-width: auto par defaut) et pousse la carte
+       hors du cadre. */
+    min-width: 0;
+    /* min-width ne suffit pas pour un MOT insecable trop long (URL collee,
+       nom compose) : il faut autoriser la coupure a l'interieur du mot.
+       Verifie sur un titre de 60 caracteres sans espace a 390px. */
+    overflow-wrap: anywhere;
+}
+
+@media screen and (max-width: 480px) {
+    .impact-thumb {
+        flex-basis: 72px;
+        width: 72px;
+        height: 72px;
+    }
+}

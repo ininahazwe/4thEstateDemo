@@ -716,10 +716,15 @@ export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
         );
         if (!posts.length) return [];
 
-        const { categoryIds } = extractIds(posts);
-        const categoryMap = await fetchCategoryBatch(categoryIds);
+        const { mediaIds, categoryIds } = extractIds(posts);
+        const [mediaMap, categoryMap] = await Promise.all([
+            fetchMediaBatch(mediaIds),
+            fetchCategoryBatch(categoryIds),
+        ]);
 
         return posts.map((post, index) => {
+            const media = mediaMap.get(post.featured_media);
+
             // Étiquette = catégorie thématique du post (Anti-Corruption,
             // Environment…), en ignorant "our-impact" lui-même : afficher six
             // fois "Our Impact" sous le titre "Our Impact" n'apporte rien.
@@ -728,7 +733,7 @@ export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
             const tagOrCategory =
                 (otherId !== undefined ? categoryMap.get(otherId) : undefined) ?? 'Our Impact';
 
-            return {
+            const article: OurImpactArticle = {
                 id:            `oi-post-${post.id}`,
                 href:          buildHref(post),
                 title:         cleanHtmlTitle(post.title.rendered),
@@ -738,6 +743,12 @@ export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
                 type:          'default'    as const,
                 index:         index + 1,
             };
+
+            // Contexte 'thumb' et non 'card' : la vignette est affichee a 96px
+            // de cote, demander `medium_large` (768px) serait du gaspillage.
+            if (media) article.image = buildImage(media, index, 'thumb');
+
+            return article;
         });
 
     } catch (error) {

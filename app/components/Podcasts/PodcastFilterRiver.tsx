@@ -11,7 +11,7 @@ interface PodcastFilterRiverProps {
 
 type SortOrder = 'recent' | 'oldest';
 
-const BATCH_SIZE = 10;
+const BATCH_SIZE = 9;
 
 function getYear(episode: PodcastEpisode): string {
     return String(new Date(episode.publishedAtISO).getFullYear());
