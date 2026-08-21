@@ -44,7 +44,7 @@ export default function SsoHandler() {
                     This login link has expired or is no longer valid.
                 </p>
                 <a href="/connexion" style={{ color: "#6D2929", fontWeight: 700 }}>
-                    Log ig
+                    Log in
                 </a>
             </div>
         );
