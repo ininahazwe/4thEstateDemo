@@ -107,7 +107,7 @@
         min-width:100%
     }
     .home .forecast-top-articles:only-child .wrap article.item {
-        width:calc(25% - 3px)
+        width:calc(33% - 3px)
     }
 }
 .home .zone-puzzle {

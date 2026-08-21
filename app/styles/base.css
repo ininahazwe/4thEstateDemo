@@ -1,7 +1,7 @@
 :root {
     --siteBackground:#fff;
     --siteBackgroundRGB:238,238,238;
-    --siteBoxBackground:#f6f6f6;
+    --siteBoxBackground:#f7f7f7;
     --siteBoxBackgroundRGB:255,255,255;
     --siteBoxShadow:#0000001a;
     --siteText:#111;
@@ -1330,6 +1330,10 @@ html:not(.v-app) [data-model^=article]:hover {
     width:100%;
     position: relative;
     padding-left: 12px;
+}
+
+.item-text.impact {
+    padding-left: 0 !important;
 }
 /*[data-model="article-horizontal"] .item-text.impact::before,
 [data-model="article"] .item-text.impact::before {

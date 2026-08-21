@@ -23,7 +23,7 @@ export default function OurImpactZone({ articles }: OurImpactZoneProps) {
                 </div>
             </section>
 
-            {/* Colonne droite : bloc statique — reproduit à l'identique du HTML de référence */}
+            {/* Colonne droite : bloc statique — reproduit à l'identique du HTML de référence
             <section className="zone zone-puzzle" data-column="right">
                 <Link
                     href="/category/our-impact"
@@ -41,7 +41,7 @@ export default function OurImpactZone({ articles }: OurImpactZoneProps) {
                     </div>
                 </Link>
             </section>
-
+            */}
         </section>
     );
 }
