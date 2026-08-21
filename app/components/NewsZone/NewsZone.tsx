@@ -40,8 +40,10 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
     const zone2Areas = chunkArticles(zone2Articles, [2, 4]);
 
     return (
-        <section className="zone zone-actu" data-columns="2">
-            {/* COLONNE PRINCIPALE (zone-1)
+        <div>
+            <div className="section-title">More stories</div>
+            <section className="zone zone-actu" data-columns="2">
+                {/* COLONNE PRINCIPALE (zone-1)
             <div className="zone-1" data-column="full">
                 {zone1Areas.map((area, areaIdx) => (
                     <div className="area" key={`z1-area-${areaIdx}`}>
@@ -57,25 +59,26 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                 ))}
             </div>*/}
 
-            {/* COLONNE LATÉRALE (zone-2)*/}
-            <div className="zone-2" data-column="left">
-                {zone2Areas.map((area, areaIdx) => (
-                    <div className="area" key={`z2-area-${areaIdx}`}>
-                        {area.map((article) => (
-                            <ArticleCard
-                                key={article.id}
-                                article={article}
-                                sizes={ZONE2_SIZES[Math.min(areaIdx, 1)]}
-                                headingLevel="h3" // Tous les titres de la colonne latérale utilisent H3
-                            />
-                        ))}
-                    </div>
-                ))}
-                {/*<SpecialOfferBanner />*/}
-            </div>
+                {/* COLONNE LATÉRALE (zone-2)*/}
+                <div className="zone-2" data-column="left">
+                    {zone2Areas.map((area, areaIdx) => (
+                        <div className="area" key={`z2-area-${areaIdx}`}>
+                            {area.map((article) => (
+                                <ArticleCard
+                                    key={article.id}
+                                    article={article}
+                                    sizes={ZONE2_SIZES[Math.min(areaIdx, 1)]}
+                                    headingLevel="h3" // Tous les titres de la colonne latérale utilisent H3
+                                />
+                            ))}
+                        </div>
+                    ))}
+                    {/*<SpecialOfferBanner />*/}
+                </div>
 
-            {/* Colonne latérale droite (data-column="right", 300px @≥1000px — cf. base.css [data-columns="2"]) */}
-            <TipCallout />
-        </section>
+                {/* Colonne latérale droite (data-column="right", 300px @≥1000px — cf. base.css [data-columns="2"]) */}
+                <TipCallout />
+            </section>
+        </div>
     );
 }

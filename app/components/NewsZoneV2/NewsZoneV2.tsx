@@ -44,7 +44,6 @@ export default function NewsZoneV2({ zone1Articles, zone2Articles }: NewsZonePro
         // Classe "zone-actu-v2" (et non "zone-actu") : isole complètement les
         // nouveaux styles de zone-1 de ceux du NewsZone original.
         <section className="zone zone-actu-v2" data-columns="2">
-            {/* COLONNE PRINCIPALE (zone-1) */}
             <div className="zone-1" data-column="full">
                 {zone1Areas.map((area, areaIdx) => (
                     <div className="area" key={`z1-area-${areaIdx}`}>
