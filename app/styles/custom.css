@@ -133,6 +133,90 @@ li.wp-block-list{
     border: 0;
 }
 
+/* ─── Bloc Gutenberg "Gallery" (articles classiques uniquement) ──────────
+   WordPress envoie le HTML du bloc gallery (figure.wp-block-gallery imbriquant
+   des figure.wp-block-image) mais pas son CSS : sans ces regles, les images
+   s'empilent une par ligne en pleine largeur. Repris depuis le CSS core de
+   Gutenberg (wp-block-library), pas invente.
+
+   Portee : uniquement les classes brutes wp-block-gallery/wp-block-image,
+   rendues via le HTML WordPress brut du template CLASSIQUE (ArticleContent).
+   Le storytelling a son propre composant de galerie, `.am-gallery`
+   (voir article-storytelling.css) — namespace distinct, aucun risque de
+   collision, ne pas fusionner les deux. */
+.wp-block-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* columns-default : WordPress ne fixe pas de nombre de colonnes fixe, chaque
+   image se partage l'espace disponible (flex-grow), avec un plancher pour
+   eviter des vignettes trop etroites sur une ligne chargee. */
+.wp-block-gallery .wp-block-image {
+    margin: 0;
+}
+
+.wp-block-gallery .wp-block-image a,
+.wp-block-gallery .wp-block-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* is-cropped : chaque image remplit un carre au lieu de garder son ratio
+   d'origine — comportement par defaut du bloc gallery. */
+.wp-block-gallery.is-cropped .wp-block-image {
+    /*aspect-ratio: 1 / 1;*/
+    overflow: hidden;
+}
+
+.wp-block-gallery.is-cropped .wp-block-image img {
+    object-fit: cover;
+}
+
+.wp-block-gallery.is-clickable .wp-block-image img {
+    cursor: zoom-in;
+}
+
+.wp-block-gallery .wp-block-image figcaption {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #666;
+    text-align: center;
+}
+
+/* Nombre de colonnes explicite (choisi dans l'editeur) : remplace le partage
+   proportionnel par une largeur fixe. Valeurs alignees sur le CSS core WP. */
+.wp-block-gallery.columns-2 .wp-block-image { flex: 0 0 calc(50% - 16px); min-width: 0; }
+.wp-block-gallery.columns-3 .wp-block-image { flex: 0 0 calc(33.33333% - 16px); min-width: 0; }
+.wp-block-gallery.columns-4 .wp-block-image { flex: 0 0 calc(25% - 16px); min-width: 0; }
+.wp-block-gallery.columns-5 .wp-block-image { flex: 0 0 calc(20% - 16px); min-width: 0; }
+.wp-block-gallery.columns-6 .wp-block-image { flex: 0 0 calc(16.66667% - 16px); min-width: 0; }
+.wp-block-gallery.columns-7 .wp-block-image { flex: 0 0 calc(14.28571% - 16px); min-width: 0; }
+.wp-block-gallery.columns-8 .wp-block-image { flex: 0 0 calc(12.5% - 16px); min-width: 0; }
+
+/* Sous 600px, WordPress replie tout a 2 colonnes max, quel que soit le
+   nombre choisi dans l'editeur (columns-default n'est pas concerne : le
+   flex-grow de base retombe déjà naturellement en 1-2 par ligne). */
+@media (max-width: 599px) {
+    .wp-block-gallery {
+        gap: 8px;
+    }
+
+    .wp-block-gallery.columns-3 .wp-block-image,
+    .wp-block-gallery.columns-4 .wp-block-image,
+    .wp-block-gallery.columns-5 .wp-block-image,
+    .wp-block-gallery.columns-6 .wp-block-image,
+    .wp-block-gallery.columns-7 .wp-block-image,
+    .wp-block-gallery.columns-8 .wp-block-image {
+        flex: 0 0 calc(50% - 8px);
+    }
+}
+
 .pswp__custom-caption {
     position: absolute;
     left: 0;

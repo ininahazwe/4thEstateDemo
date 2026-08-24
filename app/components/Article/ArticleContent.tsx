@@ -28,7 +28,16 @@ function prepareAndInterleaveContent(
     figuresAndImages.forEach((el) => {
         // Si c'est une image isolée, ou une image dans une figure qui n'a pas encore de lien PhotoSwipe
         const img = el.tagName.toLowerCase() === "img" ? (el as HTMLImageElement) : el.querySelector("img");
-        if (!img || el.querySelector("a[data-pswp-width]")) return;
+        // `closest()` et non `querySelector()` : querySelectorAll("figure, img") liste l'<img>
+        // lui-même comme element separe (en plus de sa figure), et un <img> n'a jamais de
+        // descendant — `el.querySelector(...)` y renvoyait donc toujours null, meme une fois
+        // l'image deja enveloppee par le passage sur sa figure. Chaque image se retrouvait
+        // enveloppee DEUX fois (<a><a><img></a></a>, invalide), que le navigateur aplatit en
+        // deux <a> freres — le premier vide. Sans consequence visible sur une image seule, mais
+        // ce <a> vide, mis a height:100% par le CSS du bloc gallery (is-cropped), repousse la
+        // vraie image hors du cadre `overflow:hidden` — c'est ce qui la rendait invisible dans
+        // la galerie (24/08/2026), sans que ca se voie sur une image seule.
+        if (!img || img.closest("a[data-pswp-width]")) return;
 
         const src = img.getAttribute("src") || "";
         const alt = img.getAttribute("alt") || "";
