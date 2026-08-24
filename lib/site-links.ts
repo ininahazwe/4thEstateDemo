@@ -6,8 +6,8 @@
  * la page de don MFWA. Pour revenir en arrière, remettre la valeur commentée
  * ci-dessous — c'est le seul endroit à modifier.
  */
-export const MEMBERSHIP_URL = "https://mfwa.org/donate";
-// export const MEMBERSHIP_URL = "https://membership.thefourthestategh.com";
+//export const MEMBERSHIP_URL = "https://mfwa.org/donate";
+export const MEMBERSHIP_URL = "https://membership.thefourthestategh.com";
 
 /** CTA « Join us » / « Renew » / « Support us ». */
 export const MEMBERSHIP_JOIN_URL = MEMBERSHIP_URL;
