@@ -87,7 +87,8 @@
     .home .forecast-top-articles .wrap {
         display:flex;
         flex-wrap:wrap;
-        justify-content:space-between
+        justify-content:space-between;
+        gap: 5px;
     }
     .home .forecast-top-articles .wrap article.item,
     .home .forecast-top-articles .wrap article.item:first-of-type,
@@ -190,6 +191,11 @@
     }
     .home .zone-insta [aria-roledescription=carousel][class*=horizontal] {
         scroll-padding-left:20px
+    }
+    .wrap{
+        display:flex;
+        flex-direction: column;
+        gap: 5px;
     }
 }
 @media screen and (min-width:760px) {
