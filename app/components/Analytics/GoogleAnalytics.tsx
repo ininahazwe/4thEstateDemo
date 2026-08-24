@@ -40,10 +40,9 @@ function PageViewTracker() {
 /**
  * Google Analytics 4, branche en direct (sans Tag Manager).
  *
- * Les defauts de Google Consent Mode v2 sont poses par le script inline du
- * <head> (app/layout.tsx), qui s'execute AVANT ce composant : tant que le
- * visiteur n'a pas accepte, gtag.js se charge mais ne depose ni cookie ni
- * identifiant. Le bandeau CookieConsent envoie ensuite `consent: update`.
+ * Pas de Consent Mode / bandeau cookies : arbitrage du 24/08/2026, le Ghana
+ * n'imposant pas de regime equivalent au RGPD. La mesure demarre donc
+ * directement au chargement de gtag.js, sans attendre d'action du visiteur.
  *
  * Sans `NEXT_PUBLIC_GA_ID`, le composant ne rend rien du tout : aucune requete
  * vers Google en developpement ou en preproduction tant que la variable n'est

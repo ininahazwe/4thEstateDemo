@@ -97,7 +97,7 @@
     }
     .home .forecast-top-articles .wrap article.item {
         margin:0 0 4px;
-        width:calc(50% - 2px)
+        width:calc(49% - 2px)
     }
     .home .forecast-top-articles .wrap article.item .item-text {
         font-size:16px
@@ -192,10 +192,13 @@
     .home .zone-insta [aria-roledescription=carousel][class*=horizontal] {
         scroll-padding-left:20px
     }
-    .wrap{
+    /*.wrap{
         display:flex;
         flex-direction: column;
         gap: 5px;
+    }*/
+    .forecast-top-articles .item {
+        margin-bottom: 8px !important;
     }
 }
 @media screen and (min-width:760px) {

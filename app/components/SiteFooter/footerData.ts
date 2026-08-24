@@ -18,15 +18,6 @@ export interface FooterLink {
     target?: string;
     rel?: string;
     className?: string;
-    /**
-     * Entree qui declenche une action au lieu de naviguer.
-     *
-     * `'cookie-settings'` : rend un bouton qui reouvre le bandeau de
-     * consentement (CookieSettingsButton) au lieu d'un <a>. `href` est alors
-     * ignore — il reste renseigne pour rester compatible avec un eventuel
-     * rendu degrade, mais aucune page n'est visitee.
-     */
-    action?: 'cookie-settings';
 }
 
 export interface FooterSection {
@@ -83,8 +74,5 @@ export const sectionsLegals: FooterSection = {
         { label: 'About us',          href: '/about-us' },
         /*{ label: 'Terms of use',      href: '/terms' },*/
         { label: 'Privacy policy',    href: '/privacy' },
-        // Ne pointe plus vers /cookies (route inexistante = 404) : rouvre le
-        // bandeau de consentement. Voir CookieSettingsButton.
-        { label: 'Cookie settings',   href: '/privacy', className: 'item cookies', action: 'cookie-settings' },
     ],
 };
