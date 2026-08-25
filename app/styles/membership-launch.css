@@ -1,0 +1,384 @@
+/* ==========================================================================
+   Popup de lancement du programme de membres (MembershipLaunchModal)
+   Portée : toutes les classes sont préfixées .mlm-, rien ne fuit ailleurs.
+   ========================================================================== */
+
+.mlm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    padding: clamp(10px, 3vw, 32px);
+    background: rgba(4, 6, 10, 0.74);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    animation: mlm-fade 0.32s ease both;
+}
+
+.mlm-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    width: min(760px, 100%);
+    min-height: min(520px, 82vh);
+    max-height: min(94vh, 780px);
+    overflow: hidden;
+    border-radius: 20px;
+    /* Sert aussi de repli si WebGL est indisponible. */
+    background:
+        radial-gradient(120% 90% at 72% 12%, rgba(0, 48, 73, 0.55), transparent 62%),
+        linear-gradient(180deg, #0b1017 0%, #070a0f 100%);
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+    animation: mlm-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.mlm-canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Le composant pose cet attribut si le contexte WebGL n'a pas pu être créé. */
+.mlm-canvas[data-fallback="1"] {
+    display: none;
+}
+
+.mlm-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(110% 80% at 75% 10%, rgba(0, 48, 73, 0.28), transparent 58%),
+        linear-gradient(
+            90deg,
+            rgba(7, 10, 15, 0.72) 0%,
+            rgba(7, 10, 15, 0.34) 52%,
+            rgba(7, 10, 15, 0) 88%
+        ),
+        linear-gradient(
+            180deg,
+            rgba(7, 10, 15, 0.22) 0%,
+            rgba(7, 10, 15, 0.5) 42%,
+            rgba(7, 10, 15, 0.9) 100%
+        );
+}
+
+/* --- fermeture ---------------------------------------------------------- */
+
+.mlm-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    color: #fff;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.mlm-close:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: rotate(90deg);
+}
+
+.mlm-close:focus-visible {
+    outline: 2px solid var(--sitePrimary, #ff5252);
+    outline-offset: 2px;
+}
+
+/* --- contenu ------------------------------------------------------------ */
+
+.mlm-content {
+    position: relative;
+    z-index: 2;
+    padding: clamp(22px, 4.5vw, 44px);
+    padding-top: clamp(60px, 12vw, 96px);
+    overflow-y: auto;
+    color: #fff;
+    /* Le canvas doit rester « éclairable » : les pointer-events passent au
+       travers du bloc de texte, seuls les éléments interactifs les captent. */
+    pointer-events: none;
+}
+
+.mlm-content a,
+.mlm-content button {
+    pointer-events: auto;
+}
+
+.mlm-eyebrow {
+    margin: 0 0 14px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.mlm-title {
+    margin: 0 0 16px;
+    /* le vh borne le titre sur les écrans bas (mobile en paysage) */
+    font-size: clamp(1.45rem, min(4.6vw, 6vh), 2.5rem);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: #fff;
+    text-wrap: balance;
+}
+
+.mlm-title-accent {
+    color: var(--sitePrimary, #ff5252);
+}
+
+.mlm-lede {
+    max-width: 46ch;
+    margin: 0 0 12px;
+    font-size: clamp(0.92rem, 2.4vw, 1.05rem);
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.mlm-hint {
+    margin: 0 0 22px;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.48);
+}
+
+.mlm-hint-touch {
+    display: none;
+}
+
+/* --- compte à rebours --------------------------------------------------- */
+
+.mlm-countdown {
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(6px, 1.6vw, 12px);
+    margin: 0 0 26px;
+}
+
+.mlm-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: clamp(64px, 17vw, 88px);
+    padding: clamp(8px, 2vw, 12px) clamp(6px, 2vw, 10px);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+}
+
+.mlm-num {
+    font-size: clamp(1.7rem, 6.4vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+.mlm-lab {
+    margin-top: 6px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.52);
+}
+
+.mlm-sep {
+    align-self: center;
+    margin-top: -14px;
+    font-size: clamp(1.2rem, 4vw, 1.7rem);
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.28);
+}
+
+/* --- actions ------------------------------------------------------------ */
+
+.mlm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+}
+
+.mlm-cta {
+    display: inline-block;
+    padding: 14px 28px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    background: var(--sitePrimary, #ff5252);
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(255, 82, 82, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.mlm-cta:hover {
+    filter: brightness(1.06);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 38px rgba(255, 82, 82, 0.38);
+}
+
+.mlm-cta:focus-visible,
+.mlm-later:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+.mlm-later {
+    padding: 8px 4px;
+    font-size: 0.86rem;
+    color: rgba(255, 255, 255, 0.58);
+    cursor: pointer;
+    background: none;
+    border: 0;
+    transition: color 0.2s ease;
+}
+
+.mlm-later:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* --- animations --------------------------------------------------------- */
+
+@keyframes mlm-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes mlm-rise {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* --- responsive --------------------------------------------------------- */
+
+@media (hover: none) {
+    .mlm-hint-hover {
+        display: none;
+    }
+    .mlm-hint-touch {
+        display: inline;
+    }
+    .mlm-close:hover {
+        transform: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .mlm-panel {
+        width: 100%;
+        min-height: min(560px, 88vh);
+        border-radius: 16px;
+    }
+    .mlm-actions {
+        gap: 8px;
+    }
+    .mlm-cta {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+    .mlm-later {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 380px) {
+    .mlm-unit {
+        min-width: 0;
+        flex: 1 1 0;
+    }
+    .mlm-hint {
+        display: none;
+    }
+}
+
+/* Écrans bas (mobile en paysage) : tout se compacte, rien n'est coupé. */
+@media (max-height: 560px) {
+    .mlm-panel {
+        min-height: 0;
+        max-height: 96vh;
+    }
+    .mlm-content {
+        padding-top: 52px;
+        padding-bottom: 20px;
+    }
+    .mlm-eyebrow {
+        margin-bottom: 8px;
+    }
+    .mlm-title {
+        margin-bottom: 10px;
+    }
+    .mlm-lede {
+        margin-bottom: 8px;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+    .mlm-hint {
+        display: none;
+    }
+    .mlm-countdown {
+        margin-bottom: 14px;
+    }
+    .mlm-unit {
+        min-width: 58px;
+        padding: 7px 8px;
+        border-radius: 10px;
+    }
+    .mlm-num {
+        font-size: 1.5rem;
+    }
+    .mlm-sep {
+        margin-top: -10px;
+        font-size: 1.1rem;
+    }
+    .mlm-cta {
+        padding: 11px 22px;
+        font-size: 0.88rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mlm-overlay,
+    .mlm-panel {
+        animation: none;
+    }
+    .mlm-close,
+    .mlm-cta {
+        transition: none;
+    }
+    .mlm-close:hover,
+    .mlm-cta:hover {
+        transform: none;
+    }
+}

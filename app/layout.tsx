@@ -32,10 +32,12 @@ import "./styles/contact.css";
 import "./styles/aside-skeleton.css";
 import "./styles/comments.css";
 import "./styles/dark.css";
+import "./styles/membership-launch.css";
 import "./styles/article-storytelling.css";
 import "./globals.css";
 import Providers from "@/app/providers";
 import GoogleAnalytics from "@/app/components/Analytics/GoogleAnalytics";
+import MembershipLaunchModal from "@/app/components/UI/MembershipLaunch/MembershipLaunchModal";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
 
@@ -162,6 +164,9 @@ export default function RootLayout({
         <body className="ci-phalcon not-logged special-abo variantB page-home v-web {maPoliceConfiguration.className}">
             <Providers>
                 {children}
+                {/* Annonce du lancement du programme de membres (s'auto-désactive
+                    après le 31/08 : cf. LAUNCH_AT dans le composant). */}
+                <MembershipLaunchModal />
             </Providers>
 
             {/* JSON-LD Structured Data - injected after hydration to avoid mismatch */}
