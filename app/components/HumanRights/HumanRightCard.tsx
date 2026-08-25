@@ -82,11 +82,11 @@ export default function HumanRightsCard({ article, sizes = '(max-width: 759px) 1
             </a>
 
             <div className="item-buttons">
-                <TTSButton
+                {/*<TTSButton
                     titleId={titleId}
                     showLabel={false}
                     showStopButton={false}
-                />
+                />*/}
                 <BookmarkButton
                     articleId={article.id}
                     slug={slug}

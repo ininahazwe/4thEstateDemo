@@ -81,11 +81,11 @@ export default function AntiCorruptionCard({ article, sizes = '(max-width: 759px
             </a>
 
             <div className="item-buttons">
-                <TTSButton
+                {/*<TTSButton
                     titleId={titleId}
                     showLabel={false}
                     showStopButton={false}
-                />
+                />*/}
                 <BookmarkButton
                     articleId={article.id}
                     slug={slug}

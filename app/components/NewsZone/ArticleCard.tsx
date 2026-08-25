@@ -81,11 +81,11 @@ export default function ArticleCard({ article, headingLevel: Heading, sizes = '(
 
             {/* Action bar (Listen / Favorites) */}
             <div className="item-buttons">
-                <TTSButton
+                {/*<TTSButton
                     titleId={`title-${article.id}`}
                     showLabel={false}
                     showStopButton={false}
-                />
+                />*/}
                 <BookmarkButton
                     articleId={article.id}
                     slug={slug}

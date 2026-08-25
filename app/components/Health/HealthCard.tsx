@@ -73,11 +73,11 @@ export default function HealthCard({ article, sizes = '(max-width: 759px) 100vw,
             </a>
 
             <div className="item-buttons">
-                <TTSButton
+                {/*<TTSButton
                     titleId={titleId}
                     showLabel={false}
                     showStopButton={false}
-                />
+                />*/}
                 <BookmarkButton
                     articleId={article.id}
                     slug={slug}

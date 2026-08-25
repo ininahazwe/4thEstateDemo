@@ -49,7 +49,7 @@ export default function SubscriptionBanner() {
                 data-ithal="footer_bandeau"
             >
                 {/* Respect strict du texte d'origine avec les espaces insécables (\u00A0) */}
-                Support our journalism {/*now{" "}*/}
+                Support our journalism. Become a member{/*now{" "}*/}
                 {/*<strong>GHS50/month</strong>.*/}
             </Link>
 

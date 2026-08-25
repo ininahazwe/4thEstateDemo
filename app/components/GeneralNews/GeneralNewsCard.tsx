@@ -81,11 +81,11 @@ export default function GeneralNewsCard({ article, index, sizes = '(max-width: 7
             </a>
 
             <div className="item-buttons">
-                <TTSButton
+                {/*<TTSButton
                     titleId={titleId}
                     showLabel={false}
                     showStopButton={false}
-                />
+                />*/}
                 <BookmarkButton
                     articleId={article.id}
                     slug={slug}
