@@ -245,7 +245,7 @@ export default function MembershipLaunchModal() {
                             rel="noopener noreferrer"
                             onClick={dismiss}
                         >
-                            Be there on day one
+                            Join the community now
                         </a>
                         <button type="button" className="mlm-later" onClick={dismiss}>
                             Not now

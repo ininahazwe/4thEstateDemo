@@ -673,4 +673,5 @@ aside[class$=-aside]>[data-flex-grow][data-flex-grow="5"] {
     font-weight: 600;
     line-height: 1;
     display: inline-flex;
+    opacity: 0.5;
 }
