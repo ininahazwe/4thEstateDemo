@@ -63,11 +63,11 @@ export default function CategoryArticleCard({ article, highlight = false }: Cate
                             )}*/}
                         </div>
                         <div className="placeholders">
-                            <TTSButton
+                            {/*<TTSButton
                                 titleId={titleId}
                                 showLabel={false}
                                 showStopButton={false}
-                            />
+                            />*/}
                             <BookmarkButton
                                 articleId={article.id}
                                 slug={slug}

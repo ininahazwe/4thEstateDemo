@@ -22,7 +22,7 @@
     flex-direction: column;
     justify-content: flex-end;
     width: min(760px, 100%);
-    min-height: min(520px, 82vh);
+    min-height: min(420px, 49vh);
     max-height: min(94vh, 780px);
     overflow: hidden;
     border-radius: 20px;
@@ -297,7 +297,7 @@
 @media (max-width: 600px) {
     .mlm-panel {
         width: 100%;
-        min-height: min(560px, 88vh);
+        min-height: min(320px, 35vh);
         border-radius: 16px;
     }
     .mlm-actions {

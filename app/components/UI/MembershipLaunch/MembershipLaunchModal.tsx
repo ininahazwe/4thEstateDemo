@@ -187,7 +187,8 @@ export default function MembershipLaunchModal() {
                     {/*<p className="mlm-eyebrow">The Fourth Estate · Membership</p>*/}
 
                     <h2 id="mlm-title" className="mlm-title">
-                        On Monday 31 August, 2026, <span className="mlm-title-accent">The Fourth Estate Membership Programme</span> opens
+                        Launching <span className="mlm-title-accent">The Fourth Estate Membership</span>.<br/>
+                        Be among the first to join the community
                     </h2>
 
                     {/*<p id="mlm-lede" className="mlm-lede">
@@ -208,7 +209,7 @@ export default function MembershipLaunchModal() {
                             Drag your finger across the page — the redactions lift where the
                             light falls.
                         </span>
-                    </p>*/}
+                    </p>
 
                     <div
                         className="mlm-countdown"
@@ -234,7 +235,7 @@ export default function MembershipLaunchModal() {
                             <span className="mlm-num">{pad(remaining.minutes)}</span>
                             <span className="mlm-lab">min</span>
                         </div>
-                    </div>
+                    </div>*/}
 
                     <div className="mlm-actions">
                         <a
