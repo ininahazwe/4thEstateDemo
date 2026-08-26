@@ -167,7 +167,7 @@ export default function Header() {
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                Renew your support
+                Join the community
                 </a>
             )}
             </div>

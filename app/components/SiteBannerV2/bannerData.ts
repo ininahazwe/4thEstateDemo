@@ -1,5 +1,5 @@
 import { type IconType } from "react-icons/lib";
-import { HeadphonesIcon, PlayCircleIcon } from "lucide-react";
+import { HeadphonesIcon, PlayCircleIcon, SearchCheck } from "lucide-react";
 
 export interface BannerTag {
     label: string;
@@ -32,5 +32,15 @@ export const bannerStaticTags: BannerTag[] = [
         iconColor: "#ffb142",
         ithal: "fourth-estate-podcasts",
         icon: HeadphonesIcon,
+    },
+    {
+        // 💡 Correction bonus : J'ai nettoyé le label qui semblait avoir un résidu de copier-coller
+        label: "Fact-Check Ghana",
+        href: "https://www.fact-checkghana.com",
+        type: "type",
+        iconColor: "red",
+        ithal: "fourth-estate-podcasts",
+        icon: SearchCheck,
     }
+
 ];
