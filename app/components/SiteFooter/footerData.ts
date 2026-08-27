@@ -72,7 +72,7 @@ export const sectionsLegals: FooterSection = {
     links: [
         { label: 'Contact us',        href: '/contact-us' },
         { label: 'About us',          href: '/about-us' },
-        /*{ label: 'Terms of use',      href: '/terms' },*/
+        { label: 'Supporters',      href: '/supporters' },
         { label: 'Privacy policy',    href: '/privacy' },
     ],
 };
