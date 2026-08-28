@@ -16,10 +16,10 @@ export interface BannerTag {
 // 🛑 Correction ici : Ajout de [] après BannerTag pour indiquer un tableau
 export const bannerStaticTags: BannerTag[] = [
     {
-        label: "The Fourth Estate TV",
+        label: "Videos",
         href: "/tv",
         type: "type",
-        ithal: "fourth-estate-tv",
+        ithal: "videos",
         iconColor: "#cd6133",
         icon: PlayCircleIcon,
     },

@@ -1,5 +1,5 @@
 import { type IconType } from "react-icons/lib";
-import { HeadphonesIcon, PlayCircleIcon, SearchCheck } from "lucide-react";
+import { HeadphonesIcon, PlayCircleIcon, SearchCheck, Megaphone } from "lucide-react";
 
 export interface BannerTag {
     label: string;
@@ -17,10 +17,10 @@ export interface BannerTag {
 // 🛑 Correction ici : Ajout de [] après BannerTag pour indiquer un tableau
 export const bannerStaticTags: BannerTag[] = [
     {
-        label: "The Fourth Estate TV",
+        label: "Videos",
         href: "/tv",
         type: "type",
-        ithal: "fourth-estate-tv",
+        ithal: "videos",
         iconColor: "#cd6133",
         icon: PlayCircleIcon,
     },
@@ -41,6 +41,15 @@ export const bannerStaticTags: BannerTag[] = [
         iconColor: "red",
         ithal: "fourth-estate-podcasts",
         icon: SearchCheck,
+    },
+    {
+        // 💡 Correction bonus : J'ai nettoyé le label qui semblait avoir un résidu de copier-coller
+        label: "Whistleblower",
+        href: "/whistleblower",
+        type: "type",
+        iconColor: "blue",
+        ithal: "fourth-estate-podcasts",
+        icon: Megaphone,
     }
 
 ];

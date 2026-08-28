@@ -30,7 +30,7 @@ export default function TvVideoCard({ video, index }: TvVideoCardProps) {
 
                 <div className="item-text">
                     <div className="heading">
-                        <span className="sr-only">The Fourth Estate TV</span>
+                        <span className="sr-only">The Fourth Estate Videos</span>
                         <p id={`title-${video.id}`} className="title">
                             {video.title}
                         </p>

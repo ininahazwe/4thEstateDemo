@@ -23,7 +23,7 @@ interface TvPageProps {
 }
 
 export const metadata = {
-    title: 'The Fourth Estate TV',
+    title: 'The Fourth Estate Videos',
     description: 'Watch the latest videos from The Fourth Estate.',
 };
 

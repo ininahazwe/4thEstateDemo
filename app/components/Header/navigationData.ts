@@ -15,10 +15,10 @@ export const navItems: NavItem[] = [
     { label: "Human Rights", href: "/category/human-rights", type: "section", ithal: "human-rights", target: "" },
     { label: "Our Impact", href: "/category/our-impact", type: "section", ithal: "our-impact", target: "" },
     { label: "Honours", href: "/category/honours", type: "section", ithal: "honours", target: "" },
-    { label: "Opinions", href: "/category/opinions", type: "section", ithal: "opinions", target: "" },
+    /*{ label: "Opinions", href: "/category/opinions", type: "section", ithal: "opinions", target: "" },*/
 
     // Groupes de types / fonctionnalités secondaires
-    { label: "The Fourth Estate TV", href: "/tv", type: "type", ithal: "fourth-estate-tv", icon: "reveil", target: "" },
+    { label: "Videos", href: "/tv", type: "type", ithal: "videos", icon: "reveil", target: "" },
     { label: "Podcasts", href: "/podcasts", type: "type", ithal: "fourth-estate-postcasts", icon: "reveil", target: "" },
     { label: "About Us", href: "/about-us", type: "section", ithal: "About us", icon: "reveil", target: "" },
     { label: "Fact-Check Ghana", href: "https://www.fact-checkghana.com/", type: "section", ithal: "Fact-Check Ghana", icon: "reveil", target: "" },
