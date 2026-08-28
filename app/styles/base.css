@@ -2105,6 +2105,9 @@ label.item-action input:not(:checked)~span[data-icon=toggle-large-off] {
     line-height:1.4;
     text-transform:uppercase
 }
+.site-banner .banner-hot-tags .item.type[data-type=whistleblower]{
+    background: #5a2020;
+}
 .site-banner .banner-hot-tags .item:hover {
     color:var(--sitePrimary)
 }

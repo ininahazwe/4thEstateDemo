@@ -10,50 +10,18 @@ interface WPPost {
   modified: string;
 }
 
-// WordPress caps per_page at 100, so the full catalogue only fits by paging
-// through the REST API. Fetching just page 1 (the previous behaviour) meant
-// the sitemap silently capped out at the 100 most recent articles, however
-// many were actually published — starving Google's discovery of everything
-// older than that.
-const PER_PAGE = 100;
-// Safety cap so a corrupted total-pages header (or a runaway API) can't spin
-// this into an unbounded crawl. 500 pages = 50k posts, in line with the
-// per-sitemap URL limit in Google's sitemap spec; split into a sitemap index
-// if the catalogue ever actually grows past that.
-const MAX_PAGES = 500;
-
 async function getArticles(): Promise<WPPost[]> {
-  const all: WPPost[] = [];
-  let page = 1;
-  let totalPages = 1;
-
   try {
-    do {
-      const response = await fetch(
-        `${WP_API}/posts?per_page=${PER_PAGE}&page=${page}&status=publish&_fields=slug,date,modified`,
-        { next: { revalidate: 3600 } } // Cache for 1 hour
-      );
+    const response = await fetch(
+      `${WP_API}/posts?per_page=100&status=publish&_fields=slug,date,modified`,
+      { next: { revalidate: 3600 } } // Cache for 1 hour
+    );
 
-      if (!response.ok) break;
-
-      if (page === 1) {
-        const totalPagesHeader = response.headers.get('X-WP-TotalPages');
-        const parsed = totalPagesHeader ? parseInt(totalPagesHeader, 10) : 1;
-        totalPages = Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
-      }
-
-      const batch: WPPost[] = await response.json();
-      if (!batch.length) break;
-
-      all.push(...batch);
-      page++;
-    } while (page <= Math.min(totalPages, MAX_PAGES));
+    if (!response.ok) return [];
+    return await response.json();
   } catch {
-    // Return whatever was fetched before the failure rather than nothing —
-    // a partial sitemap still beats an empty one.
+    return [];
   }
-
-  return all;
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -112,7 +112,7 @@ export default function WhistleblowerForm() {
 
             <label className="wb-field">
                 <span className="wb-label">
-                    Subject <span className="wb-required">* (required)</span>
+                    <span className="wb-label">Subject</span>
                 </span>
                 <input className="wb-input" type="text" name="subject" required disabled={sending} />
             </label>

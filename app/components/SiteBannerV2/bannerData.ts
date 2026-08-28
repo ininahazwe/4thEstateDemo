@@ -39,7 +39,7 @@ export const bannerStaticTags: BannerTag[] = [
         href: "https://www.fact-checkghana.com",
         type: "type",
         iconColor: "red",
-        ithal: "fourth-estate-podcasts",
+        ithal: "fact-check-ghana",
         icon: SearchCheck,
     },
     {
@@ -48,7 +48,7 @@ export const bannerStaticTags: BannerTag[] = [
         href: "/whistleblower",
         type: "type",
         iconColor: "blue",
-        ithal: "fourth-estate-podcasts",
+        ithal: "whistleblower",
         icon: Megaphone,
     }
 
