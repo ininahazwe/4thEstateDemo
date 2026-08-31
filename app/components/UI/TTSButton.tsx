@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { Headphones, Pause, Square } from "lucide-react";
+import { useRef } from "react";
+import { Headphones, Pause, Square, Loader2 } from "lucide-react";
+import { useServerTTS } from "./useServerTTS";
 
 interface TTSButtonProps {
     /**
@@ -49,20 +50,15 @@ function extractParagraphText(container: Element | null): string {
 
 /**
  * Mappe le code de langue actif (écrit par LanguageSwitcher sur
- * document.documentElement.lang) vers un code BCP-47 complet attendu par
- * SpeechSynthesisUtterance.lang. Fallback en-US si la langue est absente,
- * inconnue, ou si document n'est pas encore disponible (safety SSR).
+ * document.documentElement.lang) vers le code 2 lettres attendu par
+ * /api/tts (EN/FR/PT/SW). Fallback EN si absent/inconnu, ou si document
+ * n'est pas encore disponible (safety SSR).
  */
-function resolveSpeechLang(): string {
-    if (typeof document === 'undefined') return 'en-US';
-    const map: Record<string, string> = {
-        en: 'en-US',
-        fr: 'fr-FR',
-        pt: 'pt-PT',
-        sw: 'sw-KE',
-    };
+function resolveTTSLang(): string {
+    if (typeof document === 'undefined') return 'EN';
+    const known = new Set(['en', 'fr', 'pt', 'sw']);
     const current = document.documentElement.lang;
-    return map[current] ?? 'en-US';
+    return (known.has(current) ? current : 'en').toUpperCase();
 }
 
 export default function TTSButton({
@@ -74,18 +70,12 @@ export default function TTSButton({
                                       showStopButton = true,
                                       className = '',
                                   }: TTSButtonProps) {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isPaused, setIsPaused] = useState(false);
-    const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+    const { state, play, pause, resume, stop } = useServerTTS();
     const buttonRef = useRef<HTMLButtonElement>(null);
 
-    // Sécurité : arrêter l'audio si le composant est démonté (changement de page,
-    // disparition de la carte d'une liste filtrée, etc.)
-    useEffect(() => {
-        return () => {
-            window.speechSynthesis.cancel();
-        };
-    }, []);
+    const isLoading = state === 'loading';
+    const isPlaying = state === 'playing';
+    const isPaused = state === 'paused';
 
     /**
      * Résout le texte à lire, entièrement côté client au moment du clic —
@@ -109,53 +99,30 @@ export default function TTSButton({
     };
 
     const handleToggleAudio = () => {
-        // 1. Si c'est en cours de lecture, on met en pause
-        if (isPlaying && !isPaused) {
-            window.speechSynthesis.pause();
-            setIsPaused(true);
+        if (isLoading) return; // évite un double clic pendant la génération serveur
+
+        if (isPlaying) {
+            pause();
             return;
         }
 
-        // 2. Si c'est en pause, on reprend
         if (isPaused) {
-            window.speechSynthesis.resume();
-            setIsPaused(false);
+            resume();
             return;
         }
 
-        // 3. Sinon, on lance une nouvelle lecture
         const textToRead = resolveText();
         if (!textToRead) return;
 
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(textToRead);
-        utterance.lang = resolveSpeechLang();
-        utterance.rate = 1.0;
-
-        utterance.onend = () => {
-            setIsPlaying(false);
-            setIsPaused(false);
-        };
-
-        utterance.onerror = () => {
-            setIsPlaying(false);
-            setIsPaused(false);
-        };
-
-        utteranceRef.current = utterance;
-        setIsPlaying(true);
-        window.speechSynthesis.speak(utterance);
+        play(textToRead, resolveTTSLang());
     };
 
     const handleStopAudio = (e: React.MouseEvent) => {
         e.stopPropagation(); // Évite de déclencher le toggle du parent si imbriqué
-        window.speechSynthesis.cancel();
-        setIsPlaying(false);
-        setIsPaused(false);
+        stop();
     };
 
-    const label = isPlaying && !isPaused ? "Pause" : isPaused ? "Resume" : "Listen";
+    const label = isLoading ? "Loading" : isPlaying ? "Pause" : isPaused ? "Resume" : "Listen";
 
     const button = (
         <button
@@ -165,12 +132,15 @@ export default function TTSButton({
             data-model="button"
             title={label}
             aria-describedby={titleId}
+            aria-busy={isLoading}
             data-modal-open="tts-reserved"
             data-audio-url=""
             data-need-js=""
             onClick={handleToggleAudio}
         >
-            {isPlaying && !isPaused ? (
+            {isLoading ? (
+                <Loader2 size={18} strokeWidth={2} className="tts-spin" aria-hidden="true" style={showLabel ? { paddingRight: "4px" } : undefined} />
+            ) : isPlaying ? (
                 <Pause size={18} strokeWidth={2} aria-hidden="true" style={showLabel ? { paddingRight: "4px" } : undefined} />
             ) : (
                 <Headphones size={18} strokeWidth={2} aria-hidden="true" style={showLabel ? { paddingRight: "4px" } : undefined} />

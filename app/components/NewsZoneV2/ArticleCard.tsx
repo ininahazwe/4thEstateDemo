@@ -1,8 +1,8 @@
 'use client';
 
 import { type ArticleData } from './types';
-import {Globe, Headphones} from "lucide-react";
 import Image from "next/image";
+import TTSButton from "@/app/components/UI/TTSButton";
 
 interface ArticleCardProps {
     article: ArticleData;
@@ -10,24 +10,6 @@ interface ArticleCardProps {
     /** Largeur d'affichage reelle du slot, pour le srcset next/image. */
     sizes?: string;
 }
-
-const handlePlayAudio = () => {
-    // 1. Get article text (via ID or class)
-    const articleText = document.getElementById('article-content')?.innerText;
-
-    if (!articleText) return;
-
-    // 2. Stop any ongoing playback
-    window.speechSynthesis.cancel();
-
-    // 3. Create utterance
-    const utterance = new SpeechSynthesisUtterance(articleText);
-    utterance.lang = 'en-GB'; // English language
-    utterance.rate = 1.0;     // Reading speed (0.5 to 2)
-
-    // 4. Start playback
-    window.speechSynthesis.speak(utterance);
-};
 
 export default function ArticleCard({ article, headingLevel: Heading, sizes = '(max-width: 759px) 100vw, 653px' }: ArticleCardProps) {
     const isLive = article.type === 'sirius-live';
@@ -99,15 +81,11 @@ export default function ArticleCard({ article, headingLevel: Heading, sizes = '(
             {/* Action bar (Listen / Favorites) */}
             <div className="item-buttons">
                 {!isLive && (
-                    <button
-                        type="button"
-                        className="tts" // Adjust class according to your CSS
-                        title="Listen to article"
-                        onClick={handlePlayAudio} // Handler for click event
-                    >
-                        <Headphones size={18} strokeWidth={2} aria-hidden="true" />
-                        <span className="sr-only">Listen to article</span>
-                    </button>
+                    <TTSButton
+                        containerSelector="#article-content"
+                        showLabel={false}
+                        showStopButton={false}
+                    />
                 )}
             </div>
         </article>

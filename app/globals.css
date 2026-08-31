@@ -1,0 +1,8 @@
+
+/* Spinner du bouton TTS pendant la generation audio server-side (Piper). */
+.tts-spin {
+    animation: tts-spin 0.8s linear infinite;
+}
+@keyframes tts-spin {
+    to { transform: rotate(360deg); }
+}
