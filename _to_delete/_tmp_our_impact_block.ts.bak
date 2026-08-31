@@ -1,0 +1,232 @@
+
+// ---------------------------------------------------------------------------
+// Filtres secondaires de /category/our-impact — 31/08/2026
+//
+// La page liste les posts de la catégorie WP "our-impact" (id 229, voir
+// CATEGORY_IDS plus haut), avec un filtre optionnel sur la taxonomie custom
+// "impact-category" — les mêmes termes que /impact-category/[slug]
+// (Government Action, Policy Change, Public Awareness, Accountability,
+// Honours). Les deux se combinent en AND côté WP REST
+// (?categories=229&impact-category=<id>) : un post n'apparaît sous un filtre
+// que s'il porte À LA FOIS la catégorie "our-impact" ET ce terme
+// impact-category. "All" = pas de filtre, comportement identique à
+// getCategoryPageData('our-impact') d'avant le 31/08.
+//
+// Fonctions dédiées (plutôt qu'un paramètre optionnel sur
+// getCategoryPageData/getCategoryArticlesOffset) : cette page est la SEULE à
+// avoir des filtres, inutile d'alourdir les ~20 autres pages catégorie qui
+// n'en ont pas.
+// ---------------------------------------------------------------------------
+
+const OUR_IMPACT_FIELDS =
+    '&status=publish' +
+    '&_fields=id,slug,title,excerpt,date,categories,tags,featured_media,format,link';
+
+/**
+ * Les 5 filtres demandés, résolus contre les VRAIS termes impact-category de
+ * WordPress (par nom, insensible à la casse) plutôt que sur des slugs
+ * devinés — un terme renommé ou re-sluggé còté CMS ne casse pas les onglets.
+ * Un filtre dont le terme n'existe pas (encore) côté WP est simplement omis
+ * plutôt que de produire un onglet mort.
+ */
+const OUR_IMPACT_FILTER_LABELS = [
+    'Government Action',
+    'Policy Change',
+    'Public Awareness',
+    'Accountability',
+    'Honours',
+];
+
+export interface OurImpactFilter {
+    slug: string;
+    label: string;
+}
+
+export const getOurImpactFilters = cache(async (): Promise<OurImpactFilter[]> => {
+    const map = await getImpactCategorySlugMap(); // slug -> {id, name}, cache 24h
+    const slugByName = new Map<string, string>();
+    for (const [slug, term] of map) slugByName.set(term.name.toLowerCase(), slug);
+
+    return OUR_IMPACT_FILTER_LABELS
+        .map((label) => {
+            const slug = slugByName.get(label.toLowerCase());
+            return slug ? { slug, label } : null;
+        })
+        .filter((f): f is OurImpactFilter => f !== null);
+});
+
+/** slug de filtre -> id du terme impact-category. `null`/absent/inconnu =
+ *  traité comme "All" plutôt que de renvoyer une erreur. */
+async function resolveOurImpactFilterId(filterSlug?: string | null): Promise<number | null> {
+    if (!filterSlug) return null;
+    const term = await resolveImpactCategory(filterSlug);
+    return term ? term.id : null;
+}
+
+/** Résout la catégorie WP "our-impact" via le map caché 24h, avec repli
+ *  resolveCategory — même stratégie que getCategoryPageData. */
+async function resolveOurImpactCategory(): Promise<WPCategoryResolved | null> {
+    const slugMap = await getCategorySlugMap();
+    const mapped = slugMap.get('our-impact');
+    if (mapped) return { id: mapped.id, name: mapped.name, slug: 'our-impact' };
+    return resolveCategory('our-impact');
+}
+
+export const getOurImpactPageData = cache(async (filterSlug?: string | null): Promise<CategoryData | null> => {
+    const category = await resolveOurImpactCategory();
+    if (!category) return null;
+
+    const impactCategoryId = await resolveOurImpactFilterId(filterSlug);
+    const basePath = '/category/our-impact';
+    const config = getCategoryConfig('our-impact');
+    const title = config.title ?? category.name;
+
+    const url =
+        `${WP_BASE}/posts` +
+        `?categories=${category.id}` +
+        (impactCategoryId ? `&impact-category=${impactCategoryId}` : '') +
+        `&page=1` +
+        `&per_page=${CATEGORY_PER_PAGE}` +
+        OUR_IMPACT_FIELDS;
+
+    // Les tags "section-tags" restent ceux de la catégorie our-impact dans son
+    // ensemble (pas recalculés par filtre) : c'est un outil de navigation pour
+    // toute la page, pas une facette du filtre actif.
+    const [res, sectionTags] = await Promise.all([
+        fetch(url, { next: { revalidate: 600 } }),
+        config.tags ? Promise.resolve<CategoryTag[]>(config.tags) : getCategoryTags(category.id),
+    ]);
+
+    const emptyBase = {
+        title,
+        slug: 'our-impact',
+        seoDescription: config.seoDescription,
+        tags: sectionTags,
+        articles: [] as CategoryArticle[],
+    };
+
+    if (!res.ok) {
+        if (res.status === 400) {
+            return { ...emptyBase, hasMore: false, nextOffset: 0, pagination: { currentPage: 1, totalPages: 0, basePath } };
+        }
+        console.error(`Erreur wpApi [getOurImpactPageData]: ${res.status}`);
+        return null;
+    }
+
+    const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '1');
+    const rawPosts: WPPost[] = await res.json();
+    // Posts consommés côté WP, pas articles affichés (voir CategoryData.nextOffset).
+    const nextOffset = rawPosts.length;
+    const posts = rawPosts.filter((p) => !isVideoPost(p));
+
+    if (!posts.length) {
+        return { ...emptyBase, hasMore: 1 < totalPages, nextOffset, pagination: { currentPage: 1, totalPages, basePath } };
+    }
+
+    const { mediaIds, categoryIds } = extractIds(posts);
+    const [mediaMap, categoryMap] = await Promise.all([
+        fetchMediaBatch(mediaIds),
+        fetchCategoryBatch(categoryIds),
+    ]);
+
+    const articles: CategoryArticle[] = posts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+
+        // Étiquette de carte = catégorie thématique du post (Anti-Corruption,
+        // Environment…), "our-impact" (229) exclu — même règle que la zone
+        // "Our Impact" de la home (getOurImpactArticles) : sinon toutes les
+        // cartes répéteraient "Our Impact" sous une section déjà titrée
+        // "Our Impact".
+        let source = category.name;
+        const thematic = post.categories.find((id) => id !== category.id);
+        if (thematic) {
+            const cat = categoryMap.get(thematic);
+            if (cat) source = cat;
+        }
+
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(index),
+        };
+        if (media) article.image = buildImage(media, index);
+        return article;
+    });
+
+    return {
+        title,
+        slug: 'our-impact',
+        seoDescription: config.seoDescription,
+        tags: sectionTags,
+        articles,
+        hasMore: 1 < totalPages,
+        nextOffset,
+        pagination: { currentPage: 1, totalPages, basePath },
+    };
+});
+
+/**
+ * "Load more" de /category/our-impact, avec le même filtre optionnel que
+ * getOurImpactPageData. Pas un simple appel à loadMoreSlice() (le helper
+ * partagé par catégorie/tag/impact-category) : son étiquette de carte par
+ * défaut est `post.categories[0]`, qui peut être 229 (our-impact) lui-même —
+ * ça reproduirait exactement le bug d'incohérence corrigé le 19/08 (page 1 et
+ * "Load more" affichant deux étiquettes différentes), cette fois entre le
+ * premier lot (règle "catégorie thématique" ci-dessus) et les suivants.
+ */
+export const getOurImpactArticlesOffset = cache(async (
+    offset: number,
+    limit: number = 5,
+    filterSlug?: string | null,
+): Promise<OffsetSlice> => {
+    const category = await resolveOurImpactCategory();
+    if (!category) return { articles: [], hasMore: false, nextOffset: offset };
+
+    const impactCategoryId = await resolveOurImpactFilterId(filterSlug);
+
+    const buildUrl = (wpOffset: number, perPage: number) =>
+        `${WP_BASE}/posts` +
+        `?categories=${category.id}` +
+        (impactCategoryId ? `&impact-category=${impactCategoryId}` : '') +
+        `&offset=${wpOffset}` +
+        `&per_page=${perPage}` +
+        OUR_IMPACT_FIELDS;
+
+    const { posts, nextOffset, hasMore } = await fetchDisplayableSlice(buildUrl, offset, limit);
+    if (!posts.length) return { articles: [], hasMore, nextOffset };
+
+    const { mediaIds, categoryIds } = extractIds(posts);
+    const [mediaMap, categoryMap] = await Promise.all([
+        fetchMediaBatch(mediaIds),
+        fetchCategoryBatch(categoryIds),
+    ]);
+
+    const articles: CategoryArticle[] = posts.map((post, index) => {
+        const media = mediaMap.get(post.featured_media);
+
+        // Même règle "catégorie thématique" que getOurImpactPageData — voir le
+        // commentaire ci-dessus sur pourquoi loadMoreSlice() ne convient pas ici.
+        let source = category.name;
+        const thematic = post.categories.find((id) => id !== category.id);
+        if (thematic) {
+            const cat = categoryMap.get(thematic);
+            if (cat) source = cat;
+        }
+
+        const article: CategoryArticle = {
+            id: `post-${post.id}`,
+            href: buildHref(post),
+            title: cleanHtmlTitle(post.title.rendered),
+            source,
+            publishedAt: formatWpDate(post.date),
+            imagePriority: imagePriority(offset + index),
+        };
+        if (media) article.image = buildImage(media, offset + index);
+        return article;
+    });
+
+    return { articles, hasMore, nextOffset };
+});

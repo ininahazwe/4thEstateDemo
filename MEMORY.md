@@ -1584,3 +1584,46 @@ visites »).
 
 **Reste à faire** : `REVALIDATE_SECRET` dans cPanel Application Manager, les
 deux constantes dans wp-config.php, déployer les mu-plugins, push pour la route.
+
+### 2026-08-17 — Le site tourne en Cloudflare « Flexible » (dette ouverte)
+
+Sondes croisées sur `/`, `/robots.txt`, `/abonnements`, `/podcasts`,
+`/api/revalidate` :
+
+```
+origine-http  : 200 partout   → Passenger OK
+origine-https : 403 / 404     → Passenger PAS branché sur le vhost SSL
+public        : 200 partout
+```
+
+Conclusion : Cloudflare parle à l'origine en **HTTP clair** (mode Flexible).
+C'est ce qui a rendu le site visible sans que l'include SSL n'ait jamais été
+créé — `ssl/2_4/dxtrmfwa/thefourthestategh.com/` ne contient toujours que
+`wp-toolkit.conf`.
+
+⚠️ **Enjeu sécurité** : le trafic entre l'edge Cloudflare et le serveur circule
+en clair, y compris les POST de `/api/whistleblower`, `/api/contact` et les
+cookies de session NextAuth. Point le plus sérieux encore ouvert.
+
+Le `403` sur `/` contre `404` ailleurs = Apache sert le docroot vide
+(`Options -Indexes` → 403 sur l'index, 404 sur les fichiers absents).
+
+**Piste à retenter (conditions changées)** : l'origine HTTPS renvoie désormais
+du 403/404 **applicatif** et non une erreur TLS → le vhost SSL existe (grâce au
+certificat d'origine Cloudflare installé) et lit le docroot. Donc un
+`.htaccess` avec les directives Passenger dans `~/public_html/TFE/` SERA lu sur
+le port 443, ce qui n'était pas le cas au premier essai (pas de certificat →
+pas de vhost SSL → `.htaccess` jamais lu).
+⚠️ Ce `.htaccess` s'applique aussi au vhost HTTP qui sert la prod : tester les
+deux colonnes et garder `rm` sous la main.
+
+**Sinon** : ticket hébergeur `/scripts/ensure_vhost_includes --user=dxtrmfwa`
++ `/scripts/restartsrv_httpd`.
+
+⛔ **NE PAS passer Cloudflare en Full ou Full (strict) avant** que l'origine ne
+réponde 200 en HTTPS — ça couperait le site immédiatement.
+
+Note ouverte : j'avais prédit qu'un mode Flexible zone-wide casserait `cms.` et
+`membership.` (WordPress en `siteurl` https → boucle de redirection). Ce n'est
+pas arrivé — soit une Configuration Rule limite Flexible à l'apex, soit
+wp-config gère `HTTP_X_FORWARDED_PROTO`. À élucider si on touche au mode SSL.

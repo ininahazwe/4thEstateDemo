@@ -279,6 +279,14 @@ async function callGroq(
             model: GROQ_MODEL,
             temperature: 0.2,
             response_format: { type: 'json_object' },
+            // openai/gpt-oss-* sont des modeles "reasoning" : par defaut leur
+            // raisonnement interne peut polluer/consommer le champ `content`,
+            // ce qui casse la validation JSON de Groq (json_validate_failed).
+            // include_reasoning:false le sort du `content` ; reasoning_effort
+            // low limite le budget de tokens qu'il y consacre. Sans effet sur
+            // les modeles non-reasoning (ex. llama), qui ignorent ces champs.
+            reasoning_effort: 'low',
+            include_reasoning: false,
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: numbered },

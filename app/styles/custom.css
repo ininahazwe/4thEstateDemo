@@ -31,7 +31,7 @@
 }
 
 .item-buttons {
-    opacity: 0.4;
+    opacity: 0.2;
     transition: opacity 0.2s ease;
 }
 
@@ -407,4 +407,23 @@ li.wp-block-list{
         width: 72px;
         height: 72px;
     }
+}
+
+/* -----------------------------------------------------------------------
+ * /category/our-impact — bandeau de filtres (31/08/2026)
+ *
+ * data-model="button"/"button primary" (base.css [data-model^=button]) donne
+ * deja l'etat inactif/actif ; les regles ci-dessous ne portent que sur la
+ * mise en page du bandeau lui-meme (voir OurImpactFilterRiver.tsx).
+ * ----------------------------------------------------------------------- */
+.our-impact-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.our-impact-filters [data-model^="button"] {
+    font-size: 13px;
+    padding: 8px 16px;
 }

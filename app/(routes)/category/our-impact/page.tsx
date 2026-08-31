@@ -1,16 +1,13 @@
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import Script from 'next/script';
 import type { Metadata } from 'next';
 import CategoryHeader from '@/app/components/Category/CategoryHeader';
-import CategoryRiverLoadMore from '@/app/components/Category/CategoryRiverLoadMore';
-import ArticleAsideStream from '@/app/components/Article/ArticleAsideStream';
-import ArticleAsideSkeleton from '@/app/components/Article/ArticleAsideSkeleton';
+import OurImpactFilterRiver from '@/app/components/Category/OurImpactFilterRiver';
 import {
-    getCategoryPageData,
+    getOurImpactPageData,
+    getOurImpactFilters,
     getBannerCategories,
     getLatestBannerArticles,
-    getAllCategorySlugs,
 } from '@/app/services/wpApi';
 import { BANNER_CATEGORY_SLUGS } from '@/app/components/SiteBanner/bannerCategorySlugs';
 import Header from "@/app/components/Header/Header";
@@ -18,37 +15,32 @@ import SubscriptionBanner from "@/app/components/SubscriptionBanner";
 import SiteFooter from "@/app/components/SiteFooter/SiteFooter";
 import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 
-interface CategoryPageProps {
-    params: Promise<{ slug: string }>;
-}
+// ---------------------------------------------------------------------------
+// /category/our-impact — route dédiée (31/08/2026)
+//
+// Un dossier littéral `category/our-impact/` est prioritaire sur
+// `category/[slug]/` dans le App Router : cette URL ne passe donc plus JAMAIS
+// par la route générique (retirée de son generateStaticParams, voir
+// `../[slug]/page.tsx`). Nécessaire pour deux différences que les ~20 autres
+// pages catégorie n'ont pas :
+//
+// 1. Pas d'aside ("article-aside") — data-columns="1" + section-content en
+//    data-column="full", même pattern que /about-us, /privacy, /subscribe.
+// 2. Un bandeau de filtres (All + termes impact-category) au-dessus de la
+//    rivière — voir OurImpactFilterRiver.
+//
+// Toujours STATIQUE comme avant : aucune lecture de searchParams côté
+// serveur. Le rendu initial est toujours "All" (getOurImpactPageData() sans
+// argument) ; les filtres sont gérés entièrement côté client contre
+// /api/category/our-impact/more, pas par un re-rendu serveur par filtre.
+// ---------------------------------------------------------------------------
 
-// ISR : la page catégorie est revalidée toutes les 10 min (comme les fetchs).
 export const revalidate = 600;
 
-// Prébuild des pages catégorie au build, à partir des slugs WP. Aucune lecture
-// de searchParams (la pagination se fait via "Load more" -> /api/category/.../more,
-// pas via ?page=), donc la page est réellement STATIQUE (parité avec la home) :
-// la chaîne resolve->posts->médias tourne au build/revalidation, plus jamais sur
-// le chemin critique d'une requête utilisateur. dynamicParams (défaut true)
-// laisse un slug non prébuild se rendre à la demande.
-export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
-    try {
-        const slugs = await getAllCategorySlugs();
-        // "our-impact" a sa propre route littérale (app/(routes)/category/our-impact/page.tsx,
-        // filtres + pas d'aside) depuis le 31/08/2026 : elle est prioritaire sur
-        // cette route dynamique dans le App Router, donc la construire ici en
-        // double n'a aucun effet utile — juste un slug prébuild en trop.
-        return slugs.filter((slug) => slug !== 'our-impact').map((slug) => ({ slug }));
-    } catch {
-        return [];
-    }
-}
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
 
-export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-    const { slug } = await params;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
-
-    const data = await getCategoryPageData(slug);
+export async function generateMetadata(): Promise<Metadata> {
+    const data = await getOurImpactPageData();
     if (!data) return {};
 
     return {
@@ -57,13 +49,13 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
         keywords: [data.title, "news", "articles"],
         openGraph: {
             type: "website",
-            url: `${baseUrl}/category/${slug}`,
+            url: `${baseUrl}/category/our-impact`,
             title: data.title,
             description: data.seoDescription || `${data.title} news`,
             locale: "en_GH",
         },
         alternates: {
-            canonical: `${baseUrl}/category/${slug}`,
+            canonical: `${baseUrl}/category/our-impact`,
         },
         robots: {
             index: true,
@@ -72,15 +64,10 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     };
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
-    const { slug } = await params;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://thefourthestategh.com";
-
-    // getMostReadArticles sorti du Promise.all : il est désormais fetché à
-    // l'intérieur de <ArticleAsideStream> et streamé via <Suspense>, pour ne
-    // pas bloquer le rendu du contenu principal.
-    const [data, bannerArticles, bannerCategories] = await Promise.all([
-        getCategoryPageData(slug),
+export default async function OurImpactCategoryPage() {
+    const [data, filters, bannerArticles, bannerCategories] = await Promise.all([
+        getOurImpactPageData(),
+        getOurImpactFilters(),
         getLatestBannerArticles(),
         getBannerCategories(BANNER_CATEGORY_SLUGS),
     ]);
@@ -102,7 +89,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 "@type": "ListItem",
                 position: 2,
                 name: data.title,
-                item: `${baseUrl}/category/${slug}`,
+                item: `${baseUrl}/category/our-impact`,
             },
         ],
     };
@@ -113,7 +100,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         "@type": "CollectionPage",
         name: data.title,
         description: data.seoDescription || `Articles in the ${data.title} category`,
-        url: `${baseUrl}/category/${slug}`,
+        url: `${baseUrl}/category/our-impact`,
         mainEntity: {
             "@type": "ItemList",
             itemListElement: data.articles.slice(0, 10).map((article, idx) => ({
@@ -129,13 +116,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <>
             {/* JSON-LD Structured Data - injected after hydration */}
             <Script
-                id={`category-breadcrumb-${slug}`}
+                id="category-breadcrumb-our-impact"
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
                 strategy="afterInteractive"
             />
             <Script
-                id={`category-collection-${slug}`}
+                id="category-collection-our-impact"
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
                 strategy="afterInteractive"
@@ -143,26 +130,20 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
             <Header />
 
-            {/*<SiteBanner articles={bannerArticles} categories={bannerCategories} />*/}
-
             <SiteBannerV2 articles={bannerArticles} categories={bannerCategories} showHighlights={false} />
 
             <main className="site-main" id="site-main">
-                <section className="section" data-columns="2" data-section={data.slug}>
-                    <div className="section-content" data-column="left">
-                        <CategoryHeader title={data.title} tags={data.tags} />
-                        <CategoryRiverLoadMore
-                            slug={slug}
+                <section className="section" data-columns="1" data-section="our-impact">
+                    <div className="section-content" data-column="full">
+                       {/* <CategoryHeader title={data.title} tags={data.tags} />*/}
+                        <OurImpactFilterRiver
                             initialArticles={data.articles}
                             initialHasMore={data.hasMore}
                             initialNextOffset={data.nextOffset}
+                            filters={filters}
                             batchSize={5}
                         />
                     </div>
-
-                    <Suspense fallback={<ArticleAsideSkeleton />}>
-                        <ArticleAsideStream />
-                    </Suspense>
                 </section>
             </main>
 
