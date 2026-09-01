@@ -18,7 +18,7 @@ import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
  */
 
 /** Cible du compte à rebours. Le Z est important : heure GMT, comme Accra. */
-const LAUNCH_AT = "2026-08-31T00:00:00Z";
+const LAUNCH_AT = "2026-09-29T00:00:00Z";
 /** Délai avant ouverture, en ms. */
 const OPEN_DELAY_MS = 5000;
 /** Une fois fermé, on ne réaffiche pas dans cette session d'onglet.
