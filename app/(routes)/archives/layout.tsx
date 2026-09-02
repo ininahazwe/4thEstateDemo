@@ -19,7 +19,6 @@ export default async function ArchivesLayout({ children }: { children: React.Rea
         <>
             <Header />
 
-            <SiteBanner articles={bannerArticles} categories={bannerCategories} />
 
             {children}
 
