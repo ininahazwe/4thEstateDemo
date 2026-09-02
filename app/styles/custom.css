@@ -97,6 +97,10 @@ p.wp-block-paragraph, .wp-block-heading{
     margin-top: 1rem;
 }
 
+p.wp-block-paragraph a{
+    color: var(--siteLogo);
+}
+
 h2.wp-block-heading{
     font-size: 30px;
 }
@@ -426,4 +430,26 @@ li.wp-block-list{
 .our-impact-filters [data-model^="button"] {
     font-size: 13px;
     padding: 8px 16px;
+}
+
+/*
+ * Style "front" natif WP — sert uniquement si l'article est vu directement
+ * sur le CMS (wp_head chargé). Le front Next.js headless ne charge PAS ce
+ * fichier : porter l'équivalent dans app/styles/custom.css, à côté des
+ * règles .wp-block-gallery existantes (voir composant-gallery-classique.md),
+ * et brancher le script de défilement (Swiper ou maison) dans ArticleContent.tsx.
+ */
+
+.tfe-carousel {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tfe-carousel-slide {
+    flex: 0 0 80%;
+    scroll-snap-align: start;
+    margin: 0;
 }

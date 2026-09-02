@@ -1,11 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { HeadphonesIcon, PlayCircleIcon, CalendarClockIcon } from 'lucide-react';
+import { HeadphonesIcon, PlayCircleIcon, CalendarClockIcon, NetworkIcon, Handshake } from 'lucide-react';
 import { getHighlights, type HighlightItem } from '@/app/services/wpApi.highlight';
 
 /** Icône par défaut quand pas de thumbnail (podcast/video/upcoming — serie a toujours une vraie image). */
 function HighlightFallbackIcon({ type }: { type: 'podcast' | 'video' | 'upcoming' }) {
-    const Icon = type === 'podcast' ? HeadphonesIcon : type === 'video' ? PlayCircleIcon : CalendarClockIcon;
+    const Icon = type === 'podcast' ? HeadphonesIcon : type === 'video' ? PlayCircleIcon : NetworkIcon;
     return <Icon size={20} aria-hidden="true" />;
 }
 
