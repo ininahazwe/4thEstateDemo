@@ -433,23 +433,132 @@ li.wp-block-list{
 }
 
 /*
- * Style "front" natif WP — sert uniquement si l'article est vu directement
- * sur le CMS (wp_head chargé). Le front Next.js headless ne charge PAS ce
- * fichier : porter l'équivalent dans app/styles/custom.css, à côté des
- * règles .wp-block-gallery existantes (voir composant-gallery-classique.md),
- * et brancher le script de défilement (Swiper ou maison) dans ArticleContent.tsx.
+ * Add this block to app/styles/custom.css, next to the existing
+ * .wp-block-gallery rules (see composant-gallery-classique.md).
+ *
+ * Base rules (.tfe-carousel, .tfe-carousel-slide) apply immediately from
+ * the block's static HTML — even with JS disabled, slides stack as a plain
+ * scrollable strip. The --enhanced / -track / -arrow / -dots rules only
+ * take effect once tfeCarousel.ts has run (progressive enhancement).
  */
 
 .tfe-carousel {
+    position: relative;
+    margin: 0;
+}
+
+.tfe-carousel-slide {
+    margin: 0;
+}
+
+.tfe-carousel-slide img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.tfe-carousel-slide figcaption {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+/* Before JS runs: simple swipeable strip, no arrows/dots yet. */
+.tfe-carousel:not(.tfe-carousel--enhanced) {
     display: flex;
     gap: 12px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
 }
-
-.tfe-carousel-slide {
-    flex: 0 0 80%;
+.tfe-carousel:not(.tfe-carousel--enhanced) .tfe-carousel-slide {
+    flex: 0 0 90%;
     scroll-snap-align: start;
-    margin: 0;
+}
+
+/* After JS runs: real sliding carousel. */
+.tfe-carousel--enhanced {
+    overflow: hidden;
+    border-radius: 6px;
+}
+
+.tfe-carousel-track {
+    display: flex;
+    transition-property: transform;
+    transition-timing-function: ease-in-out;
+    /* transition-duration is set inline by tfeCarousel.ts (TRANSITION_MS) */
+}
+
+.tfe-carousel--enhanced .tfe-carousel-slide {
+    flex: 0 0 100%;
+}
+
+.tfe-carousel-slide figcaption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 8px 12px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+    color: #fff;
+    margin-top: 0;
+}
+
+.tfe-carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tfe-carousel-arrow:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+.tfe-carousel-arrow--prev {
+    left: 12px;
+}
+.tfe-carousel-arrow--next {
+    right: 12px;
+}
+
+.tfe-carousel-dots {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+.tfe-carousel-dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+}
+.tfe-carousel-dot.is-active {
+    background: #fff;
+}
+
+@media (max-width: 600px) {
+    .tfe-carousel-arrow {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
 }

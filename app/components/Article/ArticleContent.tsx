@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
+import { initCarousels } from "@/app/scripts/tfeCarousel";
 import ReadMoreCard from "./ReadMoreCard";
 import { WpArticleCard } from "@/app/services/wpApi.article";
 
@@ -118,6 +119,9 @@ export default function ArticleContent({
 
     useEffect(() => {
         if (!containerRef.current || !mounted) return;
+
+        // Active la navigation (flèches, points, swipe) des blocs .tfe-carousel
+        initCarousels(containerRef.current);
 
         // Configuration de la Lightbox ciblant les liens générés dynamiquement
         const lightbox = new PhotoSwipeLightbox({
