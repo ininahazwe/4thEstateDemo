@@ -27,6 +27,7 @@ import SiteBannerV2 from "@/app/components/SiteBannerV2/SiteBannerV2";
 import NewsZoneV2 from "@/app/components/NewsZoneV2/NewsZoneV2";
 import VideoZone from "@/app/components/VideoZone/VideoZone";
 import NewsletterSignup from "@/app/components/NewsletterSignup/NewsletterSignup";
+import HeroStacked from "@/app/components/Hero/HeroStacked";
 import Hero from "@/app/components/Hero/Hero";
 
 
@@ -84,8 +85,9 @@ export default async function App() {
                             <NewsZoneV2
                                 zone1Articles={zone1}
                                 zone2Articles={zone2}
-                            />*/}
+                            />
 
+                            <HeroStacked />*/}
                             <Hero />
 
                             <OurImpactZone articles={impactNews} />

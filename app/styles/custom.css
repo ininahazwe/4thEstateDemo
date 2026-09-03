@@ -222,6 +222,47 @@ li.wp-block-list{
     }
 }
 
+/* ─── Bloc Gutenberg "File" (PDF, articles classiques) ───────────────────
+   WordPress emet un <object class="wp-block-file__embed"> pour l'apercu natif
+   du fichier (lecteur PDF du navigateur), initialement "hidden" en attendant
+   son script d'interactivite core/file — jamais charge sur ce front headless.
+   ArticleContent.tsx leve ce "hidden" ; ce bloc ne fait que le styliser,
+   wp-block-library n'etant pas charge ici non plus. Couleurs neutres a
+   ajuster si besoin pour coller a la charte. */
+.wp-block-file {
+    margin: 24px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.wp-block-file__embed {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.wp-block-file > a:first-of-type {
+    font-size: 14px;
+    color: #666;
+    text-decoration: underline;
+}
+
+.wp-block-file__button {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: #222;
+    color: #fff !important;
+    text-decoration: none !important;
+    font-size: 14px;
+}
+
+.wp-block-file__button:hover {
+    opacity: 0.85;
+}
+
 .pswp__custom-caption {
     position: absolute;
     left: 0;

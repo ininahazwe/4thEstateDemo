@@ -15,6 +15,7 @@ import "./styles/latest-podcast-widget.css";
 import "./styles/video-zone.css";
 import "./styles/newsletter-signup.css";
 import "./styles/hero-gallery.css";
+import "./styles/hero-stacked-gallery.css";
 import "./styles/article.css";
 import "./styles/article-card-theme-lock.css";
 import "./styles/share-popup.css";

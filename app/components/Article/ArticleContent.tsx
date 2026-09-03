@@ -69,6 +69,19 @@ function prepareAndInterleaveContent(
         }
     });
 
+    // 2. Bloc Gutenberg "File" (PDF, etc.) : WordPress genere deja un
+    // <object class="wp-block-file__embed" hidden> pour l'apercu natif du
+    // fichier (lecteur PDF du navigateur), mais ce "hidden" n'est leve que par
+    // le script d'interactivite core/file (data-wp-bind--hidden) — jamais
+    // charge ici puisque ce front recoit du content.rendered brut, sans les
+    // scripts wp-block-library. Sans intervention, l'apercu reste invisible et
+    // seuls le titre du fichier et le bouton "Download" s'affichent. On leve
+    // nous-memes ce "hidden" pour afficher l'apercu natif ; lien et bouton
+    // restent inchanges.
+    doc.querySelectorAll(".wp-block-file__embed[hidden]").forEach((embed) => {
+        embed.removeAttribute("hidden");
+    });
+
     const children = Array.from(doc.body.children);
     const nodes: React.ReactNode[] = [];
     let cardIndex = 0;
