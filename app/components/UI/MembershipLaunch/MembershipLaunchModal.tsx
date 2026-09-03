@@ -187,7 +187,7 @@ export default function MembershipLaunchModal() {
                     {/*<p className="mlm-eyebrow">The Fourth Estate · Membership</p>*/}
 
                     <h2 id="mlm-title" className="mlm-title">
-                        We launched <span className="mlm-title-accent">The Fourth Estate Membership</span>.<br/>
+                        We have launched <span className="mlm-title-accent">The Fourth Estate Membership</span>.<br/>
                         Be among the first to join the community
                     </h2>
 
