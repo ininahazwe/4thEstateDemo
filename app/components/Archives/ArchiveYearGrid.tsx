@@ -15,12 +15,20 @@ interface ArchiveYearGridProps {
  * afficher un spinner sur le bouton cliqué pendant la navigation ; le
  * loading.tsx de la route prend ensuite le relais (skeleton pleine page).
  * Aucun appel réseau pour le modal lui-même : les 12 mois sont toujours
- * proposés (un mois sans publication affiche une liste vide côté page mois).
+ * proposés (un mois sans publication affiche une liste vide côté page mois),
+ * sauf pour l'année en cours où les mois pas encore atteints sont grisés
+ * (`disabled`, même style que le spinner de chargement) — ils n'ont par
+ * définition aucun contenu.
  */
 export default function ArchiveYearGrid({ years }: ArchiveYearGridProps) {
     const [openYear, setOpenYear] = useState<number | null>(null);
     const [pendingMonth, setPendingMonth] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
+    // Calculés au rendu client (composant 'use client', modal ouvert seulement
+    // après interaction) : pas de risque de désaccord SSR/hydratation.
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
     const dialogRef = useRef<HTMLDivElement>(null);
     const lastTriggerRef = useRef<HTMLButtonElement | null>(null);
     const router = useRouter();
@@ -114,15 +122,19 @@ export default function ArchiveYearGrid({ years }: ArchiveYearGridProps) {
 
                         <ul className="archives-month-grid">
                             {MONTH_NAMES.map((name, index) => {
-                                const month = String(index + 1).padStart(2, '0');
+                                const monthNum = index + 1;
+                                const month = String(monthNum).padStart(2, '0');
                                 const isThisPending = isPending && pendingMonth === month;
+                                const isFuture = openYear === currentYear && monthNum > currentMonth;
                                 return (
                                     <li key={name}>
                                         <button
                                             type="button"
                                             className={`archives-month-item${isThisPending ? ' is-loading' : ''}`}
-                                            disabled={isPending}
+                                            disabled={isPending || isFuture}
                                             aria-busy={isThisPending}
+                                            aria-disabled={isFuture}
+                                            title={isFuture ? 'No publications yet' : undefined}
                                             onClick={() => openYear !== null && goToMonth(openYear, month)}
                                         >
                                             {isThisPending && (

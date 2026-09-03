@@ -85,10 +85,10 @@ export default async function App() {
                             <NewsZoneV2
                                 zone1Articles={zone1}
                                 zone2Articles={zone2}
-                            />
+                            />*/}
 
-                            <HeroStacked />*/}
-                            <Hero />
+                            <HeroStacked />
+                            {/*<Hero />*/}
 
                             <OurImpactZone articles={impactNews} />
 

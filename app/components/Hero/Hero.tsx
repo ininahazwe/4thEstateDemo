@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { getSpotlightArticles } from '@/app/services/wpApi.spotlight';
 import { splitTitle } from '@/app/services/titleParts';
+import HeroCardVideo from './HeroCardVideo';
 
 /**
  * Hero — galerie de 3 articles en grandes cartes verticales, image plein
@@ -29,18 +30,30 @@ export default async function Hero() {
                     className="hero-gallery-card"
                     key={article.id}
                 >
-                    {article.image && (
-                        <Image
-                            src={article.image.src}
-                            alt=""
-                            fill
-                            sizes="(min-width: 760px) 33vw, 80vw"
-                            priority={index === 0}
-                            style={{ objectFit: 'cover' }}
-                        />
+                    {article.heroVideo ? (
+                        <HeroCardVideo src={article.heroVideo} poster={article.image?.src} />
+                    ) : (
+                        article.image && (
+                            <Image
+                                src={article.image.src}
+                                alt=""
+                                fill
+                                sizes="(min-width: 760px) 33vw, 80vw"
+                                priority={index === 0}
+                                style={{ objectFit: 'cover' }}
+                            />
+                        )
                     )}
 
                     <div className="hero-gallery-scrim" aria-hidden="true" />
+
+                    {article.heroVideo && (
+                        <span className="hero-card-play-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                        </span>
+                    )}
 
                     <div className="hero-gallery-caption">
                         {/* Un seul bloc de titre, coupe en deux uniquement a

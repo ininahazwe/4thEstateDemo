@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { getSpotlightArticles } from '@/app/services/wpApi.spotlight';
 import { splitTitle } from '@/app/services/titleParts';
+import HeroCardVideo from './HeroCardVideo';
 
 /**
  * HeroStacked — variante du Hero où le texte est séparé de l'image.
@@ -26,15 +27,27 @@ export default async function HeroStacked() {
                         key={article.id}
                     >
                         <div className="hero-stacked-gallery-media">
-                            {article.image && (
-                                <Image
-                                    src={article.image.src}
-                                    alt=""
-                                    fill
-                                    sizes="(min-width: 760px) 33vw, 80vw"
-                                    priority={index === 0}
-                                    style={{ objectFit: 'cover' }}
-                                />
+                            {article.heroVideo ? (
+                                <HeroCardVideo src={article.heroVideo} poster={article.image?.src} />
+                            ) : (
+                                article.image && (
+                                    <Image
+                                        src={article.image.src}
+                                        alt=""
+                                        fill
+                                        sizes="(min-width: 760px) 33vw, 80vw"
+                                        priority={index === 0}
+                                        style={{ objectFit: 'cover' }}
+                                    />
+                                )
+                            )}
+
+                            {article.heroVideo && (
+                                <span className="hero-card-play-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                        <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                </span>
                             )}
                         </div>
 

@@ -50,6 +50,15 @@ export interface SpotlightArticle {
         height: number;
         blurDataURL: string;
     };
+    /**
+     * Video de vignette, jouee en boucle a la place de l'image mise en avant —
+     * celle-ci reste renseignee et sert de poster. Alimentee par le meme champ
+     * "Hero video" que le hero d'article (mu-plugin tfe-hero-video.php), expose
+     * en REST sous `hero_video` a la racine du post. Voir ArticleHeroVideo.tsx
+     * (meme convention, cf. WpArticle.heroVideo dans wpApi.article.ts) et
+     * HeroCardVideo.tsx pour la lecture cote vignette.
+     */
+    heroVideo?: string;
 }
 
 interface WPCompositionEntry {
@@ -80,6 +89,7 @@ interface WPSpotlightPost {
     title: { rendered: string };
     featured_media: number;
     acf?: { subtitle?: string };
+    hero_video?: string | null;
 }
 
 /** Même placeholder LQIP que wpApi.ts (SVG gris 640×426) — dupliqué, fichier autonome. */
@@ -91,6 +101,16 @@ const BLUR_PLACEHOLDER =
  * 'large' d'abord, pas medium_large, pour éviter un upscale visible.
  */
 const IMAGE_SIZE_PRIORITY = ['large', 'medium_large', '1536x1536'];
+
+/**
+ * Lit le champ REST `hero_video`, expose a la racine de l'objet post par le
+ * mu-plugin `tfe-hero-video.php` — pas dans `acf`. Duplique de
+ * pickHeroVideoUrl() (wpApi.article.ts) : fichier autonome, pas d'import
+ * croise wpApi.article.ts (meme convention que le reste de ce fichier).
+ */
+function pickHeroVideoUrl(value: unknown): string | undefined {
+    return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
 
 function cleanHtmlTitle(title: string): string {
     return decode(title).replace(/<[^>]*>/g, '').trim();
@@ -190,7 +210,7 @@ export async function getSpotlightArticles(limit: number = 3): Promise<Spotlight
         // (date décroissante) écraserait le choix éditorial.
         const res = await fetch(
             `${WP_BASE}/posts?include=${ids.join(',')}&orderby=include&per_page=${ids.length}` +
-                `&status=publish&_fields=id,slug,date,title,featured_media,acf`,
+                `&status=publish&_fields=id,slug,date,title,featured_media,acf,hero_video`,
             { next: { revalidate: 600 } }
         );
 
@@ -217,6 +237,7 @@ export async function getSpotlightArticles(limit: number = 3): Promise<Spotlight
                 subtitle: (post.acf?.subtitle || '').trim() || undefined,
                 publishedAtISO: post.date,
                 position: index + 1,
+                heroVideo: pickHeroVideoUrl(post.hero_video),
             };
 
             if (media) {
