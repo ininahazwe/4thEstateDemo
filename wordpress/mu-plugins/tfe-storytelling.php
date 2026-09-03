@@ -62,7 +62,7 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+    exit;
 }
 
 /**
@@ -79,24 +79,24 @@ define( 'TFE_STORYTELLING_MAX_DEPTH', 10 );
 add_action( 'rest_api_init', 'tfe_storytelling_register_rest_field' );
 
 function tfe_storytelling_register_rest_field() {
-	register_rest_field(
-		'post',
-		'blocks',
-		array(
-			'get_callback'    => 'tfe_storytelling_get_blocks',
-			// Explicite : aucun chemin d'ecriture. Le champ est calcule, jamais recu.
-			'update_callback' => null,
-			'schema'          => array(
-				'description' => 'Arbre de blocs Gutenberg (posts storytelling uniquement).',
-				'type'        => array( 'array', 'null' ),
-				// Jamais expose a l'editeur de blocs. Voir la note sur le piege
-				// en tete de fichier : ceci ne remplace pas la garde dans le
-				// callback, il la complete.
-				'context'     => array( 'view' ),
-				'readonly'    => true,
-			),
-		)
-	);
+    register_rest_field(
+        'post',
+        'blocks',
+        array(
+            'get_callback'    => 'tfe_storytelling_get_blocks',
+            // Explicite : aucun chemin d'ecriture. Le champ est calcule, jamais recu.
+            'update_callback' => null,
+            'schema'          => array(
+                'description' => 'Arbre de blocs Gutenberg (posts storytelling uniquement).',
+                'type'        => array( 'array', 'null' ),
+                // Jamais expose a l'editeur de blocs. Voir la note sur le piege
+                // en tete de fichier : ceci ne remplace pas la garde dans le
+                // callback, il la complete.
+                'context'     => array( 'view' ),
+                'readonly'    => true,
+            ),
+        )
+    );
 }
 
 /**
@@ -107,39 +107,39 @@ function tfe_storytelling_register_rest_field() {
  */
 function tfe_storytelling_get_blocks( $post_array, $field_name = '', $request = null ) {
 
-	// ── LA correction ───────────────────────────────────────────────────
-	// L'editeur de blocs charge le post en context=edit. Il lit content.raw
-	// et n'utilise pas ce champ : le calculer ici alourdissait la reponse
-	// dont il depend, au point de la rendre inexploitable.
-	if ( $request instanceof WP_REST_Request && 'edit' === $request->get_param( 'context' ) ) {
-		return null;
-	}
+    // ── LA correction ───────────────────────────────────────────────────
+    // L'editeur de blocs charge le post en context=edit. Il lit content.raw
+    // et n'utilise pas ce champ : le calculer ici alourdissait la reponse
+    // dont il depend, au point de la rendre inexploitable.
+    if ( $request instanceof WP_REST_Request && 'edit' === $request->get_param( 'context' ) ) {
+        return null;
+    }
 
-	if ( empty( $post_array['id'] ) ) {
-		return null;
-	}
+    if ( empty( $post_array['id'] ) ) {
+        return null;
+    }
 
-	$post_id = (int) $post_array['id'];
+    $post_id = (int) $post_array['id'];
 
-	// ACF peut etre desactive (maintenance, install neuve) : sans cette garde,
-	// get_field() provoque un fatal "Call to undefined function" qui casse
-	// TOUTE reponse REST de posts, pas seulement ce champ.
-	if ( ! function_exists( 'get_field' ) ) {
-		return null;
-	}
+    // ACF peut etre desactive (maintenance, install neuve) : sans cette garde,
+    // get_field() provoque un fatal "Call to undefined function" qui casse
+    // TOUTE reponse REST de posts, pas seulement ce champ.
+    if ( ! function_exists( 'get_field' ) ) {
+        return null;
+    }
 
-	if ( ! get_field( 'is_storytelling', $post_id ) ) {
-		return null;
-	}
+    if ( ! get_field( 'is_storytelling', $post_id ) ) {
+        return null;
+    }
 
-	$raw = get_post_field( 'post_content', $post_id );
-	if ( ! is_string( $raw ) || '' === trim( $raw ) ) {
-		// Contenu vide : renvoyer un tableau vide plutot que de laisser le
-		// front croire qu'il a des blocs a afficher.
-		return array();
-	}
+    $raw = get_post_field( 'post_content', $post_id );
+    if ( ! is_string( $raw ) || '' === trim( $raw ) ) {
+        // Contenu vide : renvoyer un tableau vide plutot que de laisser le
+        // front croire qu'il a des blocs a afficher.
+        return array();
+    }
 
-	return tfe_storytelling_clean_blocks( parse_blocks( $raw ), 0 );
+    return tfe_storytelling_clean_blocks( parse_blocks( $raw ), 0 );
 }
 
 /**
@@ -153,23 +153,23 @@ function tfe_storytelling_get_blocks( $post_array, $field_name = '', $request = 
  * @return array
  */
 function tfe_storytelling_clean_blocks( $blocks, $depth = 0 ) {
-	if ( ! is_array( $blocks ) || $depth > TFE_STORYTELLING_MAX_DEPTH ) {
-		return array();
-	}
+    if ( ! is_array( $blocks ) || $depth > TFE_STORYTELLING_MAX_DEPTH ) {
+        return array();
+    }
 
-	$cleaned = array();
+    $cleaned = array();
 
-	foreach ( $blocks as $block ) {
-		$item = tfe_storytelling_clean_block( $block, $depth );
-		if ( null !== $item ) {
-			$cleaned[] = $item;
-		}
-	}
+    foreach ( $blocks as $block ) {
+        $item = tfe_storytelling_clean_block( $block, $depth );
+        if ( null !== $item ) {
+            $cleaned[] = $item;
+        }
+    }
 
-	// array_values implicite : $cleaned est construit par append, donc deja
-	// indexe sequentiellement — indispensable pour serialiser en tableau JSON
-	// et non en objet {"1": …}.
-	return $cleaned;
+    // array_values implicite : $cleaned est construit par append, donc deja
+    // indexe sequentiellement — indispensable pour serialiser en tableau JSON
+    // et non en objet {"1": …}.
+    return $cleaned;
 }
 
 /**
@@ -178,21 +178,21 @@ function tfe_storytelling_clean_blocks( $blocks, $depth = 0 ) {
  * @return array|null
  */
 function tfe_storytelling_clean_block( $block, $depth = 0 ) {
-	if ( ! is_array( $block ) || empty( $block['blockName'] ) ) {
-		// parse_blocks() renvoie aussi des entrees a blockName null pour les
-		// blancs entre blocs : sans interet pour le front.
-		return null;
-	}
+    if ( ! is_array( $block ) || empty( $block['blockName'] ) ) {
+        // parse_blocks() renvoie aussi des entrees a blockName null pour les
+        // blancs entre blocs : sans interet pour le front.
+        return null;
+    }
 
-	return array(
-		'blockName'   => (string) $block['blockName'],
-		'attrs'       => isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array(),
-		'innerHTML'   => isset( $block['innerHTML'] ) ? (string) $block['innerHTML'] : '',
-		'innerBlocks' => tfe_storytelling_clean_blocks(
-			isset( $block['innerBlocks'] ) ? $block['innerBlocks'] : array(),
-			$depth + 1
-		),
-	);
+    return array(
+        'blockName'   => (string) $block['blockName'],
+        'attrs'       => isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array(),
+        'innerHTML'   => isset( $block['innerHTML'] ) ? (string) $block['innerHTML'] : '',
+        'innerBlocks' => tfe_storytelling_clean_blocks(
+            isset( $block['innerBlocks'] ) ? $block['innerBlocks'] : array(),
+            $depth + 1
+        ),
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -210,36 +210,36 @@ add_action( 'acf/init', 'tfe_storytelling_register_acf_field' );
  * acf_add_local_field_group() n'existe pas encore a ce moment-la.
  */
 function tfe_storytelling_register_acf_field() {
-	if ( ! function_exists( 'acf_add_local_field_group' ) ) {
-		return;
-	}
+    if ( ! function_exists( 'acf_add_local_field_group' ) ) {
+        return;
+    }
 
-	acf_add_local_field_group(
-		array(
-			'key'          => 'group_storytelling_template',
-			'title'        => 'Template',
-			'fields'       => array(
-				array(
-					'key'           => 'field_is_storytelling',
-					'label'         => 'Storytelling (audio/video layout)',
-					'name'          => 'is_storytelling',
-					'type'          => 'true_false',
-					'instructions'  => 'Check to use the storytelling template (ArticleMediaLayout) instead of the standard article template.',
-					'default_value' => 0,
-					'ui'            => 1,
-				),
-			),
-			'location'     => array(
-				array(
-					array(
-						'param'    => 'post_type',
-						'operator' => '==',
-						'value'    => 'post',
-					),
-				),
-			),
-			'position'     => 'side',
-			'show_in_rest' => 1,
-		)
-	);
+    acf_add_local_field_group(
+        array(
+            'key'          => 'group_storytelling_template',
+            'title'        => 'Template',
+            'fields'       => array(
+                array(
+                    'key'           => 'field_is_storytelling',
+                    'label'         => 'Storytelling (audio/video layout)',
+                    'name'          => 'is_storytelling',
+                    'type'          => 'true_false',
+                    'instructions'  => 'Check to use the storytelling template (ArticleMediaLayout) instead of the standard article template.',
+                    'default_value' => 0,
+                    'ui'            => 1,
+                ),
+            ),
+            'location'     => array(
+                array(
+                    array(
+                        'param'    => 'post_type',
+                        'operator' => '==',
+                        'value'    => 'post',
+                    ),
+                ),
+            ),
+            'position'     => 'side',
+            'show_in_rest' => 1,
+        )
+    );
 }
