@@ -29,6 +29,7 @@ import VideoZone from "@/app/components/VideoZone/VideoZone";
 import NewsletterSignup from "@/app/components/NewsletterSignup/NewsletterSignup";
 import HeroStacked from "@/app/components/Hero/HeroStacked";
 import Hero from "@/app/components/Hero/Hero";
+import { getSpotlightIds } from "@/app/services/wpApi.spotlight";
 
 
 export default async function App() {
@@ -37,6 +38,13 @@ export default async function App() {
     // Before: 8 sequential calls (each await blocks the next). None of these
     // functions depend on each other's results — parallelizing via Promise.all
     // reduces total time to the slowest fetch instead of the sum.
+    // IDs des 3 articles du Hero (zone "spotlight" de la composition WP).
+    // Recupere AVANT le Promise.all : les zones par categorie en ont besoin
+    // pour les exclure de leur requete WP, sinon un article en Hero
+    // reapparait plus bas dans sa categorie. Requete composition deja mise en
+    // cache par HeroStacked (meme URL, revalidate 300) : cout ~0.
+    const spotlightIds = await getSpotlightIds(3);
+
     const [
         { zone1, zone2 },
         bannerArticles,
@@ -51,13 +59,13 @@ export default async function App() {
     ] = await Promise.all([
         getFourthEstateArticles(),
         getLatestBannerArticles(),
-        getGeneralNewsArticles(6),
-        getEnvironmentArticles(6),
-        getAntiCorruptionArticles(),
-        getOurImpactArticles(),
+        getGeneralNewsArticles(6, spotlightIds),
+        getEnvironmentArticles(6, spotlightIds),
+        getAntiCorruptionArticles(spotlightIds),
+        getOurImpactArticles(spotlightIds),
         getStoriesArticles(),
-        getHumanRightArticles(),
-        getHealthArticles(),
+        getHumanRightArticles(spotlightIds),
+        getHealthArticles(spotlightIds),
         getBannerCategories(BANNER_CATEGORY_SLUGS),
     ]);
 

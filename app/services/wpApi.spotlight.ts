@@ -189,6 +189,24 @@ async function getZoneIds(zone: string): Promise<number[]> {
 }
 
 /**
+ * IDs des articles reellement affiches par le Hero (zone spotlight, tronquee
+ * a `limit`).
+ *
+ * Sert aux zones par categorie de la homepage : elles passent ces IDs en
+ * `exclude` a l'API WP pour ne pas reafficher un article deja en Hero. Meme
+ * requete `composition` que getSpotlightArticles (meme URL, meme revalidate)
+ * donc dedoublonnee par le cache fetch de Next : aucun appel reseau en plus.
+ */
+export async function getSpotlightIds(limit: number = 3): Promise<number[]> {
+    try {
+        return (await getZoneIds(SPOTLIGHT_ZONE)).slice(0, limit);
+    } catch (error) {
+        console.error('Erreur wpApi.spotlight [getSpotlightIds]:', error);
+        return [];
+    }
+}
+
+/**
  * Articles mis en avant, dans l'ordre défini en admin.
  *
  * Renvoie [] si la composition est vide ou injoignable — le Hero se masque

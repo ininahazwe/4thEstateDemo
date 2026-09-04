@@ -153,6 +153,19 @@ function imagePriority(index: number): 'high' | 'auto' | 'low' {
 
 // ---------------------------------------------------------------------------
 // Helpers fetch groupés
+/**
+ * Fragment `&exclude=` a coller a une requete /posts.
+ *
+ * Sert a retirer des zones de la home les articles deja affiches ailleurs
+ * (typiquement les 3 du Hero, cf. getSpotlightIds). Filtre cote WP et non
+ * cote JS : `per_page` reste respecte, donc une zone de 5 affiche toujours
+ * 5 articles au lieu de 5 moins les doublons.
+ */
+function excludeParam(exclude?: number[]): string {
+    if (!exclude?.length) return '';
+    return `&exclude=${exclude.join(',')}`;
+}
+
 // ---------------------------------------------------------------------------
 
 async function fetchPosts(url: string, revalidate = 600): Promise<WPPost[]> {
@@ -433,10 +446,10 @@ export async function getLatestBannerArticles(): Promise<ArticleDataBanner[]> {
 // getGeneralNewsArticles
 // ---------------------------------------------------------------------------
 
-export async function getGeneralNewsArticles(perPage = 9): Promise<GeneralNewsArticle[]> {
+export async function getGeneralNewsArticles(perPage = 9, exclude?: number[]): Promise<GeneralNewsArticle[]> {
     try {
         const posts = await fetchPosts(
-            `${WP_BASE}/posts?per_page=${perPage}&categories=${CATEGORY_IDS.generalNews}&status=publish`
+            `${WP_BASE}/posts?per_page=${perPage}&categories=${CATEGORY_IDS.generalNews}&status=publish${excludeParam(exclude)}`
         );
         if (!posts.length) return [];
 
@@ -483,12 +496,12 @@ export async function getGeneralNewsArticles(perPage = 9): Promise<GeneralNewsAr
 // getEnvironmentArticles
 // ---------------------------------------------------------------------------
 
-export async function getEnvironmentArticles(perPage = 6): Promise<EnvironmentArticle[]> {
+export async function getEnvironmentArticles(perPage = 6, exclude?: number[]): Promise<EnvironmentArticle[]> {
     try {
         const categoryId = await resolveCategoryId(CATEGORY_IDS.environment, 'environment');
         const url = categoryId
-            ? `${WP_BASE}/posts?per_page=${perPage}&categories=${categoryId}&status=publish`
-            : `${WP_BASE}/posts?per_page=${perPage}&status=publish`;
+            ? `${WP_BASE}/posts?per_page=${perPage}&categories=${categoryId}&status=publish${excludeParam(exclude)}`
+            : `${WP_BASE}/posts?per_page=${perPage}&status=publish${excludeParam(exclude)}`;
 
         const posts = await fetchPosts(url);
         if (!posts.length) return [];
@@ -536,12 +549,12 @@ export async function getEnvironmentArticles(perPage = 6): Promise<EnvironmentAr
 // getAntiCorruptionArticles
 // ---------------------------------------------------------------------------
 
-export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle[]> {
+export async function getAntiCorruptionArticles(exclude?: number[]): Promise<AntiCorruptionArticle[]> {
     try {
         const categoryId = await resolveCategoryId(CATEGORY_IDS.antiCorruption, 'anti-corruption');
         const url = categoryId
-            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish`
-            : `${WP_BASE}/posts?per_page=5&status=publish`;
+            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish${excludeParam(exclude)}`
+            : `${WP_BASE}/posts?per_page=5&status=publish${excludeParam(exclude)}`;
 
         const posts = await fetchPosts(url);
         if (!posts.length) return [];
@@ -589,12 +602,12 @@ export async function getAntiCorruptionArticles(): Promise<AntiCorruptionArticle
 // getHumanRightArticles
 // ---------------------------------------------------------------------------
 
-export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
+export async function getHumanRightArticles(exclude?: number[]): Promise<HumanRightsArticle[]> {
     try {
         const categoryId = await resolveCategoryId(CATEGORY_IDS.humanRight, 'human-right');
         const url = categoryId
-            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish`
-            : `${WP_BASE}/posts?per_page=5&status=publish`;
+            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish${excludeParam(exclude)}`
+            : `${WP_BASE}/posts?per_page=5&status=publish${excludeParam(exclude)}`;
 
         const posts = await fetchPosts(url);
         if (!posts.length) return [];
@@ -646,12 +659,12 @@ export async function getHumanRightArticles(): Promise<HumanRightsArticle[]> {
 // de repli.
 // ---------------------------------------------------------------------------
 
-export async function getHealthArticles(): Promise<HealthArticle[]> {
+export async function getHealthArticles(exclude?: number[]): Promise<HealthArticle[]> {
     try {
         const categoryId = await resolveCategoryId(CATEGORY_IDS.health, 'health');
         const url = categoryId
-            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish`
-            : `${WP_BASE}/posts?per_page=5&status=publish`;
+            ? `${WP_BASE}/posts?per_page=5&categories=${categoryId}&status=publish${excludeParam(exclude)}`
+            : `${WP_BASE}/posts?per_page=5&status=publish${excludeParam(exclude)}`;
 
         const posts = await fetchPosts(url);
         if (!posts.length) return [];
@@ -699,7 +712,7 @@ export async function getHealthArticles(): Promise<HealthArticle[]> {
 // getOurImpactArticles  (pas d'images dans cette zone)
 // ---------------------------------------------------------------------------
 
-export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
+export async function getOurImpactArticles(exclude?: number[]): Promise<OurImpactArticle[]> {
     try {
         // Catégorie WP "our-impact" (id 229), comme les autres zones de la home
         // (cf. getHealthArticles). La taxonomie custom "impact-category" n'est
@@ -712,7 +725,7 @@ export async function getOurImpactArticles(): Promise<OurImpactArticle[]> {
         if (!categoryId) return [];
 
         const posts = await fetchPosts(
-            `${WP_BASE}/posts?per_page=6&categories=${categoryId}&status=publish`
+            `${WP_BASE}/posts?per_page=6&categories=${categoryId}&status=publish${excludeParam(exclude)}`
         );
         if (!posts.length) return [];
 
