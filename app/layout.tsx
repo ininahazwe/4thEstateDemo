@@ -34,6 +34,7 @@ import "./styles/aside-skeleton.css";
 import "./styles/comments.css";
 import "./styles/dark.css";
 import "./styles/membership-launch.css";
+import "./styles/article-membership-cta.css";
 import "./styles/article-storytelling.css";
 import "./globals.css";
 import Providers from "@/app/providers";

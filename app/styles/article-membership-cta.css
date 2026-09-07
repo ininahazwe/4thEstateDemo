@@ -1,0 +1,71 @@
+/* ArticleMembershipCTA — bandeau d'adhésion en bas de chaque article.
+   Même patron que .newsletter-signup (bandeau centré, toujours clair),
+   classes dédiées pour ne pas dépendre de newsletter-signup.css. */
+
+.article-membership-cta {
+    padding: 56px var(--mainPadding);
+    text-align: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.article-membership-cta-inner {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.article-membership-cta-title {
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1.15;
+    color: #111;
+    margin: 0 0 16px;
+}
+
+@media screen and (min-width: 760px) {
+    .article-membership-cta-title {
+        font-size: 34px;
+    }
+}
+
+.article-membership-cta-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    margin: 0 0 16px;
+    text-align: left;
+}
+
+.article-membership-cta-text:last-of-type {
+    margin-bottom: 28px;
+}
+
+:root[data-user-color-scheme="dark"] .article-membership-cta-title,
+:root[data-user-color-scheme="dark"] .article-membership-cta-text {
+    background-clip: text;
+    background-color: rgba(var(--siteTextRGB), .4);
+    -webkit-text-fill-color: #0000;
+}
+
+:root[data-user-color-scheme="dark"] .article-membership-cta {
+    border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.article-membership-cta-button {
+    display: inline-block;
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    background-color: var(--siteLogo);
+    color: #fff !important;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 16px 32px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.article-membership-cta-button:hover {
+    opacity: 0.85;
+}

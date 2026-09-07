@@ -1,5 +1,6 @@
 import RelatedArticleCard from "./RelatedArticleCard";
 import ArticleContent from "./ArticleContent";
+import ArticleMembershipCTA from "./ArticleMembershipCTA";
 import { WpArticleCard } from "@/app/services/wpApi.article";
 import ArticleIllustration from "@/app/components/Article/Articleillustration";
 import ArticleShareButton from "@/app/components/UI/ArticleShareButton";
@@ -70,6 +71,8 @@ export default function ArticleBody({
             <div className="article-text">
                 <ArticleContent content={content} readMoreArticles={readMoreArticles} />
             </div>
+
+            <ArticleMembershipCTA />
 
             <div className="article-secondary">
                 {/*<div className="article-authors-vo">
