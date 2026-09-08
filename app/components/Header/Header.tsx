@@ -20,8 +20,44 @@ export default function Header() {
     // During first render (hydration), status is 'loading' → treated as logged out.
     // When session is fetched client-side, display updates (minor flash expected;
     // SessionProvider has no server session to preserve article page SSG).
-    const { data: session, status } = useSession();
+    const { data: session, status, update } = useSession();
     const isAuthenticated = status === 'authenticated';
+    const isActiveMember = session?.user?.isActive;
+
+    // Le statut is_active du JWT est figé au login (voir lib/auth.config.ts) :
+    // si l'adhésion est activée après l'ouverture de session en cours, le
+    // header continue d'afficher "Join the community" jusqu'à ce qu'on force
+    // une resynchronisation. On ne le fait que pour un connecté affiché
+    // non-actif (pas pour un visiteur déconnecté, pas pour un membre déjà
+    // confirmé actif) — au montage puis à chaque retour sur l'onglet, avec un
+    // throttle pour ne pas spammer l'API WP.
+    useEffect(() => {
+        if (!isAuthenticated || isActiveMember) return;
+
+        let lastCheck = 0;
+        const MIN_INTERVAL_MS = 60_000;
+
+        const refresh = () => {
+            const now = Date.now();
+            if (now - lastCheck < MIN_INTERVAL_MS) return;
+            lastCheck = now;
+            update();
+        };
+
+        refresh();
+
+        const onVisible = () => {
+            if (document.visibilityState === 'visible') refresh();
+        };
+
+        window.addEventListener('focus', refresh);
+        document.addEventListener('visibilitychange', onVisible);
+
+        return () => {
+            window.removeEventListener('focus', refresh);
+            document.removeEventListener('visibilitychange', onVisible);
+        };
+    }, [isAuthenticated, isActiveMember, update]);
 
     // Always initialize with 'light' to match server render (no window check in useState)
     const [theme, setTheme] = useState('light');
@@ -167,7 +203,7 @@ export default function Header() {
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                Join the community
+                Update your membership
                 </a>
             )}
             </div>

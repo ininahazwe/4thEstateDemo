@@ -35,7 +35,7 @@ export const authConfig: NextAuthConfig = {
          * authorize()). Les appels suivants ne font que faire transiter le
          * token existant.
          */
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger }) {
             if (user) {
                 // user provient d'authorize() qui garantit un id non-null
                 // (String(data.id)). Le ?? "" satisfait le type optionnel
@@ -45,6 +45,53 @@ export const authConfig: NextAuthConfig = {
                 token.tier = user.tier;
                 token.syncPending = user.syncPending;
             }
+
+            // Rafraîchissement à la demande — déclenché côté client par
+            // `useSession().update()`. Sans ce bloc, is_active/tier sont une
+            // photo prise au login (ci-dessus) et ne sont plus jamais
+            // revérifiés pendant toute la durée de vie du JWT (30 jours par
+            // défaut) : un compte activé après l'ouverture de session
+            // continue d'afficher "Join the community" jusqu'à ce que
+            // l'utilisateur se déconnecte / reconnecte.
+            //
+            // ⚠️ Suppose un endpoint POST {TFE_MEMBERSHIP_API_URL}/status
+            // côté plugin WP membership (user_id → is_active/tier/
+            // sync_pending), à créer s'il n'existe pas déjà — ce plugin vit
+            // sur membership.thefourthestategh.com, pas dans ce dépôt.
+            if (trigger === "update" && token.wpUserId) {
+                try {
+                    const res = await fetch(
+                        `${process.env.TFE_MEMBERSHIP_API_URL}/status`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-TFE-API-Key": process.env.TFE_MEMBERSHIP_API_KEY!,
+                            },
+                            body: JSON.stringify({ user_id: token.wpUserId }),
+                            cache: "no-store",
+                        }
+                    );
+
+                    if (res.ok) {
+                        const data = (await res.json()) as {
+                            is_active: boolean;
+                            tier: string | null;
+                            sync_pending: boolean;
+                        };
+                        token.isActive = data.is_active;
+                        token.tier = data.tier;
+                        token.syncPending = data.sync_pending;
+                    } else {
+                        console.error(`jwt update: /status a renvoyé ${res.status}`);
+                    }
+                } catch (err) {
+                    // Échec réseau : on garde l'ancienne valeur plutôt que de
+                    // dégrader un membre actif en cas de panne WP passagère.
+                    console.error("jwt update: échec de l'appel /status", err);
+                }
+            }
+
             return token;
         },
 
