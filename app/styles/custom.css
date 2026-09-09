@@ -499,9 +499,10 @@ li.wp-block-list{
 }
 
 .tfe-carousel-slide figcaption {
-    font-size: 0.85rem;
-    opacity: 0.8;
     margin-top: 4px;
+    font-size: 13px;
+    color: #666;
+    text-align: center;
 }
 
 /* Before JS runs: simple swipeable strip, no arrows/dots yet. */
@@ -534,7 +535,7 @@ li.wp-block-list{
     flex: 0 0 100%;
 }
 
-.tfe-carousel-slide figcaption {
+/*.tfe-carousel-slide figcaption {
     position: absolute;
     left: 0;
     right: 0;
@@ -543,7 +544,7 @@ li.wp-block-list{
     background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
     color: #fff;
     margin-top: 0;
-}
+}*/
 
 .tfe-carousel-arrow {
     position: absolute;
