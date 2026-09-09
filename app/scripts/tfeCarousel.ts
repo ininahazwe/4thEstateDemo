@@ -52,12 +52,8 @@ function setupCarousel( carousel: HTMLElement ): void {
 	track.style.transitionDuration = TRANSITION_MS + 'ms';
 	slides.forEach( ( slide ) => {
 		slide.classList.add( 'tfe-carousel-slide' );
-
 		const figcaption = slide.querySelector( 'figcaption' );
-		if ( figcaption ) {
-			figcaption.classList.add( 'wp-element-caption' );
-		}
-
+		if ( figcaption ) figcaption.classList.add( 'wp-element-caption' );
 		track.appendChild( slide );
 	} );
 	carousel.appendChild( track );
