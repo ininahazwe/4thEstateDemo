@@ -2,6 +2,7 @@
 
 import TikTokEmbed from './TikTokEmbed';
 import YouTubeEmbed from './YouTubeEmbed';
+import FacebookEmbed from './FacebookEmbed';
 import { type VideoPlatform } from './Tiktokdemodata';
 
 interface VideoEmbedProps {
@@ -17,6 +18,7 @@ interface VideoEmbedProps {
 export default function VideoEmbed({ url, platform }: VideoEmbedProps) {
     if (platform === 'tiktok') return <TikTokEmbed url={url} />;
     if (platform === 'youtube') return <YouTubeEmbed url={url} />;
+    if (platform === 'facebook') return <FacebookEmbed url={url} />;
 
     return (
         <a target="_blank" rel="noopener noreferrer" href={url}>

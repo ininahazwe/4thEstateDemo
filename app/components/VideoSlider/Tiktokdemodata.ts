@@ -1,16 +1,17 @@
 // ---------------------------------------------------------------------------
 // Types du slider "Video Stories" — alimenté par le CPT "video-story"
 // (voir app/services/wpApi.videoStory.ts). Multi-plateforme : TikTok,
-// YouTube… détecté automatiquement depuis l'URL, pas besoin de champ dédié.
+// YouTube, Facebook… détecté automatiquement depuis l'URL, pas besoin de
+// champ dédié.
 // ---------------------------------------------------------------------------
 
-export type VideoPlatform = 'tiktok' | 'youtube' | 'unknown';
+export type VideoPlatform = 'tiktok' | 'youtube' | 'facebook' | 'unknown';
 
 export interface VideoStoryItem {
     id: string;
     url: string;
     platform: VideoPlatform;
-    /** Optionnel : si absent, rempli automatiquement (oEmbed TikTok, ou vide pour YouTube — voir TikTokStoriesSlider.tsx). */
+    /** Optionnel : si absent, rempli automatiquement (oEmbed TikTok/Facebook, ou vide pour YouTube — voir TikTokStoriesSlider.tsx). */
     caption?: string;
     /** Image de fond affichée derrière l'embed pendant son chargement. */
     thumbnail?: string;
@@ -21,6 +22,7 @@ export interface VideoStoryItem {
 export function detectPlatform(url: string): VideoPlatform {
     if (/tiktok\.com/i.test(url)) return 'tiktok';
     if (/(youtube\.com|youtu\.be)/i.test(url)) return 'youtube';
+    if (/(facebook\.com|fb\.watch)/i.test(url)) return 'facebook';
     return 'unknown';
 }
 
@@ -30,7 +32,7 @@ export function extractYouTubeId(url: string): string {
     return url.match(YOUTUBE_ID_REGEX)?.[1] ?? '';
 }
 
-/** Thumbnail YouTube prévisible, pas besoin d'appel oEmbed contrairement à TikTok. */
+/** Thumbnail YouTube prévisible, pas besoin d'appel oEmbed contrairement à TikTok/Facebook. */
 export function getYouTubeThumbnail(url: string): string | undefined {
     const id = extractYouTubeId(url);
     return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : undefined;
