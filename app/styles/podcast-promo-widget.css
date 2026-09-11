@@ -1,0 +1,105 @@
+/* Widget "dernier podcast" autonome, sans dépendance à .ci-services ni à
+   une classe de mise en page héritée (contrairement à
+   latest-podcast-widget.css, propre à l'aside article) — pensé pour être
+   posé n'importe où sur le site.
+   `container-type: inline-size` fait s'adapter le widget à la largeur de
+   SON conteneur, pas à celle du viewport : indispensable puisqu'il peut se
+   retrouver aussi bien dans une sidebar étroite qu'en pleine largeur de
+   page, sur le même écran. */
+.podcast-promo-widget {
+    container-type: inline-size;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.podcast-promo-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 10px;
+    background: var(--siteLogo);
+    box-shadow: 0 1px 3px var(--siteBoxShadow);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: #FFFFFF;
+}
+
+.podcast-promo-thumb {
+    flex: none;
+    width: 120px;
+    height: 120px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.podcast-promo-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.podcast-promo-info {
+    flex: 1 1 auto;
+    min-width: 0; /* sans ça, text-overflow:ellipsis ne fonctionne pas dans un item flex */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.podcast-promo-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #ffb507;
+    font-weight: 700;
+}
+
+.podcast-promo-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: break-spaces;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.podcast-promo-play {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--sitePrimary);
+    color: #fff;
+}
+
+/* Sous une certaine largeur de CONTENEUR (pas du viewport) : la vignette et
+   le libellé "Latest episode" ne valent plus la place qu'ils prennent — le
+   titre a besoin de tout l'espace disponible. */
+@container (max-width: 280px) {
+    .podcast-promo-thumb {
+        display: none;
+    }
+
+    .podcast-promo-label {
+        display: none;
+    }
+}
+
+.podcast-promo-embed {
+    width: 100%;
+}
+
+.podcast-promo-embed iframe {
+    display: block;
+    width: 100%;
+    height: 152px;
+    border: none;
+    border-radius: 10px;
+}

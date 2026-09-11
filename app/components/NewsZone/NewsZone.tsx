@@ -2,6 +2,7 @@ import ArticleCard from './ArticleCard';
 import { type ArticleData } from './types';
 import SpecialOfferBanner from "@/app/components/GeneralNews/SpecialOfferBanner";
 import TipCallout from "@/app/components/CallToAction/TipCallout";
+import PodcastPromoWidget from "@/app/components/Podcasts/PodcastPromoWidget";
 
 interface NewsZoneProps {
     zone1Articles: ArticleData[];
@@ -73,6 +74,7 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                             ))}
                         </div>
                     ))}
+                    <PodcastPromoWidget />
                     {/*<SpecialOfferBanner />*/}
                 </div>
 
