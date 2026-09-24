@@ -78,7 +78,7 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                     {/*<SpecialOfferBanner />*/}
                 </div>
 
-                {/* Colonne latérale droite (data-column="right", 300px @≥1000px — cf. base.css [data-columns="2"]) */}
+                {/* Colonne ...latérale droite (data-column="right", 300px @≥1000px — cf. base.css [data-columns="2"]) */}
                 <TipCallout />
             </section>
         </div>
