@@ -92,6 +92,21 @@
     pointer-events: none;
 }
 
+.hero-stacked-gallery-media .hero-card-storytelling-icon {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
 html:not(.v-app) .hero-stacked-gallery-card:hover .hero-stacked-gallery-title {
     text-decoration: underline;
     text-underline-offset: 3px;

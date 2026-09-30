@@ -29,4 +29,11 @@ export interface SearchData {
     articles: SearchArticle[];
     total: number; // nombre total de résultats (header X-WP-Total)
     pagination: SearchPagination;
+    /**
+     * Présent uniquement si la requête telle que saisie n'a donné aucun
+     * résultat et qu'une correction orthographique (fautes de frappe) a été
+     * retentée avec succès — contient alors le texte original saisi, tandis
+     * que `query` porte la version corrigée effectivement utilisée.
+     */
+    correctedFrom?: string;
 }

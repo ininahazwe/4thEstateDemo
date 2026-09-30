@@ -89,6 +89,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             </p>
                         )}
 
+                        {data.correctedFrom && (
+                            <p className="search-corrected-notice">
+                                Showing results for “{data.query}” — no matches for “{data.correctedFrom}”.
+                            </p>
+                        )}
+
                         {hasResults ? (
                             <>
                                 <SearchRiver articles={data.articles} />

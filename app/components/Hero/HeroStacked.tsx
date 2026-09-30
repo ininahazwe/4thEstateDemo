@@ -27,7 +27,7 @@ export default async function HeroStacked() {
                         key={article.id}
                     >
                         <div className="hero-stacked-gallery-media">
-                            {article.heroVideo ? (
+                            {article.heroVideo && article.model !== 'story' ? (
                                 <HeroCardVideo src={article.heroVideo} poster={article.image?.src} />
                             ) : (
                                 article.image && (
@@ -42,7 +42,15 @@ export default async function HeroStacked() {
                                 )
                             )}
 
-                            {article.heroVideo && (
+                            {article.model === 'story' ? (
+                                <span className="hero-card-storytelling-icon" aria-hidden="true" title="Storytelling">
+                                    <svg viewBox="0 0 24 24" width="18" height="18">
+                                        <rect x="3" y="3" width="12" height="12" rx="3" fill="#FFB020" />
+                                        <rect x="7" y="7" width="12" height="12" rx="3" fill="#FF5252" />
+                                        <rect x="11" y="11" width="10" height="10" rx="3" fill="#6D2929" />
+                                    </svg>
+                                </span>
+                            ) : article.heroVideo && (
                                 <span className="hero-card-play-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                                         <path d="M8 5v14l11-7z" />

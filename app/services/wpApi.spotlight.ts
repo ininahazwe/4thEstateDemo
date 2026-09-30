@@ -59,6 +59,14 @@ export interface SpotlightArticle {
      * HeroCardVideo.tsx pour la lecture cote vignette.
      */
     heroVideo?: string;
+    /**
+     * Present uniquement si l'article utilise le template storytelling (ACF
+     * `is_storytelling`, voir diagnostic-storytelling-sans-effet). Seule
+     * valeur geree pour l'instant : 'story' — sert de garde dans
+     * HeroStacked.tsx (pas de heroVideo, icone dediee au lieu du triangle
+     * play).
+     */
+    model?: 'story';
 }
 
 interface WPCompositionEntry {
@@ -88,7 +96,7 @@ interface WPSpotlightPost {
     date: string;
     title: { rendered: string };
     featured_media: number;
-    acf?: { subtitle?: string };
+    acf?: { subtitle?: string; is_storytelling?: boolean };
     hero_video?: string | null;
 }
 
@@ -256,6 +264,7 @@ export async function getSpotlightArticles(limit: number = 3): Promise<Spotlight
                 publishedAtISO: post.date,
                 position: index + 1,
                 heroVideo: pickHeroVideoUrl(post.hero_video),
+                model: post.acf?.is_storytelling ? 'story' : undefined,
             };
 
             if (media) {

@@ -197,6 +197,13 @@
     opacity: 0.85;
 }
 
+.search-corrected-notice {
+    margin: -0.5rem 0 1rem;
+    font-size: 0.9rem;
+    font-style: italic;
+    opacity: 0.7;
+}
+
 /* Dark mode — aligns with theme data-attribute */
 [data-user-color-scheme='dark'] .search-input-wrap,
 [data-user-color-scheme='dark'] .search-filter-field input[type='date'] {

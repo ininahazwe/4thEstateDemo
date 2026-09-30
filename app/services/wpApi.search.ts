@@ -1,6 +1,8 @@
 import { cache } from 'react';
 import { decode } from 'html-entities';
 import { type SearchData, type SearchArticle } from '../components/Search/Types';
+import { getSearchDictionary } from './searchDictionary';
+import { correctQuery } from './fuzzyQuery';
 
 // ---------------------------------------------------------------------------
 // wpApi.search.ts — fichier dédié à la page /search, séparé de wpApi.ts pour
@@ -8,7 +10,8 @@ import { type SearchData, type SearchArticle } from '../components/Search/Types'
 // (buildHref/buildImage/cleanHtmlTitle/…) mais réimplémentés ici en miniature
 // pour rester 100 % autonome — pas d'import croisé vers wpApi.ts, donc aucun
 // risque de casser les pages qui en dépendent déjà (homepage, article,
-// catégorie).
+// catégorie). Seuls imports : les deux modules dédiés à la tolérance aux
+// fautes (searchDictionary.ts / fuzzyQuery.ts), écrits pour cette page.
 //
 // Recherche WordPress native :
 //   - `search=<q>`   → plein texte sur titre + contenu (équivalent de /?s=q)
@@ -17,6 +20,15 @@ import { type SearchData, type SearchArticle } from '../components/Search/Types'
 // Les dates du formulaire arrivent au format `YYYY-MM-DD` ; on les convertit
 // en ISO8601 en élargissant à la journée entière (00:00:00 → 23:59:59) pour
 // que `to` inclue bien tous les articles du jour choisi.
+//
+// Tolérance aux fautes d'orthographe :
+// WordPress fait un simple LIKE en base, sans aucune tolérance. Quand la
+// requête telle que saisie ne renvoie aucun résultat (page 1 uniquement), on
+// corrige mot par mot les termes absents du dictionnaire de mots connus
+// (titres/catégories/tags publiés) et on retente une seule fois avec la
+// requête corrigée. Si la requête initiale trouve déjà des résultats, on ne
+// touche à rien — la correction n'est qu'un filet de secours, jamais un
+// remplacement du comportement existant.
 // ---------------------------------------------------------------------------
 
 const WP_BASE =
@@ -139,6 +151,26 @@ function toIso(date: string | undefined, endOfDay = false): string | undefined {
     return endOfDay ? `${date}T23:59:59` : `${date}T00:00:00`;
 }
 
+function buildSearchUrl(
+    searchTerm: string,
+    page: number,
+    afterIso?: string,
+    beforeIso?: string
+): string {
+    const params = new URLSearchParams({
+        search: searchTerm,
+        page: String(page),
+        per_page: String(SEARCH_PER_PAGE),
+        status: 'publish',
+        orderby: 'date',
+        order: 'desc',
+        _fields: 'id,slug,title,date,categories,featured_media,format',
+    });
+    if (afterIso) params.set('after', afterIso);
+    if (beforeIso) params.set('before', beforeIso);
+    return `${WP_BASE}/posts?${params.toString()}`;
+}
+
 // ---------------------------------------------------------------------------
 // getSearchPageData
 // ---------------------------------------------------------------------------
@@ -170,38 +202,57 @@ export const getSearchPageData = cache(async (
     const afterIso = toIso(from, false);
     const beforeIso = toIso(to, true);
 
-    const params = new URLSearchParams({
-        search: trimmed,
-        page: String(page),
-        per_page: String(SEARCH_PER_PAGE),
-        status: 'publish',
-        orderby: 'date',
-        order: 'desc',
-        _fields: 'id,slug,title,date,categories,featured_media,format',
-    });
-    if (afterIso) params.set('after', afterIso);
-    if (beforeIso) params.set('before', beforeIso);
+    let searchTerm = trimmed;
+    let correctedFrom: string | undefined;
 
-    const res = await fetch(`${WP_BASE}/posts?${params.toString()}`, { next: { revalidate: 300 } });
+    let res = await fetch(buildSearchUrl(searchTerm, page, afterIso, beforeIso), {
+        next: { revalidate: 300 },
+    });
+
+    // WordPress returns 400 beyond last page — return empty page preserving
+    // context (query/dates) instead of crashing.
+    if (!res.ok && res.status === 400) {
+        return { ...empty, articles: [] };
+    }
+
+    let total = res.ok ? Number(res.headers.get('X-WP-Total') ?? '0') : 0;
+
+    // Filet de secours : uniquement sur la 1ère page, et seulement si la
+    // requête telle que saisie n'a rien donné. On ne corrige jamais une
+    // recherche qui fonctionne déjà.
+    if (res.ok && total === 0 && page === 1) {
+        const dictionary = await getSearchDictionary();
+        const { corrected, changed } = correctQuery(trimmed, dictionary);
+
+        if (changed) {
+            const retryRes = await fetch(buildSearchUrl(corrected, page, afterIso, beforeIso), {
+                next: { revalidate: 300 },
+            });
+
+            if (retryRes.ok) {
+                const retryTotal = Number(retryRes.headers.get('X-WP-Total') ?? '0');
+                if (retryTotal > 0) {
+                    res = retryRes;
+                    total = retryTotal;
+                    searchTerm = corrected;
+                    correctedFrom = trimmed;
+                }
+            }
+        }
+    }
 
     if (!res.ok) {
-        // WordPress returns 400 beyond last page — return empty page
-        // preserving context (query/dates) instead of crashing
-        if (res.status === 400) return { ...empty, articles: [] };
-
-        // Log error for debugging (5xx errors are server issues)
+        // Log error for debugging (5xx errors are server issues).
         console.error(`Search API error [getSearchPageData]: ${res.status}`, {
-            url: `${WP_BASE}/posts?${params.toString()}`,
             status: res.status,
             statusText: res.statusText,
         });
 
-        // Return empty results on any error (including 500)
-        // to prevent page crash — user sees "no results" instead
+        // Return empty results on any error (including 500) to prevent page
+        // crash — user sees "no results" instead.
         return empty;
     }
 
-    const total = Number(res.headers.get('X-WP-Total') ?? '0');
     const totalPages = Number(res.headers.get('X-WP-TotalPages') ?? '0');
     const rawPosts: WPPostMinimal[] = await res.json();
     const posts = rawPosts.filter((p) => !p.status || p.status === 'publish');
@@ -242,11 +293,12 @@ export const getSearchPageData = cache(async (
     });
 
     return {
-        query: trimmed,
+        query: searchTerm,
         from: from ?? '',
         to: to ?? '',
         articles,
         total,
         pagination: { currentPage: page, totalPages },
+        correctedFrom,
     };
 });
