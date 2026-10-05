@@ -9,6 +9,8 @@
 //export const MEMBERSHIP_URL = "https://mfwa.org/donate";
 export const MEMBERSHIP_URL = "https://membership.thefourthestategh.com";
 
+export const WHATSAPP_CHANNEL = " https://whatsapp.com/channel/0029Vb96CHn9RZAXGtvbDP05"
+
 /** CTA « Join us » / « Renew » / « Support us ». */
 export const MEMBERSHIP_JOIN_URL = MEMBERSHIP_URL;
 

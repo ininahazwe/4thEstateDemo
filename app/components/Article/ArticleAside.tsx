@@ -2,6 +2,7 @@ import Link from "next/link";
 import {WpArticleCard} from "@/app/services/wpApi.article";
 import LatestPodcastWidget from "@/app/components/Article/Latestpodcastwidget";
 import {getLatestPodcastEpisode} from "@/app/services/getSpotifyShowEpisodes";
+import SpecialOfferBanner from "@/app/components/GeneralNews/SpecialOfferBanner";
 
 interface ArticleAsideProps {
     mostRead: WpArticleCard[];
@@ -41,8 +42,9 @@ export default async function ArticleAside({ mostRead, showPodcast = true }: Art
                 </div>
             </section>
             )}
-
+            <SpecialOfferBanner />
             {showPodcast && latestPodcast && <LatestPodcastWidget episode={latestPodcast} />}
+
         </aside>
     );
 }

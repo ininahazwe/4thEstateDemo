@@ -3,7 +3,8 @@
     position:relative;
     margin:40px auto 20px;
     border-radius:var(--radius);
-    background-color:var(--siteLogo);
+    /*background-color:var(--siteLogo);*/
+    background-color: #128C7E;
     overflow:hidden;
 }
 #ci-banner-offre-spe .bg {
@@ -88,13 +89,13 @@
 }
 @media screen and (min-width:600px) {
     #ci-banner-offre-spe .wrap {
-        padding:20px 0 0 36px;
+        padding:20px 20px 0 36px;
     }
     #ci-banner-offre-spe .content {
         padding-bottom:20px;
     }
     #ci-banner-offre-spe .price {
-        font-size:40px;
+        font-size:30px;
     }
     #ci-banner-offre-spe .baseline {
         font-size:1rem;

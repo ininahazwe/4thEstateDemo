@@ -75,7 +75,7 @@ export default function NewsZone({ zone1Articles, zone2Articles }: NewsZoneProps
                         </div>
                     ))}
                     <PodcastPromoWidget />
-                    {/*<SpecialOfferBanner />*/}
+                    <SpecialOfferBanner />
                 </div>
 
                 {/* Colonne latérale droite (data-column="right", 300px @≥1000px — cf. base.css [data-columns="2"]) */}

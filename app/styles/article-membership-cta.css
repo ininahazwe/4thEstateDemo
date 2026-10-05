@@ -69,3 +69,10 @@
 .article-membership-cta-button:hover {
     opacity: 0.85;
 }
+
+/* Template storytelling : le conteneur .am-wrap apporte déjà son padding
+   latéral, on évite de le doubler. */
+.am-wrap .article-membership-cta {
+    padding-left: 0;
+    padding-right: 0;
+}

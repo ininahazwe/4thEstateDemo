@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
+import {MEMBERSHIP_JOIN_URL, WHATSAPP_CHANNEL} from "@/lib/site-links";
+import {BsWhatsapp} from "react-icons/bs";
 
 // Variants : chaque élément apparaît en fondu + léger décalage vertical.
 // viewport={{ once: false }} => l'animation se rejoue à chaque entrée/sortie du viewport.
@@ -71,7 +72,7 @@ export default function SpecialOfferBanner() {
 
             <Link
                 className="wrap"
-                href={MEMBERSHIP_JOIN_URL}
+                href={WHATSAPP_CHANNEL}
                 data-ithalc="[cta_abo]"
                 data-ithal="home_bandeau_offre_spe"
             >
@@ -83,26 +84,26 @@ export default function SpecialOfferBanner() {
                     viewport={{ once: false, amount: 0.3 }}
                     variants={container}
                 >
-                    <motion.div variants={item}>
+                    {/*<motion.div variants={item}>
                         <Image
                             src="/assets/img/logo-white.svg"
                             alt="The Fourth Estate Logo"
                             width={240}
                             height={23}
                         />
-                    </motion.div>
+                    </motion.div>*/}
 
                     <motion.p className="price" variants={item}>
-                        Make a donation or a monthly contribution
+                        <BsWhatsapp style={{marginRight: "5px"}}/> follow us on our whatsapp channel
                     </motion.p>
 
-                    <motion.p className="baseline" variants={item}>
+                    {/*<motion.p className="baseline" variants={item}>
                         The Fourth Estate membership exists to support public-interest<br />
                         journalism that improves lives and society and drives positive change
-                    </motion.p>
+                    </motion.p>*/}
 
                     <motion.span data-model="button" variants={item}>
-                        Become a member
+                        Click here
                     </motion.span>
                 </motion.div>
             </Link>

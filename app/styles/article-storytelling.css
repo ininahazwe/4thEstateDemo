@@ -607,6 +607,24 @@ html {
     top: var(--headerHeight, 0px);
     height: calc(100vh - var(--headerHeight, 0px));
     overflow: hidden;
+    /* <figure> : colonne = cadre d'image (flex:1) + légende éventuelle dessous. */
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+/* Cadre de l'image : positionné (exigé par <Image fill>) et prend toute la
+   hauteur restante une fois la légende réservée. */
+.am-media-text-frame {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.am-media-text-media .am-figcaption {
+    flex: 0 0 auto;
+    margin: 8px 0;
+    padding: 0 12px;
 }
 
 .am-media-text-media img {

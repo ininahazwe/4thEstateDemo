@@ -23,6 +23,7 @@ export type MediaBlock =
     type: "mediaText";
     src: string;
     alt: string;
+    caption?: string;
     paragraphs: string[];
     position: "left" | "right";
     width?: number;
@@ -266,6 +267,7 @@ export function mapWpBlocksToMediaBlocks(blocks: WpBlock[]): MediaBlock[] {
                         type: "mediaText",
                         src,
                         alt,
+                        caption: extractFigcaption(block.innerHTML),
                         paragraphs,
                         position: block.attrs.mediaPosition === "right" ? "right" : "left",
                         ...extractDimensions(block.innerHTML),

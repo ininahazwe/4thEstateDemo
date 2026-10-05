@@ -7,6 +7,7 @@ import ArticleShareButton from '@/app/components/UI/ArticleShareButton';
 import TTSButton from '@/app/components/UI/TTSButton';
 import BookmarkButton from '@/app/components/UI/BookmarkButton';
 import RelatedArticleCard from './RelatedArticleCard';
+import ArticleMembershipCTA from './ArticleMembershipCTA';
 import type { MediaBlock } from '@/app/services/blockMapper';
 import type { WpArticleCard } from '@/app/services/wpApi.article';
 
@@ -206,7 +207,7 @@ function Block({ block }: { block: MediaBlock }) {
             // la rangée et le sticky n'a aucune marge de déplacement).
             return (
                 <div className={`am-media-text${block.position === 'right' ? ' am-media-text--reverse' : ''}`}>
-                    <div className="am-media-text-media">
+                    <figure className="am-media-text-media">
                         {/* `fill` et non width/height : le conteneur a une
                             hauteur imposée (100vh moins le header) et le CSS
                             recadre en object-fit: cover. Le parent est en
@@ -216,13 +217,20 @@ function Block({ block }: { block: MediaBlock }) {
                             sizes : la grille fait 80vw en deux colonnes égales
                             au-dessus de 860px, soit 40vw par colonne ; en
                             dessous elle passe sur une seule colonne. */}
-                        <Image
-                            src={block.src}
-                            alt={block.alt}
-                            fill
-                            sizes="(max-width: 860px) 100vw, 40vw"
-                        />
-                    </div>
+                        <div className="am-media-text-frame">
+                            <Image
+                                src={block.src}
+                                alt={block.alt}
+                                fill
+                                sizes="(max-width: 860px) 100vw, 40vw"
+                            />
+                        </div>
+                        {/* Légende : même classe que l'image seule
+                            (.am-figcaption). Placée SOUS le cadre de l'image,
+                            dans la colonne épinglée, car la colonne a une
+                            hauteur imposée et overflow:hidden. */}
+                        {block.caption && <figcaption className="am-figcaption">{block.caption}</figcaption>}
+                    </figure>
                     <div className="am-media-text-content am-body">
                         <div>
                             {block.paragraphs.map((p, i) => (
@@ -435,6 +443,17 @@ export default function ArticleMediaLayout({ article, relatedArticles }: Article
                     </div>
                 )
             )}
+
+            {/* CTA adhésion — même composant que le template standard
+                (ArticleBody.tsx), placé après le dernier segment et avant
+                « You might also like ». `.container-background` : le dernier
+                segment peut être un cover sombre, il faut une plaque blanche
+                (même raison que pour la grille ci-dessous). */}
+            <div className="container-background">
+                <div className="am-wrap">
+                    <ArticleMembershipCTA />
+                </div>
+            </div>
 
             {/* « You might also like » — même liste et même markup que le
                 template standard (ArticleBody.tsx), pour que les deux gabarits
