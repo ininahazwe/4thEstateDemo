@@ -94,7 +94,7 @@ export default function SpecialOfferBanner() {
                     </motion.div>*/}
 
                     <motion.p className="price" variants={item}>
-                        <BsWhatsapp style={{marginRight: "5px"}}/> follow us on our whatsapp channel
+                        <BsWhatsapp style={{marginRight: "5px"}}/> follow us on our WhatsApp channel
                     </motion.p>
 
                     {/*<motion.p className="baseline" variants={item}>
