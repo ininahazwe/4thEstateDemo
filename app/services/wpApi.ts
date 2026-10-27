@@ -342,9 +342,10 @@ function buildImage(
 // getFourthEstateArticles
 // ---------------------------------------------------------------------------
 
-export async function getFourthEstateArticles(): Promise<{ zone1: ArticleData[]; zone2: ArticleData[] }> {
+export async function getFourthEstateArticles(exclude?: number[]): Promise<{ zone1: ArticleData[]; zone2: ArticleData[] }> {
     try {
-        const posts = await fetchPosts(`${WP_BASE}/posts?per_page=15&status=publish`);
+        // exclude = IDs du Hero (HeroStacked) : evite les doublons Hero/NewsZone
+        const posts = await fetchPosts(`${WP_BASE}/posts?per_page=15&status=publish${excludeParam(exclude)}`);
         if (!posts.length) return { zone1: [], zone2: [] };
 
         const { mediaIds, categoryIds, tagIds } = extractIds(posts);

@@ -57,7 +57,7 @@ export default async function App() {
         healthNews,
         bannerCategories,
     ] = await Promise.all([
-        getFourthEstateArticles(),
+        getFourthEstateArticles(spotlightIds),
         getLatestBannerArticles(),
         getGeneralNewsArticles(6, spotlightIds),
         getEnvironmentArticles(6, spotlightIds),
