@@ -167,8 +167,9 @@ export default function RootLayout({
         <body className="ci-phalcon not-logged special-abo variantB page-home v-web {maPoliceConfiguration.className}">
             <Providers>
                 {children}
-                {/* Annonce du lancement du programme de membres (s'auto-désactive
-                    après le 31/08 : cf. LAUNCH_AT dans le composant). */}
+                {/* Annonce du programme de membres : affichée uniquement pendant
+                    la première et la dernière semaine du mois (cf. isDisplayWeek
+                    dans le composant). */}
                 <MembershipLaunchModal />
             </Providers>
 

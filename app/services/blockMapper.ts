@@ -267,7 +267,14 @@ export function mapWpBlocksToMediaBlocks(blocks: WpBlock[]): MediaBlock[] {
                         type: "mediaText",
                         src,
                         alt,
-                        caption: extractFigcaption(block.innerHTML),
+                        // core/media-text n'a pas de <figcaption> natif : on retombe
+                        // sur la légende de la médiathèque, injectée par
+                        // tfe-storytelling.php dans attrs.mediaCaption.
+                        caption:
+                            extractFigcaption(block.innerHTML) ??
+                            (typeof block.attrs.mediaCaption === "string"
+                                ? stripTags(block.attrs.mediaCaption) || undefined
+                                : undefined),
                         paragraphs,
                         position: block.attrs.mediaPosition === "right" ? "right" : "left",
                         ...extractDimensions(block.innerHTML),

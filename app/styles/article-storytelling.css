@@ -42,23 +42,22 @@ html {
     padding: 0 24px;
 }
 
-/* Espace entre les blocs du corps de l'article. Ciblé sur les wrappers de
-   blocs plutôt que via ":is(article-media) > * + *" pour ne pas perturber
-   le chevauchement volontaire du texte de cover (margin négative, voir
-   plus bas). */
-.am-wrap + .am-wrap,
-.am-wrap + .am-gallery,
-.am-wrap + .am-media-text,
-.am-wrap + .am-media-full,
-.am-gallery + .am-wrap,
-.am-gallery + .am-gallery,
-.am-gallery + .am-media-full,
-.am-media-full + .am-wrap,
-.am-media-full + .am-gallery,
-.am-media-full + .am-media-full,
-.am-media-text + .am-wrap,
-.am-media-text + .am-gallery,
-.am-media-text + .am-media-full {
+/* Espace entre les blocs du corps de l'article : UNE seule règle, sur tous les
+   enfants directs d'une plaque blanche (.container-background).
+
+   Remplace l'ancienne matrice de paires (`.am-wrap + .am-gallery`,
+   `.am-media-text + .am-wrap`…) qui avait des trous : G+M, F+M, M+M n'avaient
+   aucun espace, et tout nouveau type de bloc devait y être ajouté à la main.
+   Ici, c'est le conteneur qui espace ses enfants — un bloc ne porte JAMAIS de
+   marge ou de padding extérieur propre (le media-text mobile en avait un de
+   32px en bas, qui s'ajoutait aux 48px : 80px de vide après lui, contre 48px
+   après tout autre bloc).
+
+   Sélecteur à 2 classes (0,2,0) : doit battre `.am-media-full`, `.am-gallery`
+   et `.am-wrap` qui posent `margin: 0 auto` (0,1,0) plus bas dans le fichier.
+   Les covers ne sont pas concernés : ils sont frères des plaques, pas leurs
+   enfants. */
+.article-media .container-background > * + * {
     margin-top: 48px;
 }
 
@@ -689,8 +688,11 @@ html {
            bloc media-text s'aligne ainsi sur le corps de texte au lieu d'avoir
            sa propre marge. 32px verticaux pour respirer sous l'image.
            `max-width: none` : le 760px de la regle de base n'a plus de sens
-           une fois le bloc en pleine largeur. */
-        padding: 32px 24px;
+           une fois le bloc en pleine largeur.
+           Padding BAS à 0 : l'espace sous le bloc est géré par la règle
+           `.container-background > * + *` (48px, comme après tout autre
+           bloc). Un padding bas ici s'y additionnait : 32 + 48 = 80px de vide. */
+        padding: 32px 24px 0;
         max-width: none;
     }
 
@@ -778,6 +780,16 @@ html {
     max-width: 900px;
     margin: 0;
     text-transform: uppercase;
+}
+
+/* Mobile : texte du cover +50 % (chaque borne du clamp x1.5 : 1.5rem -> 2.25rem,
+   4vw -> 6vw, 4.5rem -> 6.75rem). `overflow-wrap` : en majuscules gras à 36px,
+   un mot long (ex. ACCOUNTABILITY) dépasserait les 327px utiles de l'écran. */
+@media screen and (max-width: 759px) {
+    .am-cover-text {
+        font-size: clamp(2.25rem, 6vw, 6.75rem);
+        overflow-wrap: break-word;
+    }
 }
 
 /* iOS/Android ignorent (ou rendent de travers) background-attachment: fixed.

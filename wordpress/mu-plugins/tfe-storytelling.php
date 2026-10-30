@@ -184,9 +184,22 @@ function tfe_storytelling_clean_block( $block, $depth = 0 ) {
         return null;
     }
 
+    $attrs = isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array();
+
+    // core/media-text n'a pas de champ legende : son HTML ne contient aucun
+    // <figcaption>. On expose la legende de la MEDIATHEQUE (champ "Legende" de
+    // l'attachment, saisi dans la modale medias) via un attribut synthetique
+    // `mediaCaption`, que le front lit dans blockMapper.ts.
+    if ( 'core/media-text' === $block['blockName'] && ! empty( $attrs['mediaId'] ) ) {
+        $caption = wp_get_attachment_caption( (int) $attrs['mediaId'] );
+        if ( is_string( $caption ) && '' !== trim( $caption ) ) {
+            $attrs['mediaCaption'] = $caption;
+        }
+    }
+
     return array(
         'blockName'   => (string) $block['blockName'],
-        'attrs'       => isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array(),
+        'attrs'       => $attrs,
         'innerHTML'   => isset( $block['innerHTML'] ) ? (string) $block['innerHTML'] : '',
         'innerBlocks' => tfe_storytelling_clean_blocks(
             isset( $block['innerBlocks'] ) ? $block['innerBlocks'] : array(),

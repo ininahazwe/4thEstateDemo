@@ -12,9 +12,8 @@ import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
  * WebGL interactif (cf. PressFreedomCanvas) et un compte à rebours jusqu'au
  * lundi 31 août 00:00 GMT.
  *
- * Réglages : les trois constantes ci-dessous. Après le 31, le composant ne
- * rend plus rien du tout (aucun compte à rebours négatif possible) — on peut
- * donc le laisser en place et le retirer du layout tranquillement ensuite.
+ * Affichage : uniquement pendant la première et la dernière semaine de chaque
+ * mois (cf. isDisplayWeek). Réglages : les constantes ci-dessous.
  */
 
 /** Cible du compte à rebours. Le Z est important : heure GMT, comme Accra. */
@@ -49,6 +48,15 @@ function pad(n: number) {
     return n < 10 ? `0${n}` : String(n);
 }
 
+/** Première semaine (jours 1 à 7) ou dernière semaine (7 derniers jours) du mois, en UTC. */
+function isDisplayWeek(now: Date = new Date()): boolean {
+    const day = now.getUTCDate();
+    const lastDay = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0),
+    ).getUTCDate();
+    return day <= 7 || day > lastDay - 7;
+}
+
 export default function MembershipLaunchModal() {
     const launchTs = Date.parse(LAUNCH_AT);
     const { status } = useSession();
@@ -74,7 +82,7 @@ export default function MembershipLaunchModal() {
 
     /* --- déclenchement à +5 s ------------------------------------------- */
     useEffect(() => {
-        if (Date.now() >= launchTs) return; // lancement passé : plus rien à annoncer
+        if (!isDisplayWeek()) return; // hors première / dernière semaine du mois
         if (status === "authenticated") return; // déjà membre / connecté
 
         let dismissed = false;
@@ -97,9 +105,7 @@ export default function MembershipLaunchModal() {
     useEffect(() => {
         if (!open) return;
         const id = window.setInterval(() => {
-            const next = remainingUntil(launchTs);
-            setRemaining(next);
-            if (!next) setOpen(false); // on a franchi l'heure du lancement
+            setRemaining(remainingUntil(launchTs));
         }, 1000);
         return () => window.clearInterval(id);
     }, [open, launchTs]);
@@ -144,7 +150,7 @@ export default function MembershipLaunchModal() {
         };
     }, [open, dismiss]);
 
-    if (!open || !remaining) return null;
+    if (!open) return null;
 
     return (
         <div
