@@ -55,6 +55,11 @@ function prepareAndInterleaveContent(
         a.setAttribute("data-pswp-height", height);
         a.setAttribute("target", "_blank");
         a.setAttribute("rel", "noreferrer");
+        const capText =
+            alt ||
+            el.querySelector("figcaption")?.textContent?.trim().replace(/\s+/g, " ").slice(0, 120) ||
+            "";
+        a.setAttribute("aria-label", capText ? `View larger image: ${capText}` : "View larger image");
 
         // Ajouter une classe pour signifier que l'élément est cliquable graphiquement (curseur zoom)
         if (el.tagName.toLowerCase() === "figure") {

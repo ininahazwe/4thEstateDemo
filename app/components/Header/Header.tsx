@@ -119,7 +119,7 @@ export default function Header() {
                         className="item"
                         title={theme === 'light' ? "Turn on dark mode" : "Turn on light mode"}
                         onClick={toggleTheme}
-                        aria-pressed={theme === 'dark'}
+                       
                     >
                         {theme === 'light' ? (
                             <Moon size={18} strokeWidth={2} aria-hidden="true" />
@@ -222,8 +222,8 @@ export default function Header() {
         <span className="sr-only">My account</span>
     </a>
 ) : (
-    <Link className="header-user" href="/connexion" title="Connexion">
-        <span className="sr-only">Connexion</span>
+    <Link className="header-user" href="/connexion" title="Sign in">
+        <span className="sr-only">Sign in</span>
     </Link>
 )}
 </div>
@@ -238,8 +238,8 @@ export default function Header() {
             <section className="tools-section">
                 <div className="tool-list">
                     <Link href="/search" className="item" data-icon="magnifying-glass">Search</Link>
-                    <button type="button" className="item" data-icon="circle-half-stroke" onClick={toggleTheme} aria-pressed={theme === 'dark'}>
-                        Mode {theme === 'light' ? 'dark' : 'light'}
+                    <button type="button" className="item" data-icon="circle-half-stroke" onClick={toggleTheme}>
+                        {theme === 'light' ? 'Dark mode' : 'Light mode'}
                     </button>
                 </div>
             </section>

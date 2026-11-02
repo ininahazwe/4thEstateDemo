@@ -136,6 +136,7 @@ export default async function OurImpactCategoryPage() {
                 <section className="section" data-columns="1" data-section="our-impact">
                     <div className="section-content" data-column="full">
                        {/* <CategoryHeader title={data.title} tags={data.tags} />*/}
+                        <h1 className="page-title">{data.title}</h1>
                         <OurImpactFilterRiver
                             initialArticles={data.articles}
                             initialHasMore={data.hasMore}

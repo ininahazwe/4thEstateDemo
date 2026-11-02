@@ -85,6 +85,7 @@ export default function ArticleIllustration({
                     data-pswp-height={dimensions.height}
                     target="_blank"
                     rel="noreferrer"
+                    aria-label={imageCaption ? `View larger image: ${imageCaption}` : "View larger image"}
                 >
                     <picture>
                         <img

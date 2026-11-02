@@ -3,7 +3,7 @@ import LoginForm from "./login-form";
 import Header from "@/app/components/Header/Header";
 
 export const metadata = {
-    title: "Connexion — The Fourth Estate",
+    title: "Sign in — The Fourth Estate",
 };
 
 export default function ConnexionPage() {

@@ -608,3 +608,61 @@ li.wp-block-list{
         font-size: 0.9rem;
     }
 }
+
+/* ==========================================================================
+ * Audit UX/UI 02/11/2026 — corrections accessibilité
+ * ========================================================================== */
+
+/* #01 Focus clavier visible (WCAG 2.4.7 / 2.4.11). Remplace l'outline interne
+ * de 1px (base.css :focus-visible, offset -1px) et l'outline:none du header. */
+:root {
+    --focus-ring: #6d2929;
+}
+:root[data-user-color-scheme="dark"] {
+    --focus-ring: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+    :root[data-user-color-scheme="auto"] {
+        --focus-ring: #ffffff;
+    }
+}
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+[role="tab"]:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid var(--focus-ring) !important;
+    outline-offset: 2px !important;
+}
+
+/* #06 Cibles tactiles (WCAG 2.5.8 : 24px minimum) */
+.tfe-carousel-dot {
+    position: relative;
+}
+.tfe-carousel-dot::after {
+    content: "";
+    position: absolute;
+    inset: -8px; /* 8px visibles -> zone cliquable 24x24 */
+}
+.site-footer .footer-hero .hero-socials a,
+.hero-socials .item {
+    min-height: 44px;
+    min-width: 44px;
+}
+.our-impact-filters [data-model^="button"],
+.our-impact-filters [role="tab"] {
+    min-height: 44px;
+}
+
+/* #07 Les filtres héritent de la police du site (étaient en Arial) */
+.our-impact-filters button {
+    font-family: inherit;
+}
+
+/* Audit UX/UI 02/11/2026 #S6 — lien auteur : cible tactile >= 24px (WCAG 2.5.8) */
+.author-link {
+    display: inline-block;
+    min-height: 24px;
+    line-height: 24px;
+}

@@ -87,6 +87,7 @@ export default async function App() {
                 <div className="site-main-wrap">
                     <main className="site-main" id="site-main">
                         <section className="home">
+                            <h1 className="sr-only">The Fourth Estate — Investigative Journalism and Public Interest News</h1>
                             {/* Inject articles fetched from API service */}
 
                             {/* Main news zone powered by WordPress API
