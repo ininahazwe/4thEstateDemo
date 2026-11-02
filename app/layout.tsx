@@ -164,7 +164,7 @@ export default function RootLayout({
             />
 
         </head>
-        <body className="ci-phalcon not-logged special-abo variantB page-home v-web {maPoliceConfiguration.className}">
+        <body className="ci-phalcon not-logged special-abo variantB v-web">
             <Providers>
                 {children}
                 {/* Annonce du programme de membres : affichée uniquement pendant

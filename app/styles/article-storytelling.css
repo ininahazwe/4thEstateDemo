@@ -117,7 +117,25 @@ html {
     display: flex;
     justify-content: center;
     text-align: center;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+    /* Le dégradé vit dans ::before (audit UX 02/11/2026, S2) : il déborde de
+       160px au-dessus du bloc pour que la PREMIÈRE ligne du titre ne soit plus
+       sur un fond non assombri (ciel / sable clairs). */
+}
+.am-hero-title-overlay::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: -160px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.6) 50%,
+        rgba(0, 0, 0, 0) 100%
+    );
 }
 
 /* Bloc titre + chapô, porteur de la dérive au scroll (framer-motion pose un
@@ -140,6 +158,9 @@ html {
     line-height: 1.15;
     margin: 0;
     text-transform: none !important;
+    /* S2 : ombre portée en renfort du dégradé ; S8 : pas de mot orphelin. */
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.55);
+    text-wrap: balance;
 }
 
 /* Titre en deux temps — portee limitee au hero d'article (.am-hero-media).
@@ -852,4 +873,29 @@ html {
 
 #site-main[data-template="media"] {
     padding: 0 !important;
+}
+/* Bouton pause/lecture de la vidéo du hero (WCAG 2.2.2) — cible 44x44. */
+.am-hero-video-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 3;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    cursor: pointer;
+}
+.am-hero-video-toggle:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+.am-hero-video-toggle:focus-visible {
+    outline: 2px solid #fff !important;
+    outline-offset: 2px !important;
 }

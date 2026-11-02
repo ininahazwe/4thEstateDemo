@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Pause, Play } from 'lucide-react';
 
 interface ArticleHeroVideoProps {
     src: string;
@@ -35,8 +36,9 @@ interface ArticleHeroVideoProps {
 //    contrôles natifs apparaissent alors pour laisser le choix au lecteur.
 // ---------------------------------------------------------------------------
 
-export default function ArticleHeroVideo({ src, poster, label }: ArticleHeroVideoProps) {
+export default function ArticleHeroVideo({ src, poster }: ArticleHeroVideoProps) {
     const ref = useRef<HTMLVideoElement>(null);
+    const [playing, setPlaying] = useState(false);
 
     useEffect(() => {
         const video = ref.current;
@@ -44,31 +46,59 @@ export default function ArticleHeroVideo({ src, poster, label }: ArticleHeroVide
 
         video.muted = true;
 
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            video.controls = true;
-            return;
+        const onPlay = () => setPlaying(true);
+        const onPause = () => setPlaying(false);
+        video.addEventListener('play', onPlay);
+        video.addEventListener('pause', onPause);
+
+        // Pas d'attribut `autoPlay` dans le JSX : il lancerait la lecture
+        // avant l'hydratation, même sous prefers-reduced-motion (WCAG 2.3.3).
+        // C'est ici, une fois la préférence connue, que la lecture démarre.
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            void video.play().catch(() => {
+                // Lecture refusée : le poster tient lieu d'image de hero.
+            });
         }
 
-        void video.play().catch(() => {
-            // Lecture refusée : le poster tient lieu d'image de hero.
-        });
+        return () => {
+            video.removeEventListener('play', onPlay);
+            video.removeEventListener('pause', onPause);
+        };
     }, []);
 
+    const toggle = () => {
+        const video = ref.current;
+        if (!video) return;
+        if (video.paused) void video.play().catch(() => {});
+        else video.pause();
+    };
+
     return (
-        <video
-            ref={ref}
-            className="am-hero-video"
-            src={src}
-            poster={poster}
-            autoPlay
-            muted
-            loop
-            playsInline
-            // `metadata` et non `auto` : le hero fait 90vh, la vidéo se lance
-            // dès l'ouverture — inutile de précharger le fichier entier, le
-            // navigateur enchaîne de lui-même une fois la lecture démarrée.
-            preload="metadata"
-            aria-label={label || undefined}
-        />
+        <>
+            <video
+                ref={ref}
+                className="am-hero-video"
+                src={src}
+                poster={poster}
+                muted
+                loop
+                playsInline
+                // `metadata` et non `auto` : le hero fait 90vh, la vidéo se lance
+                // dès l'ouverture — inutile de précharger le fichier entier.
+                preload="metadata"
+                // Vidéo muette et décorative : le titre (H1) porte déjà le sens.
+                // Un aria-label la dupliquerait pour les lecteurs d'écran.
+                aria-hidden="true"
+            />
+            {/* WCAG 2.2.2 : tout mouvement > 5 s doit pouvoir être mis en pause. */}
+            <button
+                type="button"
+                className="am-hero-video-toggle"
+                onClick={toggle}
+                aria-label={playing ? 'Pause background video' : 'Play background video'}
+            >
+                {playing ? <Pause size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
+            </button>
+        </>
     );
 }

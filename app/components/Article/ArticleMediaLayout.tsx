@@ -324,7 +324,7 @@ function Cover({ block }: { block: CoverBlock }) {
                     opacity: (block.dimRatio ?? 50) / 100,
                 }}
             />
-            {block.text && <p className="am-cover-text">{block.text}</p>}
+            {block.text && <h2 className="am-cover-text">{block.text}</h2>}
         </section>
     );
 }
