@@ -666,3 +666,13 @@ summary:focus-visible,
     min-height: 24px;
     line-height: 24px;
 }
+
+/* Audit UX/UI 02/11/2026 #7 — le bouton membership du header n'est plus le
+ * point focal de l'écran mobile : contour au lieu d'aplat. Même taille. */
+@media (max-width: 759px) {
+    .site-header .header-hebdo .header-abo[data-model] {
+        background: transparent;
+        color: var(--focus-ring);
+        border: 2px solid currentColor;
+    }
+}

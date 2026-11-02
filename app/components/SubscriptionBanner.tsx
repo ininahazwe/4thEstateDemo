@@ -5,11 +5,36 @@ import Link from 'next/link';
 import {X} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
+import {
+    POPUP_DISMISSED_EVENT,
+    isPopupDismissed,
+    isPopupSeason,
+} from "@/lib/membership-prompt";
 
 export default function SubscriptionBanner() {
     const { status } = useSession();
     const [isVisible, setIsVisible] = useState(false);
     const cookieName = 'banner-abo-special-offer-mobile';
+    // Une seule surface membership à la fois : pendant la saison de la popup,
+    // la barre attend que la popup ait été vue/fermée. Elle se masque aussi
+    // tant que le héros storytelling (.am-hero-media) est à l'écran.
+    const [popupDone, setPopupDone] = useState(false);
+    const [heroInView, setHeroInView] = useState(false);
+
+    useEffect(() => {
+        const update = () => setPopupDone(!isPopupSeason() || isPopupDismissed());
+        update();
+        window.addEventListener(POPUP_DISMISSED_EVENT, update);
+        return () => window.removeEventListener(POPUP_DISMISSED_EVENT, update);
+    }, []);
+
+    useEffect(() => {
+        const hero = document.querySelector('.am-hero-media');
+        if (!hero || !('IntersectionObserver' in window)) return;
+        const io = new IntersectionObserver(([entry]) => setHeroInView(entry.isIntersecting), { threshold: 0.2 });
+        io.observe(hero);
+        return () => io.disconnect();
+    }, []);
 
     useEffect(() => {
         // Vérification du cookie au montage du composant (côté client uniquement)
@@ -34,7 +59,7 @@ export default function SubscriptionBanner() {
     // Masqué pendant la résolution de la session (évite un flash) et pour
     // tout user authentifié — banniere d'abonnement réservée aux visiteurs.
     if (status !== "unauthenticated") return null;
-    if (!isVisible) return null;
+    if (!isVisible || !popupDone || heroInView) return null;
 
     return (
         <aside

@@ -4,26 +4,33 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
+import {
+    isPopupDismissed,
+    isPopupSeason,
+    markPopupDismissed,
+} from "@/lib/membership-prompt";
 
 /**
  * Popup d'annonce du lancement du programme de membres.
  *
- * Séquence : le site s'ouvre → 5 s plus tard le popup apparaît, avec un fond
+ * Séquence : le lecteur lit la page → à 50 % de scroll (ou après 45 s sans
+ * scroll) le popup apparaît, avec un fond
  * WebGL interactif (cf. PressFreedomCanvas) et un compte à rebours jusqu'au
  * lundi 31 août 00:00 GMT.
  *
  * Affichage : uniquement pendant la première et la dernière semaine de chaque
- * mois (cf. isDisplayWeek). Réglages : les constantes ci-dessous.
+ * mois (cf. isPopupSeason dans lib/membership-prompt.ts). Réglages : les constantes ci-dessous.
  */
 
 /** Cible du compte à rebours. Le Z est important : heure GMT, comme Accra. */
 const LAUNCH_AT = "2026-09-29T00:00:00Z";
-/** Délai avant ouverture, en ms. */
-const OPEN_DELAY_MS = 5000;
+/** Seuil de scroll (0–1) qui déclenche l'ouverture. */
+const SCROLL_THRESHOLD = 0.5;
+/** Repli : ouverture après ce délai (ms) si le lecteur ne scrolle pas. */
+const FALLBACK_DELAY_MS = 45000;
 /** Une fois fermé, on ne réaffiche pas dans cette session d'onglet.
  *  Pour « une seule fois par visiteur », remplacer sessionStorage par
  *  localStorage dans les deux appels plus bas. */
-const STORAGE_KEY = "tfe:membership-launch-dismissed";
 
 // Le canvas WebGL n'est téléchargé qu'à l'ouverture du popup : zéro impact
 // sur le bundle initial du site.
@@ -48,15 +55,6 @@ function pad(n: number) {
     return n < 10 ? `0${n}` : String(n);
 }
 
-/** Première semaine (jours 1 à 7) ou dernière semaine (7 derniers jours) du mois, en UTC. */
-function isDisplayWeek(now: Date = new Date()): boolean {
-    const day = now.getUTCDate();
-    const lastDay = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0),
-    ).getUTCDate();
-    return day <= 7 || day > lastDay - 7;
-}
-
 export default function MembershipLaunchModal() {
     const launchTs = Date.parse(LAUNCH_AT);
     const { status } = useSession();
@@ -70,35 +68,40 @@ export default function MembershipLaunchModal() {
 
     const dismiss = useCallback(() => {
         setOpen(false);
-        try {
-            window.sessionStorage.setItem(STORAGE_KEY, "1");
-        } catch {
-            /* navigation privée / storage bloqué : on ignore */
-        }
+        markPopupDismissed();
         if (restoreFocus.current instanceof HTMLElement) {
             restoreFocus.current.focus();
         }
     }, []);
 
-    /* --- déclenchement à +5 s ------------------------------------------- */
+    /* --- déclenchement : 50 % de scroll, ou repli à 45 s ------------------ */
     useEffect(() => {
-        if (!isDisplayWeek()) return; // hors première / dernière semaine du mois
+        if (!isPopupSeason()) return; // hors première / dernière semaine du mois
         if (status === "authenticated") return; // déjà membre / connecté
+        if (isPopupDismissed()) return;
 
-        let dismissed = false;
-        try {
-            dismissed = window.sessionStorage.getItem(STORAGE_KEY) === "1";
-        } catch {
-            /* storage inaccessible : on affiche, c'est le comportement le plus sûr */
-        }
-        if (dismissed) return;
-
-        const id = window.setTimeout(() => {
+        let fired = false;
+        const cleanup = () => {
+            window.removeEventListener("scroll", onScroll);
+            window.clearTimeout(timer);
+        };
+        const fire = () => {
+            if (fired) return;
+            fired = true;
+            cleanup();
             setRemaining(remainingUntil(launchTs));
             setOpen(true);
-        }, OPEN_DELAY_MS);
+        };
+        const onScroll = () => {
+            const el = document.documentElement;
+            const scrollable = el.scrollHeight - window.innerHeight;
+            if (scrollable <= 0) return;
+            if (window.scrollY / scrollable >= SCROLL_THRESHOLD) fire();
+        };
+        const timer = window.setTimeout(fire, FALLBACK_DELAY_MS);
+        window.addEventListener("scroll", onScroll, { passive: true });
 
-        return () => window.clearTimeout(id);
+        return cleanup;
     }, [launchTs, status]);
 
     /* --- compte à rebours ----------------------------------------------- */
