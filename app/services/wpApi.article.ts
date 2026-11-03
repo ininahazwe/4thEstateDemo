@@ -233,6 +233,36 @@ function pickWpImageUrl(
     return (media.source_url as string) ?? undefined;
 }
 
+/**
+ * Média « image mise en avant » d'un post.
+ *
+ * Source normale : `_embedded["wp:featuredmedia"][0]`. WordPress omet cet embed
+ * (ou y place un objet d'erreur `{ code, message }`) quand la pièce jointe n'est
+ * pas lisible publiquement, typiquement parce qu'elle a été uploadée sur un
+ * brouillon dont elle hérite du statut. L'article publié se retrouve alors sans
+ * vignette ni og:image (post 25027, 03-11-2026).
+ *
+ * Repli : `post.tfe_featured_image`, exposé par le mu-plugin
+ * tfe-featured-image.php avec la même forme qu'un objet média, donc lisible tel
+ * quel par pickWpImageUrl().
+ */
+function resolveFeaturedMedia(
+    post: Record<string, unknown>,
+    embedded: Record<string, unknown>
+): Record<string, unknown> | undefined {
+    const embeddedMedia = (
+        embedded["wp:featuredmedia"] as Array<Record<string, unknown>> | undefined
+    )?.[0];
+    if (embeddedMedia && typeof embeddedMedia.source_url === "string") {
+        return embeddedMedia;
+    }
+    const fallback = post.tfe_featured_image as Record<string, unknown> | null | undefined;
+    if (fallback && typeof fallback.source_url === "string") {
+        return fallback;
+    }
+    return undefined;
+}
+
 const HERO_SIZE_PRIORITY = ['1536x1536', 'large', 'medium_large'];
 const CARD_SIZE_PRIORITY = ['medium_large', 'large', 'medium'];
 
@@ -253,9 +283,7 @@ function estimateReadTime(htmlContent: string): string {
 function buildArticleCard(post: Record<string, unknown>): WpArticleCard {
     const acf = (post.acf ?? {}) as Record<string, unknown>;
     const embedded = (post._embedded ?? {}) as Record<string, unknown>;
-    const media = (
-        embedded["wp:featuredmedia"] as Array<Record<string, unknown>>
-    )?.[0];
+    const media = resolveFeaturedMedia(post, embedded);
     const terms = (
         embedded["wp:term"] as Array<Array<Record<string, unknown>>>
     )?.[0] ?? [];
@@ -302,9 +330,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
         const post = posts[0];
         const acf = (post.acf ?? {}) as Record<string, unknown>;
         const embedded = (post._embedded ?? {}) as Record<string, unknown>;
-        const media = (
-            embedded["wp:featuredmedia"] as Array<Record<string, unknown>>
-        )?.[0];
+        const media = resolveFeaturedMedia(post, embedded);
         const allTerms = (
             embedded["wp:term"] as Array<Array<Record<string, unknown>>>
         ) ?? [];
@@ -338,7 +364,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
             featuredImage: pickWpImageUrl(media, HERO_SIZE_PRIORITY),
             heroVideo: pickHeroVideoUrl(post.hero_video),
             imageCaption: (media?.caption as { rendered: string })?.rendered
-                ? stripHtml((media.caption as { rendered: string }).rendered)
+                ? stripHtml((media?.caption as { rendered: string }).rendered)
                 : undefined,
             imageCredit: (acf.image_credit as string) ?? undefined,
             category: categoryTerms[0]
