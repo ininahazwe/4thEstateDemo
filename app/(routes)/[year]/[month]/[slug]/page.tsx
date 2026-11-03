@@ -66,6 +66,32 @@ export async function generateStaticParams() {
     }
 }
 
+/**
+ * Type MIME déduit de l'extension de l'URL de l'image mise en avant.
+ * Évite d'annoncer un type fixe (image/jpeg) alors que WordPress peut
+ * servir du PNG, WebP, etc. Ne touche pas aux dimensions : les tailles
+ * réelles ne sont pas exposées ici, on les omet donc plutôt que de
+ * déclarer des valeurs fausses.
+ */
+function imageMimeFromUrl(url: string): string | undefined {
+    const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
+    switch (ext) {
+        case "jpg":
+        case "jpeg":
+            return "image/jpeg";
+        case "png":
+            return "image/png";
+        case "webp":
+            return "image/webp";
+        case "avif":
+            return "image/avif";
+        case "gif":
+            return "image/gif";
+        default:
+            return undefined;
+    }
+}
+
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
     const { slug, year, month } = await params;
     const article = await getArticleBySlug(slug);
@@ -110,10 +136,8 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
                 ? [
                     {
                         url: article.featuredImage,
-                        width: 1200,
-                        height: 630,
                         alt: article.title,
-                        type: "image/jpeg",
+                        type: imageMimeFromUrl(article.featuredImage),
                     },
                 ]
                 : [],
@@ -241,8 +265,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 {
                     "@type": "ImageObject",
                     url: article.featuredImage,
-                    width: 1200,
-                    height: 630,
                 },
             ]
             : [],
