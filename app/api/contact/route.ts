@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { createMailSetup, describeMailError } from "@/lib/mailer";
 
 // ---------------------------------------------------------------------------
 // POST /api/contact — reçoit le formulaire de la page /contact-us et l'envoie
-// par email à la rédaction via SMTP Gmail.
+// par email à la rédaction (SMTP du serveur ou Gmail, voir lib/mailer.ts).
 //
 // Même mécanique que /api/whistleblower (nodemailer + mot de passe
 // d'application Google), à deux différences près :
@@ -95,15 +95,14 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "too_long" }, { status: 400 });
     }
 
-    const gmailUser = process.env.GMAIL_USER;
-    const gmailPassword = process.env.GMAIL_APP_PASSWORD;
+    const mail = createMailSetup();
 
-    if (!gmailUser || !gmailPassword) {
-        console.error("contact : GMAIL_USER ou GMAIL_APP_PASSWORD manquant");
+    if (!mail) {
+        console.error("contact : configuration SMTP manquante (SMTP_*, ou GMAIL_USER + GMAIL_CLIENT_ID/SECRET/REFRESH_TOKEN, ou GMAIL_APP_PASSWORD)");
         return NextResponse.json({ error: "not_configured" }, { status: 500 });
     }
 
-    const recipients = process.env.CONTACT_TO || gmailUser;
+    const recipients = process.env.CONTACT_TO || mail.user;
 
     const lines = [
         `Name: ${name}`,
@@ -115,16 +114,11 @@ export async function POST(req: Request) {
     ];
 
     try {
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: { user: gmailUser, pass: gmailPassword },
-        });
-
-        await transporter.sendMail({
+        await mail.transporter.sendMail({
             // L'expéditeur reste la boîte Gmail du site : usurper l'adresse du
             // visiteur ferait échouer SPF/DKIM et enverrait le mail en spam.
             // C'est replyTo qui permet à la rédaction de répondre directement.
-            from: `"The Fourth Estate — Contact form" <${gmailUser}>`,
+            from: `"The Fourth Estate — Contact form" <${mail.user}>`,
             to: recipients,
             replyTo: `"${name}" <${email}>`,
             subject: `[Contact] ${subject}`,
@@ -133,7 +127,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ ok: true });
     } catch (err) {
-        console.error("contact : envoi SMTP échoué", err);
+        console.error("contact : envoi SMTP échoué —", describeMailError(err));
         return NextResponse.json({ error: "send_failed" }, { status: 502 });
     }
 }
