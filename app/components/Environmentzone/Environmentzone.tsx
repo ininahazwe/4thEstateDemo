@@ -23,9 +23,11 @@ export default function EnvironmentZone({
         <section className="zone zone-type zone-long-format" data-slider="">
 
             {/* Titre cliquable vers la page catégorie — identique au HTML de référence */}
-            <Link href="/category/environment" className="section-title">
-                {title}
-            </Link>
+            <h2 className="zone-heading">
+                <Link href="/category/environment" className="section-title">
+                    {title}
+                </Link>
+            </h2>
 
             {/* Wrap slider : ref branchée sur useSlider pour le scroll horizontal */}
             <div className="wrap" data-slider-wrap="" ref={wrapRef}>

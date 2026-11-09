@@ -54,9 +54,9 @@ export default function HumanRightsCard({ article, sizes = '(max-width: 759px) 1
                        {/* {article.tagOrCategory && (
                             <span className="strapline">{article.tagOrCategory} -</span>
                         )}*/}
-                        <p id={titleId} className="title">
+                        <h3 id={titleId} className="title">
                             {article.title}
-                        </p>
+                        </h3>
                     </div>
 
                     <div className="infos">

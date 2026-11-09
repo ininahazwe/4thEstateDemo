@@ -676,3 +676,10 @@ summary:focus-visible,
         border: 2px solid currentColor;
     }
 }
+
+/* Logos : next/image avertit quand la largeur est contrainte par le CSS
+ * (max-width / largeur du conteneur) sans `height: auto`. Garde aussi le ratio. */
+.site-header .header-logo img,
+.site-footer .hero-logo img {
+    height: auto;
+}

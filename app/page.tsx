@@ -45,8 +45,18 @@ export default async function App() {
     // cache par HeroStacked (meme URL, revalidate 300) : cout ~0.
     const spotlightIds = await getSpotlightIds(3);
 
+    // "More stories" (zone2) est charge AVANT les zones par categorie : ses IDs
+    // s'ajoutent a ceux du Hero dans le `exclude` WP, sinon un article recent
+    // apparait deux fois (More stories + sa rubrique). Seule zone2 est rendue
+    // (zone1 est commentee dans NewsZone). Cout : une requete de plus en serie,
+    // deja couverte par le cache de fetchPosts.
+    const { zone1, zone2 } = await getFourthEstateArticles(spotlightIds);
+    const moreStoriesIds = zone2
+        .map((a) => Number(a.id.replace('wp-post-', '')))
+        .filter((id) => Number.isFinite(id));
+    const shownIds = [...spotlightIds, ...moreStoriesIds];
+
     const [
-        { zone1, zone2 },
         bannerArticles,
         generalNews,
         environmentlNews,
@@ -57,15 +67,14 @@ export default async function App() {
         healthNews,
         bannerCategories,
     ] = await Promise.all([
-        getFourthEstateArticles(spotlightIds),
         getLatestBannerArticles(),
-        getGeneralNewsArticles(6, spotlightIds),
-        getEnvironmentArticles(6, spotlightIds),
-        getAntiCorruptionArticles(spotlightIds),
-        getOurImpactArticles(spotlightIds),
+        getGeneralNewsArticles(6, shownIds),
+        getEnvironmentArticles(6, shownIds),
+        getAntiCorruptionArticles(shownIds),
+        getOurImpactArticles(shownIds),
         getStoriesArticles(),
-        getHumanRightArticles(spotlightIds),
-        getHealthArticles(spotlightIds),
+        getHumanRightArticles(shownIds),
+        getHealthArticles(shownIds),
         getBannerCategories(BANNER_CATEGORY_SLUGS),
     ]);
 

@@ -802,3 +802,10 @@ html:not(.v-app) .home .zone a.section-title:hover {
         display:block
     }
 }
+
+/* Intitulés de rubrique : <h2> sémantique autour du lien .section-title.
+   display:contents = aucun impact sur la mise en page (le lien reste l'enfant
+   visuel de la zone), le titre est exposé aux lecteurs d'écran. */
+.zone-heading {
+    display: contents;
+}

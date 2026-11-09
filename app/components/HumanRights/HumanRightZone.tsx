@@ -32,9 +32,11 @@ export default function HumanRightsZone({ articles }: HumanRightsZoneProps) {
         <section className="zone zone-tag zone-human-rights">
             {/* Lien interne : pointait vers le WP en absolu, ce qui ferait
                 sortir du site une fois le front sur le domaine principal. */}
-            <Link href="/category/human-rights" className="section-title">
-                Human Rights
-            </Link>
+            <h2 className="zone-heading">
+                <Link href="/category/human-rights" className="section-title">
+                    Human Rights
+                </Link>
+            </h2>
 
             <div className="wrap">
                 {areas.map((area, areaIdx) => (

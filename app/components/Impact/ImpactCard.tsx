@@ -45,7 +45,7 @@ export default function OurImpactCard({ article }: OurImpactCardProps) {
                         {/*{article.tagOrCategory && (
                             <span className="strapline">{article.tagOrCategory} -</span>
                         )}*/}
-                        <p className="title">{article.title}</p>
+                        <h3 className="title">{article.title}</h3>
                     </div>
                 </div>
             </a>

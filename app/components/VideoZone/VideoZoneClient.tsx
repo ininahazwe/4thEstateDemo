@@ -10,6 +10,8 @@ interface VideoZoneClientProps {
 
 export default function VideoZoneClient({ items }: VideoZoneClientProps) {
     const [activeIndex, setActiveIndex] = useState(0);
+    // Facade : le lecteur YouTube (~500 Ko de JS tiers) n'est charge qu'au clic.
+    const [playing, setPlaying] = useState(false);
 
     if (!items.length) return null;
 
@@ -32,13 +34,30 @@ export default function VideoZoneClient({ items }: VideoZoneClientProps) {
                 </div>
 
                 <div className="zone-video-player">
-                    <iframe
-                        key={active.youtubeId}
-                        src={`https://www.youtube.com/embed/${active.youtubeId}`}
-                        title={active.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        allowFullScreen
-                    />
+                    {playing ? (
+                        <iframe
+                            key={active.youtubeId}
+                            src={`https://www.youtube.com/embed/${active.youtubeId}?autoplay=1`}
+                            title={active.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                        />
+                    ) : (
+                        <button
+                            type="button"
+                            className="zone-video-facade"
+                            onClick={() => setPlaying(true)}
+                            aria-label={`Play video: ${active.title}`}
+                        >
+                            <img
+                                src={`https://img.youtube.com/vi/${active.youtubeId}/hqdefault.jpg`}
+                                alt=""
+                                loading="lazy"
+                                decoding="async"
+                            />
+                            <span className="zone-video-facade-play" aria-hidden="true">▶</span>
+                        </button>
+                    )}
                 </div>
 
                 <div className="zone-video-caption">
@@ -55,7 +74,10 @@ export default function VideoZoneClient({ items }: VideoZoneClientProps) {
                             type="button"
                             key={video.id}
                             className={`zone-video-thumb${index === activeIndex ? ' active' : ''}`}
-                            onClick={() => setActiveIndex(index)}
+                            onClick={() => {
+                                setActiveIndex(index);
+                                setPlaying(true);
+                            }}
                             aria-current={index === activeIndex}
                         >
                             <img
