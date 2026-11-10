@@ -6,6 +6,7 @@ import { motion, type Variants } from "framer-motion";
 import { useSession } from "next-auth/react";
 import {MEMBERSHIP_JOIN_URL, WHATSAPP_CHANNEL} from "@/lib/site-links";
 import {BsWhatsapp} from "react-icons/bs";
+import { trackWhatsappClick } from "@/lib/analytics";
 
 // Variants : chaque élément apparaît en fondu + léger décalage vertical.
 // viewport={{ once: false }} => l'animation se rejoue à chaque entrée/sortie du viewport.
@@ -75,6 +76,7 @@ export default function SpecialOfferBanner() {
                 href={WHATSAPP_CHANNEL}
                 data-ithalc="[cta_abo]"
                 data-ithal="home_bandeau_offre_spe"
+                onClick={() => trackWhatsappClick("home_offer_banner", "home")}
             >
                 <motion.div
                     className="content"

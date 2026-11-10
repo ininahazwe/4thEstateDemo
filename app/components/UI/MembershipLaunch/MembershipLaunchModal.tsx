@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
+import { trackMembershipClick } from "@/lib/analytics";
 import {
     isPopupDismissed,
     isPopupSeason,
@@ -252,7 +253,10 @@ export default function MembershipLaunchModal() {
                             href={MEMBERSHIP_JOIN_URL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={dismiss}
+                            onClick={() => {
+                                trackMembershipClick("launch_modal_cta", "modal");
+                                dismiss();
+                            }}
                         >
                             Join the community now
                         </a>

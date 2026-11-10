@@ -8,6 +8,7 @@ import { ArrowBigRight, ArrowRight, Mail, Moon, Search, Sun } from "lucide-react
 import Image from 'next/image';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import { MEMBERSHIP_JOIN_URL } from '@/lib/site-links';
+import { trackMembershipClick } from '@/lib/analytics';
 
 // Membership site handles registration and paid subscriptions; Next.js frontend
 // only handles authentication. "Join Us" / "Renew" buttons link there.
@@ -171,6 +172,7 @@ export default function Header() {
                             rel="nofollow noopener noreferrer"
                             target="_blank"
                             data-ithal="header_abo"
+                            onClick={() => trackMembershipClick("header_join", "header")}
                         >
                         Become a member
                         {/*<span style={{ display: 'block', fontWeight: 'normal', marginTop: '4px', fontSize: '16px' }}>from GHS50/month</span>*/}
@@ -202,6 +204,7 @@ export default function Header() {
                     href={MEMBERSHIP_JOIN_URL}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackMembershipClick("header_renew", "header")}
                 >
                 Update your membership
                 </a>

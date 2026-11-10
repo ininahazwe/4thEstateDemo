@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {X} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
+import { trackMembershipClick } from "@/lib/analytics";
 import {
     POPUP_DISMISSED_EVENT,
     isPopupDismissed,
@@ -72,6 +73,7 @@ export default function SubscriptionBanner() {
                 href={MEMBERSHIP_JOIN_URL}
                 data-ithalc="[cta_abo]"
                 data-ithal="footer_bandeau"
+                onClick={() => trackMembershipClick("subscription_sticky", "footer_bar")}
             >
                 {/* Respect strict du texte d'origine avec les espaces insécables (\u00A0) */}
                 Support our journalism. Become a member{/*now{" "}*/}

@@ -1,4 +1,7 @@
+"use client";
+
 import { MEMBERSHIP_JOIN_URL } from "@/lib/site-links";
+import { trackMembershipClick } from "@/lib/analytics";
 
 /**
  * Bandeau d'adhésion affiché en bas de chaque article, juste après le texte
@@ -25,6 +28,7 @@ export default function ArticleMembershipCTA() {
                     href={MEMBERSHIP_JOIN_URL}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackMembershipClick("article_end_cta", "article")}
                 >
                     Join the community now
                 </a>
