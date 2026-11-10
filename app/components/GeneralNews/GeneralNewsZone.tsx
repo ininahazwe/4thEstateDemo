@@ -23,9 +23,11 @@ export default function GeneralNewsZone({
         <section className="zone zone-type zone-archives" data-slider="">
             {/* Lien interne : pointait vers le WP en absolu, ce qui ferait
                 sortir du site une fois le front sur le domaine principal. */}
-            <Link href="/category/general-news" className="section-title">
-                {title}
-            </Link>
+            <h2 className="zone-heading">
+                <Link href="/category/general-news" className="section-title">
+                    {title}
+                </Link>
+            </h2>
 
             {/* Flux continu (plus de chunking par 3) : un groupe de 3 remplit
                 exactement une rangée et ne déborde jamais, ce qui rendait le

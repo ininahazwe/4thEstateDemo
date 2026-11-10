@@ -53,9 +53,9 @@ export default function GeneralNewsCard({ article, index, sizes = '(max-width: 7
                         {/*{article.tagOrCategory && (
                             <span className="strapline">{article.tagOrCategory} -</span>
                         )}*/}
-                        <p id={titleId} className="title">
+                        <h3 id={titleId} className="title">
                             {article.title}
-                        </p>
+                        </h3>
                     </div>
 
                     <div className="infos">

@@ -13,9 +13,11 @@ export default function OurImpactZone({ articles }: OurImpactZoneProps) {
 
             {/* Colonne gauche : liste des articles les plus lus */}
             <section className="forecast-top-articles" data-flex-grow="" data-column="left">
-                <Link href="/category/our-impact" className="section-title">
-                    Our Impact
-                </Link>
+                <h2 className="zone-heading">
+                    <Link href="/category/our-impact" className="section-title">
+                        Our Impact
+                    </Link>
+                </h2>
                 <div className="wrap" style={{marginTop:"20px"}}>
                     {articles.map((article) => (
                         <OurImpactCard key={article.id} article={article} />

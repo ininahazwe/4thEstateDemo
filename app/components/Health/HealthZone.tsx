@@ -39,9 +39,11 @@ export default function HealthZone({ articles }: HealthZoneProps) {
 
     return (
         <section className="zone zone-tag zone-health">
-            <Link href="/category/health" className="section-title">
-                Health
-            </Link>
+            <h2 className="zone-heading">
+                <Link href="/category/health" className="section-title">
+                    Health
+                </Link>
+            </h2>
 
             <div className="wrap">
                 {areas.map((area, areaIdx) => (

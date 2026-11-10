@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { createMailSetup, describeMailError } from "@/lib/mailer";
 
 // ---------------------------------------------------------------------------
 // POST /api/whistleblower — reçoit le formulaire d'appel à témoignage et
@@ -71,15 +71,14 @@ export async function POST(req: Request) {
         });
     }
 
-    const gmailUser = process.env.GMAIL_USER;
-    const gmailPassword = process.env.GMAIL_APP_PASSWORD;
+    const mail = createMailSetup();
 
-    if (!gmailUser || !gmailPassword) {
-        console.error("whistleblower : GMAIL_USER ou GMAIL_APP_PASSWORD manquant");
+    if (!mail) {
+        console.error("whistleblower : configuration SMTP manquante (SMTP_*, ou GMAIL_USER + GMAIL_CLIENT_ID/SECRET/REFRESH_TOKEN, ou GMAIL_APP_PASSWORD)");
         return NextResponse.json({ error: "not_configured" }, { status: 500 });
     }
 
-    const recipients = process.env.WHISTLEBLOWER_TO || gmailUser;
+    const recipients = process.env.WHISTLEBLOWER_TO || mail.user;
 
     const lines = [
         `Subject: ${subject}`,
@@ -92,13 +91,8 @@ export async function POST(req: Request) {
     ];
 
     try {
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: { user: gmailUser, pass: gmailPassword },
-        });
-
-        await transporter.sendMail({
-            from: `"The Fourth Estate — Whistleblower" <${gmailUser}>`,
+        await mail.transporter.sendMail({
+            from: `"The Fourth Estate — Whistleblower" <${mail.user}>`,
             to: recipients,
             // replyTo seulement si la source a laissé un email : sinon Gmail
             // renverrait les réponses vers la boîte d'envoi elle-même.
@@ -110,7 +104,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ ok: true });
     } catch (err) {
-        console.error("whistleblower : envoi SMTP échoué", err);
+        console.error("whistleblower : envoi SMTP échoué —", describeMailError(err));
         return NextResponse.json({ error: "send_failed" }, { status: 502 });
     }
 }

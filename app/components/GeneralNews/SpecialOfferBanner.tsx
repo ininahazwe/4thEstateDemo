@@ -57,14 +57,14 @@ export default function SpecialOfferBanner() {
                 <picture>
                     <source
                         media="(-webkit-min-device-pixel-ratio: 2)"
-                        srcSet="/assets/img/lines.png"
+                        srcSet="/assets/img/lines.webp"
                     />
                     <img
                         className="bg"
                         width={640}
                         height={200}
                         loading="lazy"
-                        src="/assets/img/lines.png"
+                        src="/assets/img/lines.webp"
                         alt=""
                         aria-hidden="true"
                     />
@@ -96,7 +96,7 @@ export default function SpecialOfferBanner() {
                     </motion.div>*/}
 
                     <motion.p className="price" variants={item}>
-                        <BsWhatsapp style={{marginRight: "5px"}}/> follow us on our WhatsApp channel
+                        <BsWhatsapp style={{marginRight: "5px"}} aria-hidden="true"/> Follow us on our WhatsApp channel
                     </motion.p>
 
                     {/*<motion.p className="baseline" variants={item}>
@@ -105,7 +105,7 @@ export default function SpecialOfferBanner() {
                     </motion.p>*/}
 
                     <motion.span data-model="button" variants={item}>
-                        Click here
+                        Join the channel
                     </motion.span>
                 </motion.div>
             </Link>

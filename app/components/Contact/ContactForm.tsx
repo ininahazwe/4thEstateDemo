@@ -11,6 +11,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     missing_consent: 'Please accept the privacy policy before sending.',
     too_long: 'Your message is too long. Please shorten it and try again.',
     not_configured: 'The form is temporarily unavailable. Please try again later.',
+    send_failed: 'We could not deliver your message right now. Please try again in a few minutes.',
 };
 
 /**

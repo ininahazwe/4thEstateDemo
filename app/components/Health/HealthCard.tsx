@@ -57,9 +57,9 @@ export default function HealthCard({ article, sizes = '(max-width: 759px) 100vw,
 
                 <div className="item-text">
                     <div className="heading">
-                        <p id={titleId} className="title">
+                        <h3 id={titleId} className="title">
                             {article.title}
-                        </p>
+                        </h3>
                     </div>
 
                     <div className="infos">

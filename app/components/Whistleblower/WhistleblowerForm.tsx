@@ -10,6 +10,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     invalid_file_type: 'Only JPEG, PNG, GIF and WebP images are accepted.',
     file_too_large: 'The file is too large (8 MB maximum).',
     not_configured: 'The form is temporarily unavailable. Please try again later.',
+    send_failed: 'We could not deliver your message right now. Please try again in a few minutes.',
 };
 
 /**

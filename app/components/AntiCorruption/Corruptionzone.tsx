@@ -33,9 +33,11 @@ export default function AntiCorruptionZone({ articles }: AntiCorruptionZoneProps
         <section className="zone zone-tag zone-anti-corruption">
             {/* Lien interne : pointait vers le WP en absolu, ce qui ferait
                 sortir du site une fois le front sur le domaine principal. */}
-            <Link href="/category/anti-corruption" className="section-title">
-                Anti-Corruption
-            </Link>
+            <h2 className="zone-heading">
+                <Link href="/category/anti-corruption" className="section-title">
+                    Anti-Corruption
+                </Link>
+            </h2>
 
             <div className="wrap">
                 {areas.map((area, areaIdx) => (

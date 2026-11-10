@@ -143,6 +143,9 @@ export default function BookmarkButton({
                 className={`favorites${className ? ` ${className}` : ""}`}
                 data-in-favorites={saved}
                 aria-pressed={saved}
+                // Nom unique par carte : sans le titre, les ~30 boutons de la home
+                // sont annonces "Save article" a l'identique par un lecteur d'ecran.
+                aria-label={`${label}: ${title}`}
                 disabled={pending}
                 data-model="button"
                 title={showError ? "Something went wrong. Please try again." : label}
