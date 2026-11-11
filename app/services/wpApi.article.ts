@@ -119,6 +119,38 @@ function stripHtml(html: string): string {
 }
 
 /**
+ * Retire images/légendes du contenu : WordPress les exclut de l'extrait
+ * auto-généré (excerpt_remove_blocks), il faut donc les exclure aussi avant
+ * de comparer — sinon une légende placée dans les premières lignes fait
+ * passer l'extrait fabriqué pour un chapô rédigé.
+ */
+function stripFigures(html: string): string {
+    return html
+        .replace(/<figure\b[\s\S]*?<\/figure>/gi, " ")
+        .replace(/<figcaption\b[\s\S]*?<\/figcaption>/gi, " ");
+}
+
+/**
+ * Chapô à afficher : UNIQUEMENT le texte saisi dans « Add an excerpt ».
+ *
+ * Source de vérité : le champ REST `manual_excerpt` (mu-plugin
+ * tfe-manual-excerpt.php), lu directement dans `post_excerpt` — chaîne ou
+ * null. Présent dans la réponse = on s'y fie, sans aucune heuristique.
+ *
+ * Repli (mu-plugin pas encore déployé) : pickManualExcerpt(), heuristique.
+ */
+function pickLede(post: Record<string, unknown>): string | undefined {
+    if ("manual_excerpt" in post) {
+        const v = post.manual_excerpt;
+        return typeof v === "string" && v.trim() ? decode(v).trim() : undefined;
+    }
+    return pickManualExcerpt(
+        (post.excerpt as { rendered: string }).rendered,
+        (post.content as { rendered: string }).rendered
+    );
+}
+
+/**
  * Distingue un chapô RÉDIGÉ d'un chapô AUTO-GÉNÉRÉ par WordPress.
  *
  * WordPress renvoie toujours un `excerpt.rendered`, même quand la boîte
@@ -141,6 +173,10 @@ function pickManualExcerpt(rawExcerpt: string, rawContent: string): string | und
     const excerpt = stripHtml(rawExcerpt);
     if (!excerpt) return undefined;
 
+    // « […] » (excerpt_more) n'est ajouté QUE par wp_trim_excerpt(), c.-à-d.
+    // aux extraits fabriqués : un extrait saisi à la main ne le porte jamais.
+    if (/(?:\[\s*(?:\u2026|\.\.\.)\s*\])\s*$/.test(excerpt)) return undefined;
+
     // Espaces (y compris insécables) normalisés, marqueur de troncature retiré,
     // casse ignorée : seule la SUITE DE MOTS compte pour la comparaison.
     // L'espace insécable (U+00A0) est traité explicitement : \s le couvre en
@@ -162,7 +198,7 @@ function pickManualExcerpt(rawExcerpt: string, rawContent: string): string | und
 
     // Contenu tronqué à un peu plus que la longueur de l'excerpt : inutile de
     // normaliser un article entier à chaque rendu pour un test de préfixe.
-    const normalizedContent = normalize(stripHtml(rawContent).slice(0, normalizedExcerpt.length * 3 + 200));
+    const normalizedContent = normalize(stripHtml(stripFigures(rawContent)).slice(0, normalizedExcerpt.length * 3 + 200));
 
     // Préfixe du contenu = WordPress a recopié le début de l'article → la boîte
     // « Extrait » est vide, on ne renvoie rien.
@@ -343,10 +379,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<WpArticle | 
             slug: post.slug as string,
             title: decode((post.title as { rendered: string }).rendered),
             excerpt: stripHtml((post.excerpt as { rendered: string }).rendered),
-            lede: pickManualExcerpt(
-                (post.excerpt as { rendered: string }).rendered,
-                (post.content as { rendered: string }).rendered
-            ),
+            lede: pickLede(post),
             content: (post.content as { rendered: string }).rendered,
             subtitle: ((acf.subtitle as string) || '').trim() || undefined,
             strapline: (acf.strapline as string) ?? undefined,
