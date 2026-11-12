@@ -1,0 +1,78 @@
+'use client';
+
+import { motion, useReducedMotion } from 'framer-motion';
+import type { PresidentialAspirant } from '@/app/data/elections/types';
+
+interface PresidentialRaceProps {
+    aspirants: PresidentialAspirant[];
+}
+
+const nf = new Intl.NumberFormat('en-GB');
+
+/**
+ * 2028 presidential race: NPP primary results (animated bars) plus a notice
+ * for parties that have not yet chosen a candidate.
+ */
+export default function PresidentialRace({ aspirants }: PresidentialRaceProps) {
+    const reduce = useReducedMotion();
+    const sorted = [...aspirants].sort((a, b) => b.primaryPct - a.primaryPct);
+    const nominee = sorted.find((a) => a.status === 'nominated');
+    const source = sorted[0];
+
+    return (
+        <section className="el-block" aria-labelledby="el-president-title">
+            <h2 id="el-president-title" className="el-block__title">The 2028 presidential race</h2>
+
+            <div className="el-president">
+                <div className="el-president__card">
+                    <h3 className="el-president__head">NPP primary — 31 January 2026</h3>
+                    {nominee && (
+                        <p className="el-president__nominee">
+                            <span className="el-badge el-badge--npp">Nominee</span>{' '}
+                            <strong>{nominee.name}</strong> was elected flagbearer with {nominee.primaryPct}% of
+                            the vote.
+                        </p>
+                    )}
+                    <ul className="el-bars">
+                        {sorted.map((a, index) => (
+                            <li key={a.id} className="el-bars__row">
+                                <div className="el-bars__label">
+                                    <span className="el-bars__name">{a.name}</span>
+                                    <span className="el-bars__value">
+                                        {a.primaryPct}% · {nf.format(a.primaryVotes)} votes
+                                    </span>
+                                </div>
+                                <div className="el-bars__track" aria-hidden="true">
+                                    <motion.div
+                                        className="el-bars__fill"
+                                        data-winner={a.status === 'nominated' ? 'true' : undefined}
+                                        initial={reduce ? false : { width: 0 }}
+                                        whileInView={{ width: `${Math.max(a.primaryPct, 0.6)}%` }}
+                                        viewport={{ once: true, amount: 0.6 }}
+                                        transition={{ duration: 0.8, delay: reduce ? 0 : index * 0.08, ease: 'easeOut' }}
+                                    />
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                    {source && (
+                        <p className="el-president__source">
+                            Source:{' '}
+                            <a href={source.sourceUrl} target="_blank" rel="noopener noreferrer">
+                                Electoral Commission results via ModernGhana
+                            </a>
+                        </p>
+                    )}
+                </div>
+
+                <div className="el-president__card el-president__card--pending">
+                    <h3 className="el-president__head">NDC</h3>
+                    <p>No flagbearer has been chosen yet. This page will be updated when the party sets its
+                        process and candidates declare.</p>
+                    <h3 className="el-president__head">Other parties and independents</h3>
+                    <p>No verified declarations so far.</p>
+                </div>
+            </div>
+        </section>
+    );
+}

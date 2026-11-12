@@ -1,0 +1,137 @@
+[
+ {
+  "id": "mahamudu-bawumia",
+  "name": "Mahamudu Bawumia",
+  "party": "NPP",
+  "status": "nominated",
+  "primaryVotes": 110640,
+  "primaryPct": 56.48,
+  "sourceUrl": "https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html",
+  "sourceDate": "2026-02-01",
+  "tagline": "The NPP flagbearer",
+  "facts": [
+   {
+    "label": "Party",
+    "value": "New Patriotic Party (NPP)"
+   },
+   {
+    "label": "Status",
+    "value": "Elected NPP flagbearer for 2028"
+   },
+   {
+    "label": "Background",
+    "value": "Former Vice President; NPP presidential candidate in 2024"
+   }
+  ],
+  "constituencyId": null,
+  "photo": null
+ },
+ {
+  "id": "kennedy-ohene-agyapong",
+  "name": "Kennedy Ohene Agyapong",
+  "party": "NPP",
+  "status": "lost_primary",
+  "primaryVotes": 46555,
+  "primaryPct": 23.76,
+  "sourceUrl": "https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html",
+  "sourceDate": "2026-02-01",
+  "tagline": "The primary runner-up",
+  "facts": [
+   {
+    "label": "Party",
+    "value": "New Patriotic Party (NPP)"
+   },
+   {
+    "label": "Status",
+    "value": "Second in the NPP primary"
+   },
+   {
+    "label": "Background",
+    "value": "Former MP for Assin Central"
+   }
+  ],
+  "constituencyId": null,
+  "photo": null
+ },
+ {
+  "id": "bryan-acheampong",
+  "name": "Bryan Acheampong",
+  "party": "NPP",
+  "status": "lost_primary",
+  "primaryVotes": 36303,
+  "primaryPct": 18.53,
+  "sourceUrl": "https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html",
+  "sourceDate": "2026-02-01",
+  "tagline": "The Abetifi MP",
+  "facts": [
+   {
+    "label": "Party",
+    "value": "New Patriotic Party (NPP)"
+   },
+   {
+    "label": "Status",
+    "value": "Third in the NPP primary"
+   },
+   {
+    "label": "Background",
+    "value": "Sitting MP for Abetifi (Eastern region)"
+   }
+  ],
+  "constituencyId": "abetifi",
+  "photo": null
+ },
+ {
+  "id": "osei-yaw-adutwum",
+  "name": "Osei Yaw Adutwum",
+  "party": "NPP",
+  "status": "lost_primary",
+  "primaryVotes": 1999,
+  "primaryPct": 1.02,
+  "sourceUrl": "https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html",
+  "sourceDate": "2026-02-01",
+  "tagline": "The Bosomtwe MP",
+  "facts": [
+   {
+    "label": "Party",
+    "value": "New Patriotic Party (NPP)"
+   },
+   {
+    "label": "Status",
+    "value": "Fourth in the NPP primary"
+   },
+   {
+    "label": "Background",
+    "value": "Sitting MP for Bosomtwe (Ashanti region)"
+   }
+  ],
+  "constituencyId": "bosomtwe",
+  "photo": null
+ },
+ {
+  "id": "kwabena-agyei-agyepong",
+  "name": "Kwabena Agyei Agyepong",
+  "party": "NPP",
+  "status": "lost_primary",
+  "primaryVotes": 102,
+  "primaryPct": 0.21,
+  "sourceUrl": "https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html",
+  "sourceDate": "2026-02-01",
+  "tagline": "The engineer",
+  "facts": [
+   {
+    "label": "Party",
+    "value": "New Patriotic Party (NPP)"
+   },
+   {
+    "label": "Status",
+    "value": "Fifth in the NPP primary"
+   },
+   {
+    "label": "Background",
+    "value": "Engineer"
+   }
+  ],
+  "constituencyId": null,
+  "photo": null
+ }
+]

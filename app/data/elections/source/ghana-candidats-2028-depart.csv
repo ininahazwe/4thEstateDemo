@@ -1,0 +1,6 @@
+name,election_type,election_year,party,status,role,note,votes_primary,pct_primary,source_url,source_date,verification
+Mahamudu Bawumia,president,2028,NPP,nominated,Flagbearer elected in NPP primary 31 Jan 2026 (EC-supervised),Former Vice President; 2024 NPP candidate,110640,56.48,https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html,2026-02-01,verified
+Kennedy Ohene Agyapong,president,2028,NPP,lost_primary,NPP flagbearer aspirant (2nd),,46555,23.76,https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html,2026-02-01,verified
+Bryan Acheampong,president,2028,NPP,lost_primary,NPP flagbearer aspirant (3rd),,36303,18.53,https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html,2026-02-01,verified
+Osei Yaw Adutwum,president,2028,NPP,lost_primary,NPP flagbearer aspirant (4th),,1999,1.02,https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html,2026-02-01,verified
+Kwabena Agyei Agyepong,president,2028,NPP,lost_primary,NPP flagbearer aspirant (5th),,102,0.21,https://www.modernghana.com/news/1468049/npp-flagbearer-race-ec-declares-bawumia-as-winner.html,2026-02-01,verified

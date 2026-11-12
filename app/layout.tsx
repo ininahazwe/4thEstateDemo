@@ -27,6 +27,7 @@ import "./styles/article-layout.css";
 import "./styles/section-critical.css";
 import "./styles/search.css";
 import "./styles/archives.css";
+import "./styles/elections.css";
 import "./styles/callout.css";
 import "./styles/footer-accordion.css";
 import "./styles/whistleblower.css";
