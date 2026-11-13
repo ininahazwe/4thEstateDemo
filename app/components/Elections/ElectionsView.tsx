@@ -9,7 +9,8 @@ import CandidateGrid from './CandidateGrid';
 import regionMapJson from '@/app/data/elections/regions.json';
 import constituenciesJson from '@/app/data/elections/constituencies.json';
 import candidatesJson from '@/app/data/elections/candidates.json';
-import type { Constituency, PresidentialAspirant, RegionMapData } from '@/app/data/elections/types';
+import shapesJson from '@/app/data/elections/constituency-shapes.json';
+import type { Constituency, ConstituencyShape, PresidentialAspirant, RegionMapData } from '@/app/data/elections/types';
 
 /**
  * Shared body of /elections and /elections/candidates/[slug].
@@ -28,6 +29,7 @@ export default async function ElectionsView() {
     const regionMap = regionMapJson as unknown as RegionMapData;
     const constituencies = constituenciesJson as unknown as Constituency[];
     const aspirants = candidatesJson as unknown as PresidentialAspirant[];
+    const shapes = shapesJson as unknown as Record<string, ConstituencyShape>;
 
     return (
         <>
@@ -47,7 +49,7 @@ export default async function ElectionsView() {
 
                         <CandidateGrid aspirants={aspirants} />
 
-                        <ElectionsExplorer regionMap={regionMap} constituencies={constituencies} />
+                        <ElectionsExplorer regionMap={regionMap} constituencies={constituencies} shapes={shapes} />
 
                         <aside className="el-sources" aria-labelledby="el-sources-title">
                             <h2 id="el-sources-title" className="el-sources__title">Sources and method</h2>
@@ -58,12 +60,18 @@ export default async function ElectionsView() {
                                     previous MP’s party; by-elections held since may not be reflected.
                                 </li>
                                 <li>
+                                    Constituency results (2020, 2024) and boundaries: SAGE, the Small-Area Global
+                                    Elections dataset (Dasanaike, 2026, Harvard Dataverse, CC0), compiled from Peace FM
+                                    Online; boundaries by Brian Engelsma. Guan, created in 2024, has no published
+                                    boundary yet. 2020 figures for Akwatia and Wulensi are withheld pending checks.
+                                </li>
+                                <li>
                                     Presidential race: NPP primary results of 31 January 2026 declared by the Electoral
                                     Commission. The NDC has not yet chosen its candidate.
                                 </li>
                                 <li>
-                                    Region boundaries: geoBoundaries (OpenStreetMap contributors), CC BY-SA 2.0.
-                                    Constituency tiles are a schematic grid, not geographic shapes.
+                                    Region boundaries are drawn by merging SAGE constituency boundaries, so both layers line up.
+                                    Constituency tiles are a schematic list, not geographic shapes.
                                 </li>
                             </ul>
                         </aside>

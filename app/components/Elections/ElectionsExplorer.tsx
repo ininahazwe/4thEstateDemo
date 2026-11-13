@@ -2,13 +2,80 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, animate, motion, useReducedMotion } from 'framer-motion';
-import type { Constituency, PartyCode, RegionMapData } from '@/app/data/elections/types';
-import { FLIP_COLOR, PARTY_META, PARTY_ORDER } from '@/app/data/elections/types';
+import type {
+    Constituency,
+    ConstituencyResult,
+    ConstituencyShape,
+    PartyCode,
+    RegionMapData,
+} from '@/app/data/elections/types';
+import { CLOSE_COLOR, CLOSE_RACE_POINTS, FLIP_COLOR, PARTY_META, PARTY_ORDER } from '@/app/data/elections/types';
 
 // Shorter labels for small regions so they do not collide on the map.
 const LABEL_SHORT: Record<string, string> = { 'Greater Accra': 'Accra', 'Western North': 'W. North' };
 
-type Metric = 'winner' | 'flips';
+type Metric = 'winner' | 'flips' | 'close';
+type Layer = 'constituencies' | 'regions';
+
+const OTHER_PARTY_COLOR = '#6b7280';
+
+function partyColor(code: string): string {
+    return (PARTY_META as Record<string, { color: string }>)[code]?.color ?? OTHER_PARTY_COLOR;
+}
+
+function isClose(c: Constituency): boolean {
+    return c.margin24 !== null && c.margin24 < CLOSE_RACE_POINTS;
+}
+
+/** Bounding box of an SVG path made only of absolute M/L/Z commands. */
+function pathBox(d: string): { x: number; y: number; w: number; h: number } {
+    const nums = d.match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (let i = 0; i + 1 < nums.length; i += 2) {
+        minX = Math.min(minX, nums[i]);
+        maxX = Math.max(maxX, nums[i]);
+        minY = Math.min(minY, nums[i + 1]);
+        maxY = Math.max(maxY, nums[i + 1]);
+    }
+    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
+const pct = (v: number, total: number) => (total ? (v / total) * 100 : 0);
+
+/** Top-3 result of one election, with bars that grow when the constituency changes. */
+function ResultBars({ result, year, animateBars }: { result: ConstituencyResult; year: string; animateBars: boolean }) {
+    return (
+        <div className="el-result">
+            <p className="el-result__head">
+                {year} result <span>· {result.total.toLocaleString('en-GB')} valid votes</span>
+            </p>
+            <ul className="el-result__rows">
+                {result.top.map((r, index) => {
+                    const share = pct(r.v, result.total);
+                    return (
+                        <li key={`${r.p}-${r.c}`} className="el-result__row" style={{ ['--el-party' as string]: partyColor(r.p) }}>
+                            <span className="el-result__label">
+                                <span className="el-result__party">{r.p}</span> {r.c}
+                            </span>
+                            <span className="el-result__pct">{share.toFixed(1)}%</span>
+                            <span className="el-result__track" aria-hidden="true">
+                                <motion.span
+                                    className="el-result__fill"
+                                    initial={animateBars ? { width: 0 } : false}
+                                    animate={{ width: `${share}%` }}
+                                    transition={{ duration: 0.5, delay: index * 0.05, ease: 'easeOut' }}
+                                />
+                            </span>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
+    );
+}
 type PartyFilter = 'all' | PartyCode;
 
 /** Tooltip anchor, in px relative to the tiles container. */
@@ -23,6 +90,8 @@ const TIP_WIDTH = 250;
 interface ElectionsExplorerProps {
     regionMap: RegionMapData;
     constituencies: Constituency[];
+    /** Boundaries by constituency id. A constituency without a shape (Guan) only appears in the tiles. */
+    shapes: Record<string, ConstituencyShape>;
 }
 
 interface Tally {
@@ -74,9 +143,10 @@ function AnimatedNumber({ value }: { value: number }) {
     return <>{reduce ? value : display}</>;
 }
 
-export default function ElectionsExplorer({ regionMap, constituencies }: ElectionsExplorerProps) {
+export default function ElectionsExplorer({ regionMap, constituencies, shapes }: ElectionsExplorerProps) {
     const reduce = useReducedMotion();
     const [metric, setMetric] = useState<Metric>('winner');
+    const [layer, setLayer] = useState<Layer>('constituencies');
     const [partyFilter, setPartyFilter] = useState<PartyFilter>('all');
     const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
     const [active, setActive] = useState<Constituency | null>(null);
@@ -112,7 +182,31 @@ export default function ElectionsExplorer({ regionMap, constituencies }: Electio
     );
 
     const matches = (c: Constituency): boolean =>
-        (partyFilter === 'all' || c.party === partyFilter) && (metric === 'winner' || c.flipped);
+        (partyFilter === 'all' || c.party === partyFilter) &&
+        (metric === 'winner' || (metric === 'flips' ? c.flipped : isClose(c)));
+
+    const regionBoxes = useMemo(() => new Map(regionMap.regions.map((r) => [r.id, pathBox(r.d)])), [regionMap]);
+    const missingShapes = useMemo(() => constituencies.filter((c) => !shapes[c.id]), [constituencies, shapes]);
+
+    // Zoom: in the constituency layer, the map frames the selected region.
+    const viewBox = useMemo(() => {
+        if (layer !== 'constituencies' || !selectedRegion) return regionMap.viewBox;
+        const box = regionBoxes.get(selectedRegion);
+        if (!box) return regionMap.viewBox;
+        const pad = Math.max(box.w, box.h) * 0.08;
+        return `${(box.x - pad).toFixed(1)} ${(box.y - pad).toFixed(1)} ${(box.w + pad * 2).toFixed(1)} ${(box.h + pad * 2).toFixed(1)}`;
+    }, [layer, selectedRegion, regionBoxes, regionMap.viewBox]);
+    const zoomed = viewBox !== regionMap.viewBox;
+
+    function constituencyPaint(c: Constituency): { fill: string; opacity: number } {
+        if (!matches(c)) return { fill: '#b8b8b8', opacity: 0.35 };
+        if (metric === 'winner' && partyFilter === 'all') {
+            // Safer seats darker: the margin (in points) drives the shade.
+            const margin = c.margin24 ?? 30;
+            return { fill: PARTY_META[c.party].color, opacity: 0.4 + 0.6 * Math.min(1, margin / 30) };
+        }
+        return { fill: PARTY_META[c.party].color, opacity: 0.95 };
+    }
 
     const scope = useMemo(
         () => (selectedRegion ? byRegion.get(selectedRegion) ?? [] : constituencies),
@@ -146,9 +240,10 @@ export default function ElectionsExplorer({ regionMap, constituencies }: Electio
         }
         const count = list.filter(matches).length;
         const share = count / t.total;
-        const fill = metric === 'flips' ? FLIP_COLOR : PARTY_META[partyFilter as PartyCode].color;
-        // Flipped seats are a minority in most regions: rescale so differences stay visible.
-        const scaled = metric === 'flips' ? Math.min(1, share / 0.6) : share;
+        const fill =
+            metric === 'flips' ? FLIP_COLOR : metric === 'close' ? CLOSE_COLOR : PARTY_META[partyFilter as PartyCode].color;
+        // Flipped and close seats are a minority in most regions: rescale so differences stay visible.
+        const scaled = metric === 'winner' ? share : Math.min(1, share / (metric === 'flips' ? 0.6 : 0.4));
         return { fill, opacity: 0.12 + 0.88 * scaled };
     }
 
@@ -165,6 +260,24 @@ export default function ElectionsExplorer({ regionMap, constituencies }: Electio
         if (selecting) {
             mapRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
         }
+    }
+
+    /** Constituency pointed on the map: details go to the panel next to it. */
+    function showFromMap(c: Constituency) {
+        setActive(c);
+        setTip(null);
+    }
+
+    /** Hover on the map: once zoomed, only the selected region's constituencies respond. */
+    function hoverOnMap(c: Constituency) {
+        if (selectedRegion && c.region !== selectedRegion) return;
+        showFromMap(c);
+    }
+
+    /** Click on the map: drill down into (or jump to) the constituency's region. */
+    function clickOnMap(c: Constituency) {
+        showFromMap(c);
+        if (selectedRegion !== c.region) setSelectedRegion(c.region);
     }
 
     /** Shows the constituency next to its tile (tooltip) and in the summary panel. */
@@ -191,12 +304,13 @@ export default function ElectionsExplorer({ regionMap, constituencies }: Electio
     function reset() {
         setMetric('winner');
         setPartyFilter('all');
+        setLayer('constituencies');
         setSelectedRegion(null);
         setActive(null);
         setTip(null);
     }
 
-    const isDefault = metric === 'winner' && partyFilter === 'all' && !selectedRegion;
+    const isDefault = metric === 'winner' && partyFilter === 'all' && !selectedRegion && layer === 'constituencies';
     const scopeName = selectedRegion ? regionById.get(selectedRegion)?.name ?? '' : 'Ghana';
 
     return (
@@ -221,6 +335,14 @@ export default function ElectionsExplorer({ regionMap, constituencies }: Electio
                         onClick={() => setMetric('flips')}
                     >
                         Seats that changed hands
+                    </button>
+                    <button
+                        type="button"
+                        className="el-chip"
+                        aria-pressed={metric === 'close'}
+                        onClick={() => setMetric('close')}
+                    >
+                        Close races (&lt; {CLOSE_RACE_POINTS} pts)
                     </button>
                 </div>
 
@@ -256,56 +378,161 @@ export default function ElectionsExplorer({ regionMap, constituencies }: Electio
             <div className="el-layout">
                 {/* Map ------------------------------------------------------- */}
                 <figure className="el-map-wrap" ref={mapRef}>
-                    <svg
+                    <div className="el-map-bar">
+                        <div className="el-seg" role="group" aria-label="Map detail">
+                            <button
+                                type="button"
+                                aria-pressed={layer === 'constituencies'}
+                                onClick={() => setLayer('constituencies')}
+                            >
+                                Constituencies
+                            </button>
+                            <button type="button" aria-pressed={layer === 'regions'} onClick={() => setLayer('regions')}>
+                                Regions
+                            </button>
+                        </div>
+                        <AnimatePresence>
+                            {selectedRegion && (
+                                <motion.button
+                                    type="button"
+                                    className="el-back"
+                                    initial={{ opacity: 0, x: -8 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -8 }}
+                                    onClick={() => toggleRegion(selectedRegion)}
+                                >
+                                    ← All of Ghana
+                                </motion.button>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    <motion.svg
                         className="el-map"
+                        data-layer={layer}
+                        data-zoomed={zoomed || undefined}
                         viewBox={regionMap.viewBox}
+                        initial={false}
+                        animate={{ viewBox }}
+                        transition={{ duration: reduce ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
                         role="group"
-                        aria-label="Map of Ghana’s 16 regions. Select a region to see its constituencies."
+                        aria-label={
+                            layer === 'constituencies'
+                                ? 'Map of Ghana’s parliamentary constituencies, coloured by the party that won in 2024. Select a region to zoom in; the constituency list below gives every result.'
+                                : 'Map of Ghana’s 16 regions. Select a region to see its constituencies.'
+                        }
+                        // Pointer (not mouse) events: a tap also emits a synthetic mouseleave
+                        // that would clear the panel right after it was filled.
+                        onPointerLeave={(event) => {
+                            if (event.pointerType === 'mouse') setActive(null);
+                        }}
                     >
+                        {layer === 'constituencies' &&
+                            constituencies.map((c) => {
+                                const shape = shapes[c.id];
+                                if (!shape) return null;
+                                const paint = constituencyPaint(c);
+                                const dimmed = selectedRegion !== null && c.region !== selectedRegion;
+                                return (
+                                    <path
+                                        key={c.id}
+                                        d={shape.d}
+                                        className="el-cons"
+                                        data-active={active?.id === c.id || undefined}
+                                        style={{ fill: paint.fill, fillOpacity: dimmed ? paint.opacity * 0.25 : paint.opacity }}
+                                        aria-hidden="true"
+                                        onMouseEnter={() => hoverOnMap(c)}
+                                        onClick={() => clickOnMap(c)}
+                                    />
+                                );
+                            })}
+
                         {regionMap.regions.map((r) => {
-                            const paint = regionPaint(r.id);
                             const t = regionTallies.get(r.id) ?? emptyTally();
                             const selected = selectedRegion === r.id;
                             const dimmed = selectedRegion !== null && !selected;
-                            return (
+                            const paint = regionPaint(r.id);
+                            const common = {
+                                className: layer === 'regions' ? 'el-region' : 'el-region el-region--outline',
+                                'data-selected': selected || undefined,
+                                role: 'button',
+                                tabIndex: 0,
+                                'aria-pressed': selected,
+                                'aria-label': `${r.name} region: ${t.NDC} NDC, ${t.NPP} NPP, ${t.IND} independent; ${t.flips} seats changed hands`,
+                                onClick: () => toggleRegion(r.id),
+                                onKeyDown: (e: React.KeyboardEvent<SVGPathElement>) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        toggleRegion(r.id);
+                                    }
+                                },
+                            };
+                            return layer === 'regions' ? (
                                 <motion.path
                                     key={r.id}
                                     d={r.d}
-                                    className="el-region"
-                                    data-selected={selected || undefined}
-                                    role="button"
-                                    tabIndex={0}
-                                    aria-pressed={selected}
-                                    aria-label={`${r.name} region: ${t.NDC} NDC, ${t.NPP} NPP, ${t.IND} independent; ${t.flips} seats changed hands`}
+                                    {...common}
                                     initial={false}
                                     animate={{
                                         fill: paint.fill,
                                         fillOpacity: dimmed ? paint.opacity * 0.35 : paint.opacity,
                                     }}
                                     transition={{ duration: reduce ? 0 : 0.45 }}
-                                    onClick={() => toggleRegion(r.id)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            toggleRegion(r.id);
-                                        }
-                                    }}
                                 >
                                     <title>{`${r.name}: ${t.total} seats`}</title>
                                 </motion.path>
+                            ) : (
+                                <path key={r.id} d={r.d} {...common} />
                             );
                         })}
-                        {regionMap.regions.map((r) => (
-                            <text key={`${r.id}-label`} x={r.cx} y={r.cy} className="el-map__label" textAnchor="middle">
-                                {LABEL_SHORT[r.name] ?? r.name}
-                            </text>
-                        ))}
-                    </svg>
+
+                        {!zoomed &&
+                            regionMap.regions.map((r) => (
+                                <text key={`${r.id}-label`} x={r.cx} y={r.cy} className="el-map__label" textAnchor="middle">
+                                    {LABEL_SHORT[r.name] ?? r.name}
+                                </text>
+                            ))}
+                    </motion.svg>
+
                     <figcaption className="el-map__legend">
-                        {metric === 'flips' ? (
+                        {layer === 'constituencies' ? (
+                            <>
+                                {metric === 'winner' && partyFilter === 'all' ? (
+                                    <>
+                                        {PARTY_ORDER.map((p) => (
+                                            <span key={p}>
+                                                <span className="el-swatch" style={{ background: PARTY_META[p].color }} aria-hidden="true" />
+                                                {PARTY_META[p].label}
+                                            </span>
+                                        ))}
+                                        <span className="el-legend__note">Darker = bigger 2024 margin</span>
+                                    </>
+                                ) : (
+                                    <span>
+                                        Coloured:{' '}
+                                        {metric === 'flips'
+                                            ? 'seats that changed hands'
+                                            : metric === 'close'
+                                              ? `seats won by less than ${CLOSE_RACE_POINTS} points`
+                                              : 'seats won'}
+                                        {partyFilter !== 'all' ? ` by ${PARTY_META[partyFilter].label}` : ''}; grey: the rest
+                                    </span>
+                                )}
+                                {missingShapes.length > 0 && (
+                                    <span className="el-legend__note">
+                                        {missingShapes.map((c) => c.name).join(', ')} (new in 2024) has no published boundary
+                                        yet and only appears in the list below.
+                                    </span>
+                                )}
+                            </>
+                        ) : metric !== 'winner' ? (
                             <span>
-                                <span className="el-swatch" style={{ background: FLIP_COLOR }} aria-hidden="true" />
-                                Darker = more seats that changed hands
+                                <span
+                                    className="el-swatch"
+                                    style={{ background: metric === 'flips' ? FLIP_COLOR : CLOSE_COLOR }}
+                                    aria-hidden="true"
+                                />
+                                Darker = more {metric === 'flips' ? 'seats that changed hands' : 'close races'}
                                 {partyFilter !== 'all' ? ` (won by ${PARTY_META[partyFilter].label})` : ''}
                             </span>
                         ) : partyFilter === 'all' ? (
@@ -371,28 +598,44 @@ export default function ElectionsExplorer({ regionMap, constituencies }: Electio
                         </ul>
                     )}
 
-                    <div className="el-detail" aria-live="polite">
-                        {active ? (
-                            <>
-                                <p className="el-detail__name">{active.name}</p>
-                                <p className="el-detail__line">
-                                    <span className="el-dotlabel" style={{ ['--el-party' as string]: PARTY_META[active.party].color }}>
-                                        {PARTY_META[active.party].label}
-                                    </span>{' '}
-                                    {active.mp}
+                </div>
+
+                {/* Selected constituency (own grid area: right under the map on phones). */}
+                <div className="el-detail" aria-live="polite">
+                    {active ? (
+                        <>
+                            <p className="el-detail__name">{active.name}</p>
+                            <p className="el-detail__line">
+                                <span className="el-dotlabel" style={{ ['--el-party' as string]: PARTY_META[active.party].color }}>
+                                    {PARTY_META[active.party].label}
+                                </span>{' '}
+                                {active.mp}
+                            </p>
+                            <p className="el-detail__muted">
+                                {regionById.get(active.region)?.name} region
+                                {active.prevMp
+                                    ? ` · previously ${active.prevMp} (${active.prevParty ?? '—'})`
+                                    : ' · new constituency'}
+                                {active.flipped ? ' · changed hands' : ''}
+                            </p>
+                            {active.r24 && (
+                                <ResultBars key={`${active.id}-24`} result={active.r24} year="2024" animateBars={!reduce} />
+                            )}
+                            {active.r20 && (
+                                <p className="el-detail__muted el-detail__prev">
+                                    2020:{' '}
+                                    {active.r20.top
+                                        .slice(0, 2)
+                                        .map((r) => `${r.p} ${pct(r.v, active.r20!.total).toFixed(1)}%`)
+                                        .join(' · ')}
                                 </p>
-                                <p className="el-detail__muted">
-                                    {regionById.get(active.region)?.name} region
-                                    {active.prevMp
-                                        ? ` · previously ${active.prevMp} (${active.prevParty ?? '—'})`
-                                        : ' · new constituency'}
-                                    {active.flipped ? ' · changed hands' : ''}
-                                </p>
-                            </>
-                        ) : (
-                            <p className="el-detail__muted">Select a tile below to see its MP.</p>
-                        )}
-                    </div>
+                            )}
+                        </>
+                    ) : (
+                        <p className="el-detail__muted">
+                            Point at a constituency on the map, or select a tile below, to see its result.
+                        </p>
+                    )}
                 </div>
             </div>
 

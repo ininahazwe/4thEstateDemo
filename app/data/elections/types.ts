@@ -32,6 +32,31 @@ export interface Constituency {
     prevParty: PartyCode | null;
     /** True when the party differs from the previous MP's party. */
     flipped: boolean;
+    /** Legislative result, top 3 candidates (source: SAGE). */
+    r24?: ConstituencyResult;
+    r20?: ConstituencyResult;
+    /** Winner's lead over the runner-up in 2024, in points of the valid vote. */
+    margin24: number | null;
+}
+
+export interface CandidateResult {
+    /** Party abbreviation as published (NDC, NPP, IND, CPP...). */
+    p: string;
+    c: string;
+    v: number;
+}
+
+export interface ConstituencyResult {
+    /** Valid votes cast in the constituency. */
+    total: number;
+    top: CandidateResult[];
+}
+
+/** Constituency boundary, projected to the same viewBox as the region map. */
+export interface ConstituencyShape {
+    d: string;
+    cx: number;
+    cy: number;
 }
 
 export interface CandidateFact {
@@ -69,3 +94,9 @@ export const PARTY_ORDER: PartyCode[] = ['NDC', 'NPP', 'IND'];
 
 /** Accent used for "seats that changed hands" views. */
 export const FLIP_COLOR = '#d9480f';
+
+/** Accent used for "close races" views. */
+export const CLOSE_COLOR = '#7c3aed';
+
+/** A seat counts as a close race when the winner led by fewer points than this. */
+export const CLOSE_RACE_POINTS = 5;

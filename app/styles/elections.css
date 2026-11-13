@@ -463,8 +463,24 @@ a.el-cand:focus-visible {
 .el-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 2rem;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+        'map summary'
+        'map detail';
+    gap: 0 2rem;
     align-items: start;
+}
+
+.el-map-wrap {
+    grid-area: map;
+}
+
+.el-summary {
+    grid-area: summary;
+}
+
+.el-detail {
+    grid-area: detail;
 }
 
 .el-map-wrap {
@@ -497,6 +513,166 @@ a.el-cand:focus-visible {
 .el-region[data-selected] {
     stroke: var(--siteText, #111);
     stroke-width: 3;
+}
+
+.el-map-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 44px;
+    margin-bottom: 0.5rem;
+}
+
+.el-seg {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgba(127, 127, 127, 0.15);
+}
+
+.el-seg button {
+    min-height: 38px;
+    padding: 0 0.9rem;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.el-seg button[aria-pressed='true'] {
+    background: var(--siteBackground, #fff);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    font-weight: 700;
+}
+
+.el-back {
+    min-height: 44px;
+    padding: 0 0.5rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.el-back:hover {
+    text-decoration: underline;
+}
+
+/* Constituency layer: thin white borders, region outlines drawn on top. */
+.el-cons {
+    stroke: var(--siteBackground, #fff);
+    stroke-width: 0.4;
+    vector-effect: non-scaling-stroke;
+    cursor: pointer;
+    transition: fill 0.35s ease, fill-opacity 0.35s ease;
+}
+
+.el-cons:hover,
+.el-cons[data-active] {
+    stroke: var(--siteText, #111);
+    stroke-width: 2;
+}
+
+.el-region--outline {
+    fill: none;
+    stroke: var(--siteText, #111);
+    stroke-opacity: 0.55;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+}
+
+.el-region--outline:focus-visible,
+.el-region--outline[data-selected] {
+    stroke-opacity: 1;
+    stroke-width: 2.5;
+}
+
+.el-map[data-layer='regions'] .el-region {
+    vector-effect: non-scaling-stroke;
+}
+
+.el-legend__note {
+    flex-basis: 100%;
+    text-align: center;
+    opacity: 0.7;
+}
+
+/* 2024 result inside the detail panel. */
+.el-result {
+    margin-top: 0.75rem;
+}
+
+.el-result__head {
+    margin: 0 0 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.el-result__head span {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.7;
+}
+
+.el-result__rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.45rem;
+}
+
+.el-result__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.15rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.el-result__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.el-result__party {
+    font-weight: 800;
+    color: var(--el-party);
+}
+
+.el-result__pct {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.el-result__track {
+    grid-column: 1 / -1;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(127, 127, 127, 0.2);
+    overflow: hidden;
+}
+
+.el-result__fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--el-party);
+}
+
+.el-detail__prev {
+    margin-top: 0.5rem;
 }
 
 .el-map__label {
@@ -806,6 +982,16 @@ a.el-cand:focus-visible {
 @media (max-width: 820px) {
     .el-layout {
         grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        grid-template-areas:
+            'map'
+            'detail'
+            'summary';
+        gap: 1rem;
+    }
+
+    .el-detail {
+        margin-top: 0;
     }
 
     .el-tile {
@@ -853,6 +1039,8 @@ a.el-cand:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .el-cons,
+    .el-seg button,
     .el-cand,
     .el-chip,
     .el-region,
