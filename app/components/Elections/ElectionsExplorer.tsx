@@ -334,7 +334,7 @@ export default function ElectionsExplorer({ regionMap, constituencies, shapes }:
                         aria-pressed={metric === 'flips'}
                         onClick={() => setMetric('flips')}
                     >
-                        Seats that changed hands
+                        Seats that flipped
                     </button>
                     <button
                         type="button"
@@ -458,7 +458,7 @@ export default function ElectionsExplorer({ regionMap, constituencies, shapes }:
                                 role: 'button',
                                 tabIndex: 0,
                                 'aria-pressed': selected,
-                                'aria-label': `${r.name} region: ${t.NDC} NDC, ${t.NPP} NPP, ${t.IND} independent; ${t.flips} seats changed hands`,
+                                'aria-label': `${r.name} region: ${t.NDC} NDC, ${t.NPP} NPP, ${t.IND} independent; ${t.flips} seats flipped`,
                                 onClick: () => toggleRegion(r.id),
                                 onKeyDown: (e: React.KeyboardEvent<SVGPathElement>) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
@@ -511,7 +511,7 @@ export default function ElectionsExplorer({ regionMap, constituencies, shapes }:
                                     <span>
                                         Coloured:{' '}
                                         {metric === 'flips'
-                                            ? 'seats that changed hands'
+                                            ? 'seats that flipped'
                                             : metric === 'close'
                                               ? `seats won by less than ${CLOSE_RACE_POINTS} points`
                                               : 'seats won'}
@@ -532,7 +532,7 @@ export default function ElectionsExplorer({ regionMap, constituencies, shapes }:
                                     style={{ background: metric === 'flips' ? FLIP_COLOR : CLOSE_COLOR }}
                                     aria-hidden="true"
                                 />
-                                Darker = more {metric === 'flips' ? 'seats that changed hands' : 'close races'}
+                                Darker = more {metric === 'flips' ? 'seats that flipped' : 'close races'}
                                 {partyFilter !== 'all' ? ` (won by ${PARTY_META[partyFilter].label})` : ''}
                             </span>
                         ) : partyFilter === 'all' ? (
@@ -579,7 +579,7 @@ export default function ElectionsExplorer({ regionMap, constituencies, shapes }:
                     </div>
 
                     <p className="el-summary__flips">
-                        <strong><AnimatedNumber value={scopeTally.flips} /></strong> seats changed hands since 2020
+                        <strong><AnimatedNumber value={scopeTally.flips} /></strong> seats flipped since 2020
                     </p>
                     {transitions.length > 0 && (
                         <ul className="el-transitions">
@@ -616,7 +616,7 @@ export default function ElectionsExplorer({ regionMap, constituencies, shapes }:
                                 {active.prevMp
                                     ? ` · previously ${active.prevMp} (${active.prevParty ?? '—'})`
                                     : ' · new constituency'}
-                                {active.flipped ? ' · changed hands' : ''}
+                                {active.flipped ? ' · flipped' : ''}
                             </p>
                             {active.r24 && (
                                 <ResultBars key={`${active.id}-24`} result={active.r24} year="2024" animateBars={!reduce} />
@@ -681,7 +681,7 @@ export default function ElectionsExplorer({ regionMap, constituencies, shapes }:
                                             data-off={!on || undefined}
                                             data-active={active?.id === c.id || undefined}
                                             style={{ ['--el-party' as string]: PARTY_META[c.party].color }}
-                                            aria-label={`${c.name}: ${c.mp}, ${PARTY_META[c.party].label}${c.flipped ? ', changed hands' : ''}`}
+                                            aria-label={`${c.name}: ${c.mp}, ${PARTY_META[c.party].label}${c.flipped ? ', flipped' : ''}`}
                                             onMouseEnter={(event) => showConstituency(c, event.currentTarget)}
                                             onFocus={(event) => showConstituency(c, event.currentTarget)}
                                             onClick={(event) => showConstituency(c, event.currentTarget)}
@@ -730,7 +730,7 @@ export default function ElectionsExplorer({ regionMap, constituencies, shapes }:
             <p className="el-tiles__note">
                 Each tile is one constituency (D = NDC, P = NPP, I = independent). Hover, focus or tap a tile to see its MP;
                 select a region name to filter the map. An orange corner marks a seat that
-                changed hands since 2020.
+                flipped since 2020.
             </p>
         </section>
     );

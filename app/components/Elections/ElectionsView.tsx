@@ -43,7 +43,7 @@ export default async function ElectionsView() {
                         <h1 className="page-title">Ghana 2028 Elections</h1>
                         <p className="el-intro">
                             One place to follow who is running for president in 2028, who holds Ghana’s 276
-                            parliamentary seats today and which seats changed hands in 2024. Open a candidate, or
+                            parliamentary seats today and which seats flipped in 2024. Open a candidate, or
                             click the map, a region or a party to cross the data.
                         </p>
 
@@ -56,7 +56,7 @@ export default async function ElectionsView() {
                             <ul>
                                 <li>
                                     Parliament: members elected on 7 December 2024 and previous members, from
-                                    Wikipedia’s list of MPs. “Changed hands” means the winning party differs from the
+                                    Wikipedia’s list of MPs. “Flipped” means the winning party differs from the
                                     previous MP’s party; by-elections held since may not be reflected.
                                 </li>
                                 <li>

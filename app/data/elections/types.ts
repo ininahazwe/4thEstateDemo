@@ -92,7 +92,7 @@ export const PARTY_META: Record<PartyCode, { label: string; color: string; lette
 
 export const PARTY_ORDER: PartyCode[] = ['NDC', 'NPP', 'IND'];
 
-/** Accent used for "seats that changed hands" views. */
+/** Accent used for "seats that flipped" views. */
 export const FLIP_COLOR = '#d9480f';
 
 /** Accent used for "close races" views. */
