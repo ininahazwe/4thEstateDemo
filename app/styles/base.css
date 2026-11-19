@@ -1665,7 +1665,7 @@ img[loading=lazy].loading {
     margin:auto;
     max-width:1000px;
     /*min-height:calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));*/
-    padding:calc(var(--mainPadding)*2.5) var(--mainPadding)!important
+    padding:calc(var(--mainPadding)*1.2) var(--mainPadding) calc(var(--mainPadding)*2.5)!important
 }
 #site-main [data-sticky] {
     position:sticky;
